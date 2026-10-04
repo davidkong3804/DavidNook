@@ -51,12 +51,12 @@ final class NotchUIEventTests: XCTestCase {
                     XCTFail("unexpected event")
                     return
                 }
-                XCTAssertEqual(type, .battery)
+                XCTAssertEqual(type, .music)
                 expectation.fulfill()
             }
             .store(in: &cancellables)
 
-        NotchUIEventBus.events.send(.expandingView(type: .battery))
+        NotchUIEventBus.events.send(.expandingView(type: .music))
         waitForExpectations(timeout: 1.0)
     }
 }

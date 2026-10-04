@@ -16,7 +16,6 @@ enum SneakContentType {
     case backlight
     case music
     case mic
-    case battery
     case download
 }
 
@@ -36,7 +35,7 @@ enum BrowserType {
 
 struct ExpandedItem {
     var show: Bool = false
-    var type: SneakContentType = .battery
+    var type: SneakContentType = .music
     var value: CGFloat = 0
     var browser: BrowserType = .chromium
 }

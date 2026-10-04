@@ -25,7 +25,6 @@ import SwiftUI
 struct CompactHomeView: View {
     @EnvironmentObject var vm: BoringViewModel
     @ObservedObject var musicManager = MusicManager.shared
-    @ObservedObject var batteryModel = BatteryStatusViewModel.shared
     let albumArtNamespace: Namespace.ID
     let horizontalMediaGestureFeedback: CGFloat
 
@@ -114,26 +113,6 @@ struct CompactHomeView: View {
                     .frame(width: vizBarWidth, height: 16)
                 }
                 .frame(width: vizBlockWidth)
-            }
-        }
-        .overlay(alignment: .topTrailing) {
-            // Compact mode hides BoringHeader (it spans the full notch
-            // width), which took the battery with it. Overlaid rather than
-            // placed in the HStack so it doesn't steal width from the title.
-            if Defaults[.showBatteryIndicator] {
-                BoringBatteryView(
-                    batteryWidth: 24,
-                    isCharging: batteryModel.isCharging,
-                    isInLowPowerMode: batteryModel.isInLowPowerMode,
-                    isPluggedIn: batteryModel.isPluggedIn,
-                    levelBattery: batteryModel.levelBattery,
-                    maxCapacity: batteryModel.maxCapacity,
-                    timeToFullCharge: batteryModel.timeToFullCharge,
-                    timeToDischarge: batteryModel.timeToDischarge,
-                    maxAdapterWatts: batteryModel.maxAdapterWatts,
-                    isForNotification: false
-                )
-                .offset(y: -14)
             }
         }
     }
