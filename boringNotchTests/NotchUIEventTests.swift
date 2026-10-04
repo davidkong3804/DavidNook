@@ -65,8 +65,6 @@ final class MediaAppBundleIDTests: XCTestCase {
     func testBundleIDsAreDistinctAndWellFormed() {
         let ids = [
             MediaAppBundleID.appleMusic,
-            MediaAppBundleID.spotify,
-            MediaAppBundleID.youTubeMusic,
         ]
         XCTAssertEqual(ids.count, Set(ids).count, "bundle IDs must be unique")
         for id in ids {
@@ -78,7 +76,7 @@ final class MediaAppBundleIDTests: XCTestCase {
 
 final class PlaybackStateTests: XCTestCase {
     func testEquatableIgnoresVolatileFields() {
-        var a = PlaybackState(bundleIdentifier: MediaAppBundleID.spotify, isPlaying: true)
+        var a = PlaybackState(bundleIdentifier: MediaAppBundleID.appleMusic, isPlaying: true)
         a.title = "Track"
         a.currentTime = 42
 
@@ -93,7 +91,7 @@ final class PlaybackStateTests: XCTestCase {
     }
 
     func testEquatableTracksUserVisibleFields() {
-        var a = PlaybackState(bundleIdentifier: MediaAppBundleID.spotify, isPlaying: true)
+        var a = PlaybackState(bundleIdentifier: MediaAppBundleID.appleMusic, isPlaying: true)
         a.title = "Track"
 
         var b = a

@@ -338,10 +338,6 @@ final class MusicManager: ObservableObject {
             try NowPlayingController()
         case .appleMusic:
             AppleMusicController()
-        case .spotify:
-            SpotifyController()
-        case .youtubeMusic:
-            YouTubeMusicController()
         }
     }
 
@@ -814,11 +810,7 @@ final class MusicManager: ObservableObject {
         // Request immediate update from the active controller
         Task { [weak self] in
             if self?.activeController?.isActive() == true {
-                if let youtubeController = self?.activeController as? YouTubeMusicController {
-                    await youtubeController.pollPlaybackState()
-                } else {
-                    await self?.activeController?.updatePlaybackInfo()
-                }
+                await self?.activeController?.updatePlaybackInfo()
             }
         }
     }
@@ -832,16 +824,6 @@ final class MusicManager: ObservableObject {
         if bundleID == MediaAppBundleID.appleMusic {
             script = """
             tell application "Music"
-                if it is running then
-                    get sound volume
-                else
-                    return 50
-                end if
-            end tell
-            """
-        } else if bundleID == MediaAppBundleID.spotify {
-            script = """
-            tell application "Spotify"
                 if it is running then
                     get sound volume
                 else

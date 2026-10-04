@@ -45,11 +45,6 @@ struct MusicControllerSelectionView: View {
                         .buttonStyle(.plain)
                         .disabled(!isEnabled)
 
-                        if controller == .youtubeMusic,
-                           let url = URL(string: "https://github.com/pear-devs/pear-desktop") {
-                            Link("View on GitHub: pear-devs/pear-desktop", destination: url)
-                                .font(.subheadline)
-                        }
                     }
                 }
                 .padding()
@@ -159,20 +154,10 @@ extension MediaControllerType {
                 "Works with most media apps, including browsers, to detect what's playing. Note: This may be removed in a future macOS version.",
                 comment: "Onboarding description of the universal macOS Now Playing music source."
             )
-        case .spotify:
-            LocalizedStringResource(
-                "Connects directly to the Spotify app.",
-                comment: "Onboarding description of the Spotify music source."
-            )
         case .appleMusic:
             LocalizedStringResource(
                 "Connects directly to the Apple Music app.",
                 comment: "Onboarding description of the Apple Music source."
-            )
-        case .youtubeMusic:
-            LocalizedStringResource(
-                "Requires a third-party client with API plugin enabled.",
-                comment: "Onboarding description of the YouTube Music source."
             )
         }
     }

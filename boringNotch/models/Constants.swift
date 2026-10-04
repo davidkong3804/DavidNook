@@ -110,8 +110,6 @@ extension Notification.Name {
 enum MediaControllerType: String, CaseIterable, Identifiable, Defaults.Serializable {
     case nowPlaying
     case appleMusic
-    case spotify
-    case youtubeMusic
 
     var id: String { self.rawValue }
 
@@ -119,8 +117,6 @@ enum MediaControllerType: String, CaseIterable, Identifiable, Defaults.Serializa
         switch rawValue {
         case "nowPlaying", "Now Playing": self = .nowPlaying
         case "appleMusic", "Apple Music": self = .appleMusic
-        case "spotify", "Spotify": self = .spotify
-        case "youtubeMusic", "YouTube Music": self = .youtubeMusic
         default: return nil
         }
     }
@@ -129,10 +125,6 @@ enum MediaControllerType: String, CaseIterable, Identifiable, Defaults.Serializa
         switch bundleIdentifier {
         case "com.apple.Music":
             self = .appleMusic
-        case "com.spotify.client":
-            self = .spotify
-        case YouTubeMusicConfiguration.default.bundleIdentifier:
-            self = .youtubeMusic
         default:
             return nil
         }
@@ -144,10 +136,6 @@ enum MediaControllerType: String, CaseIterable, Identifiable, Defaults.Serializa
             "Now Playing"
         case .appleMusic:
             "Apple Music"
-        case .spotify:
-            "Spotify"
-        case .youtubeMusic:
-            "YouTube Music"
         }
     }
 

@@ -10,8 +10,7 @@
 import Foundation
 
 /// The "tell application X to command" shape and distributed player-info
-/// observation that AppleMusicController and SpotifyController previously
-/// copy-pasted between each other.
+/// observation used by AppleMusicController.
 enum AppleScriptControllerSupport {
     static func executeCommand(_ command: String, appName: String) async {
         let script = "tell application \"\(appName)\" to \(command)"
