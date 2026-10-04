@@ -13,7 +13,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case notch
     case appearance
     case media
-    case calendar
     case shelf
     case battery
     case osd
@@ -33,7 +32,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .notch: "Notch"
         case .appearance: "Appearance"
         case .media: "Media"
-        case .calendar: "Calendar"
         case .shelf: "Shelf"
         case .battery: "Battery"
         case .osd: "OSD"
@@ -48,7 +46,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .notch: .custom("notch")
         case .appearance: .system("paintbrush")
         case .media: .system("play.rectangle")
-        case .calendar: .system("calendar")
         case .shelf: .system("tray.and.arrow.down")
         case .battery: .system("battery.100.bolt")
         case .osd: .system("dial.medium.fill")
@@ -84,8 +81,6 @@ struct SettingsView: View {
                     AppearanceSettingsView()
                 case .media:
                     MediaSettingsView()
-                case .calendar:
-                    CalendarSettings()
                 case .osd:
                     OSDSettings()
                 case .battery:

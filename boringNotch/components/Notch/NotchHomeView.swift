@@ -485,15 +485,6 @@ struct NotchHomeView: View {
                 isHoveringMusicArea: $isHoveringMusicArea
             )
 
-            if Defaults[.showCalendar] {
-                CalendarView()
-                    .frame(width: 215)
-                    .onHover { isHovering in
-                        vm.isHoveringCalendar = isHovering
-                    }
-                    .environmentObject(vm)
-                    .transition(.opacity)
-            }
         }
         .transition(.opacity)
         .blur(radius: vm.notchState == .closed ? 30 : 0)

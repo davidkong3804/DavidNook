@@ -24,7 +24,6 @@ final class BoringViewModel: NSObject, ObservableObject {
     @Published var hideOnClosed: Bool = true
 
     @Published var edgeAutoOpenActive: Bool = false
-    @Published var isHoveringCalendar: Bool = false
     /// Keeps the open notch alive while a popover is showing.
     @Published var isPopoverActive: Bool = false
 
