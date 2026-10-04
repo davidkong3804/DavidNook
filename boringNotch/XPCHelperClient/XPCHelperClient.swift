@@ -354,11 +354,10 @@ final class XPCHelperClient: NSObject, ObservableObject {
     }
 }
 
-// MARK: - Notification Center banners
+// MARK: - Exported object
 
-/// The app's single exported XPC object. Banner pushes are republished as local
-/// notifications; Lunar events are forwarded to whichever listener the OSD code
-/// registered, since both callbacks share one connection.
+/// The app's single exported XPC object. Lunar events are forwarded to whichever
+/// listener the OSD code registered.
 final class NotificationXPCDelegate: NSObject, BoringNotchXPCAppDelegate {
     /// Written on the MainActor (connection setup, `startLunarEventStream`),
     /// read on the XPC connection's private delivery queue. The lock
@@ -388,54 +387,4 @@ final class NotificationXPCDelegate: NSObject, BoringNotchXPCAppDelegate {
     func lunarStreamDidStop(_ reason: String?) {
         lunarListener?.lunarStreamDidStop(reason)
     }
-
-    func notificationDidAppear(_ payload: [String: String]) {
-        NotificationCenter.default.post(
-            name: .systemNotificationDidAppear, object: nil, userInfo: payload
-        )
-    }
-}
-
-extension XPCHelperClient {
-    nonisolated func startNotificationWatching() async -> Bool {
-        do {
-            let service = await MainActor.run { ensureRemoteService() }
-            return try await service.withContinuation { service, continuation in
-                service.startNotificationWatching { started in
-                    continuation.resume(returning: started)
-                }
-            }
-        } catch {
-            await MainActor.run { self.lastError = .transport(underlying: error) }
-            return false
-        }
-    }
-
-    nonisolated func setNotificationFilter(bundleIDs: Set<String>, allApps: Bool) {
-        Task {
-            let service = await MainActor.run { ensureRemoteService() }
-            do {
-                try await service.withService {
-                    $0.setNotificationFilter(Array(bundleIDs), allApps: allApps)
-                }
-            } catch {
-                await MainActor.run { self.lastError = .transport(underlying: error) }
-            }
-        }
-    }
-
-    nonisolated func stopNotificationWatching() {
-        Task {
-            let service = await MainActor.run { ensureRemoteService() }
-            do {
-                try await service.withService { $0.stopNotificationWatching() }
-            } catch {
-                await MainActor.run { self.lastError = .transport(underlying: error) }
-            }
-        }
-    }
-}
-
-extension Notification.Name {
-    static let systemNotificationDidAppear = Notification.Name("systemNotificationDidAppear")
 }

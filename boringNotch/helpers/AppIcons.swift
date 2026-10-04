@@ -117,7 +117,7 @@ func appIconAsNSImage(for bundleID: String) -> NSImage? {
 final class BundleIDResolver: @unchecked Sendable {
     static let shared = BundleIDResolver()
 
-    /// Thread-safety: the only production caller (`SystemNotificationManager.add`)
+    /// Thread-safety: the only production caller
     /// is @MainActor, but the lock costs nothing and keeps the cache sound if a
     /// caller ever resolves off-queue. It is only held around dictionary access,
     /// never during disk I/O — a duplicate concurrent lookup can do the scan

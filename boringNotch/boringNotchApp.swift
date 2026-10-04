@@ -42,12 +42,6 @@ struct DynamicNotchApp: App {
     @Default(.menubarIcon) var showMenuBarIcon
     @Environment(\.openWindow) var openWindow
 
-    init() {
-        #if DEBUG
-        OTPDetector.runSelfCheck()
-        #endif
-    }
-
     var body: some Scene {
         MenuBarExtra("boring.notch", systemImage: "rectangle.topthird.inset.filled", isInserted: $showMenuBarIcon) {
             Button("Settings") {

@@ -90,55 +90,6 @@ class BoringNotchXPCHelper: NSObject, BoringNotchXPCHelperProtocol {
         waitForAuthorization()
     }
 
-    // MARK: - Notification Center banners
-
-    private static let watcher = NotificationWatcher()
-
-    @objc func startNotificationWatching(with reply: @escaping (Bool) -> Void) {
-        // Capture the delegate for this connection before hopping queues —
-        // NSXPCConnection.current() is only valid inside the incoming call.
-        //
-        // Cast to BoringNotchXPCAppDelegate, not its parent protocol: the
-        // proxy's conformance is built from the exact interface the
-        // connection was configured with, so casting to the parent can
-        // return nil and silently swallow every callback.
-        let connection = NSXPCConnection.current()
-        let proxy = connection?.remoteObjectProxyWithErrorHandler { error in
-            NSLog("[boringNotch] notification callback failed: \(error.localizedDescription)")
-        }
-        let delegate = proxy as? BoringNotchXPCAppDelegate
-
-        if delegate == nil {
-            NSLog("[boringNotch] could not obtain notification delegate proxy — banners will not reach the app")
-        }
-
-        DispatchQueue.main.async {
-            let watcher = Self.watcher
-            watcher.onBanner = { notification in
-                delegate?.notificationDidAppear([
-                    "token": notification.token,
-                    "appName": notification.appName ?? "",
-                    "bundleID": notification.bundleID ?? "",
-                    "title": notification.title ?? "",
-                    "subtitle": notification.subtitle ?? "",
-                    "body": notification.body ?? ""
-                ])
-            }
-            let started = watcher.start()
-            NSLog("[boringNotch] notification watcher start -> \(started), AX trusted: \(AXIsProcessTrusted())")
-            reply(started)
-        }
-    }
-
-    @objc func stopNotificationWatching() {
-        DispatchQueue.main.async { Self.watcher.stop() }
-    }
-
-    @objc func setNotificationFilter(_ bundleIDs: [String], allApps: Bool) {
-        DispatchQueue.main.async {
-            Self.watcher.configureFilter(bundleIDs: Set(bundleIDs), allApps: allApps)
-        }
-    }
     private class KeyboardBrightnessClient {
         private static let keyboardID: UInt64 = 1
         private var clientInstance: NSObject?

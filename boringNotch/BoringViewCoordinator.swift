@@ -92,7 +92,6 @@ final class BoringViewCoordinator: ObservableObject {
     private var osdReplacementCancellable: AnyCancellable?
     private var boringShelfCancellable: AnyCancellable?
     private var osdSourceCancellables: [AnyCancellable] = []
-    private var notificationLiveActivityCancellable: AnyCancellable?
     private var uiEventCancellable: AnyCancellable?
 
     private init() {
@@ -128,12 +127,8 @@ final class BoringViewCoordinator: ObservableObject {
                     if Defaults[.osdReplacement] {
                         await MediaKeyInterceptor.shared.start(promptIfNeeded: false)
                     }
-                    if Defaults[.notificationLiveActivity] {
-                        await SystemNotificationManager.shared.start()
-                    }
                 } else {
                     MediaKeyInterceptor.shared.stop()
-                    SystemNotificationManager.shared.stop()
                 }
             }
         }
@@ -193,19 +188,6 @@ final class BoringViewCoordinator: ObservableObject {
                 }
             }
 
-        // Observe changes to the notification live activity toggle; it owns
-        // the notification watcher lifecycle.
-        notificationLiveActivityCancellable = Defaults.publisher(.notificationLiveActivity)
-            .sink { change in
-                Task { @MainActor in
-                    if change.newValue {
-                        await SystemNotificationManager.shared.start()
-                    } else {
-                        SystemNotificationManager.shared.stop()
-                    }
-                }
-            }
-
         Task { @MainActor in
             helloAnimationRunning = firstLaunch
 
@@ -213,9 +195,6 @@ final class BoringViewCoordinator: ObservableObject {
                 await MediaKeyInterceptor.shared.start(promptIfNeeded: false)
             }
 
-            if Defaults[.notificationLiveActivity] {
-                await SystemNotificationManager.shared.start()
-            }
             self.applyOSDSources()
         }
     }

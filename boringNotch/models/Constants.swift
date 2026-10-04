@@ -432,14 +432,6 @@ extension Defaults.Keys {
     /// layout they already have.
     static let compactMode = Key<Bool>("compactMode", default: false)
 
-    // MARK: Notifications
-    /// Off by default: mirroring banners needs Accessibility access.
-    static let notificationLiveActivity = Key<Bool>("notificationLiveActivity", default: false)
-    static let notificationsFromAllApps = Key<Bool>("notificationsFromAllApps", default: false)
-    static let notificationAllowedApps = Key<Set<String>>(
-        "notificationAllowedApps",
-        default: []
-    )
     static let enableGradient = Key<Bool>("enableGradient", default: false)
     static let systemEventIndicatorShadow = Key<Bool>("systemEventIndicatorShadow", default: false)
     static let systemEventIndicatorUseAccent = Key<Bool>("systemEventIndicatorUseAccent", default: false)

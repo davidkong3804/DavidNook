@@ -21,12 +21,10 @@ import SwiftUI
 /// ~1.5s and aren't something you'd want to swipe back to, which is also how
 /// iOS separates them from live activities.
 enum LiveActivityItem: Identifiable, Equatable {
-    case notification(SystemNotification)
     case music
 
     var id: String {
         switch self {
-        case .notification(let notification): "notification-\(notification.id)"
         case .music: "music"
         }
     }
