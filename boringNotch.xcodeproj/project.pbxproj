@@ -115,7 +115,6 @@
 		A7F4A06476BC4B029B6BECEA /* NotchUIEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80E354C7D712441284085CEA /* NotchUIEvent.swift */; };
 		AA04LAS12E7A0001 /* LiveActivityStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA04LAS22E7A0001 /* LiveActivityStack.swift */; };
 		AA06CHV12E7A0001 /* CompactHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA06CHV22E7A0001 /* CompactHomeView.swift */; };
-		AA07ARM12E7A0001 /* AudioRouteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA07ARM22E7A0001 /* AudioRouteManager.swift */; };
 		AFA82F21304B406590337862 /* ShelfContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = E49B58CAC648403F864E6D78 /* ShelfContextMenu.swift */; };
 		B1628B922CC260C0003D8DF3 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = B1628B912CC260C0003D8DF3 /* SwiftUIIntrospect */; };
 		B17266E12C6532560031BA0D /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = B17266E02C6532560031BA0D /* Localizable.xcstrings */; };
@@ -130,7 +129,6 @@
 		C0D300012F60000100000001 /* DropInteractionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D300022F60000100000001 /* DropInteractionState.swift */; };
 		C1A6A2B02D00000100000001 /* CameraSessionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A6A2AF2D00000100000001 /* CameraSessionEngine.swift */; };
 		C1A6A2B12D00000100000001 /* CameraModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A6A2AE2D00000100000001 /* CameraModel.swift */; };
-		F1F2A0A100000000000000F1 /* AudioCaptureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1F2A0A200000000000000F2 /* AudioCaptureManager.swift */; };
 		F38DE6482D8243E7008B5C6D /* BatteryActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38DE6472D8243E2008B5C6D /* BatteryActivityManager.swift */; };
 /* End PBXBuildFile section */
 
@@ -278,7 +276,6 @@
 		A5167212301F85B40018095A /* boringNotchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = boringNotchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA04LAS22E7A0001 /* LiveActivityStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityStack.swift; sourceTree = "<group>"; };
 		AA06CHV22E7A0001 /* CompactHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactHomeView.swift; sourceTree = "<group>"; };
-		AA07ARM22E7A0001 /* AudioRouteManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRouteManager.swift; sourceTree = "<group>"; };
 		AFAD1670A870402D88BFFE47 /* AudioOutputRouteResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioOutputRouteResolver.swift; sourceTree = "<group>"; };
 		B0C26F24108F414781F79D4F /* AppleScriptControllerSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleScriptControllerSupport.swift; sourceTree = "<group>"; };
 		B17266E02C6532560031BA0D /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
@@ -294,7 +291,6 @@
 		C1A6A2AF2D00000100000001 /* CameraSessionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSessionEngine.swift; sourceTree = "<group>"; };
 		E49B58CAC648403F864E6D78 /* ShelfContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfContextMenu.swift; sourceTree = "<group>"; };
 		EAB1C3E8B149445A9E57C6AF /* NotchWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWindowManager.swift; sourceTree = "<group>"; };
-		F1F2A0A200000000000000F2 /* AudioCaptureManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCaptureManager.swift; sourceTree = "<group>"; };
 		F38DE6472D8243E2008B5C6D /* BatteryActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryActivityManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -566,8 +562,6 @@
 				112FB7342CCF16F70015238C /* NotchSpaceManager.swift */,
 				EAB1C3E8B149445A9E57C6AF /* NotchWindowManager.swift */,
 				147163992C5D35FF0068B555 /* MusicManager.swift */,
-				AA07ARM22E7A0001 /* AudioRouteManager.swift */,
-				F1F2A0A200000000000000F2 /* AudioCaptureManager.swift */,
 				C1A6A2AF2D00000100000001 /* CameraSessionEngine.swift */,
 				14C08BB52C8DE42D000F8AA0 /* CalendarManager.swift */,
 			);
@@ -999,8 +993,6 @@
 				AA06CHV12E7A0001 /* CompactHomeView.swift in Sources */,
 				AA04LAS12E7A0001 /* LiveActivityStack.swift in Sources */,
 				1471639A2C5D35FF0068B555 /* MusicManager.swift in Sources */,
-				AA07ARM12E7A0001 /* AudioRouteManager.swift in Sources */,
-				F1F2A0A100000000000000F1 /* AudioCaptureManager.swift in Sources */,
 				1132E5162E777C140068732D /* YouTubeMusicAuthentication.swift in Sources */,
 				14A7E5882C64A89C008C1BE9 /* HelloAnimation.swift in Sources */,
 				1153BD8F2D986B1F00979FB0 /* MediaControllerProtocol.swift in Sources */,
@@ -1280,7 +1272,6 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
 				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
 				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
 				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
@@ -1348,7 +1339,6 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
 				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
 				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
 				ENABLE_RESOURCE_ACCESS_LOCATION = NO;

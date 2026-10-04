@@ -288,8 +288,6 @@ struct MusicControlSlotButton: View {
                 HoverButton(icon: repeatIcon, iconColor: repeatIconColor, scale: .medium) {
                     MusicManager.shared.toggleRepeat()
                 }
-            case .mediaOutput:
-                MediaOutputSlotButton()
             case .volume:
                 VolumeControlView()
             case .favorite:
@@ -362,82 +360,6 @@ struct FavoriteControlButton: View {
 
     private var iconColor: Color {
         musicManager.isFavoriteTrack ? .red : .primary
-    }
-}
-
-/// Audio-output slot for a control row. Shows where audio is going and
-/// switches it, via a popover device picker. Both layouts use this through
-/// MusicControlSlotButton.
-struct MediaOutputSlotButton: View {
-    @EnvironmentObject private var vm: BoringViewModel
-    @ObservedObject private var routeManager = AudioRouteManager.shared
-    @State private var showingPicker = false
-    @State private var isHoveringButton = false
-    @State private var isHoveringPopover = false
-    @State private var hideTask: Task<Void, Never>?
-
-    var body: some View {
-        HoverButton(icon: routeSymbol, scale: .medium) {
-            // Enumerate on open rather than polling: devices come and go
-            // (AirPods connecting, a display waking) and a list built at
-            // launch would be stale by the time anyone opened it.
-            if routeManager.devices.isEmpty {
-                // A popover sizes its window once, at presentation. Opening
-                // on the empty placeholder would size it to that and
-                // truncate names that arrive a moment later.
-                routeManager.refreshDevices { showingPicker = true }
-            } else {
-                routeManager.refreshDevices()
-                showingPicker.toggle()
-            }
-        }
-        .onHover { hovering in
-            isHoveringButton = hovering
-            if hovering {
-                hideTask?.cancel()
-                hideTask = nil
-            } else {
-                scheduleHideIfNeeded()
-            }
-        }
-        .popover(isPresented: $showingPicker, arrowEdge: .bottom) {
-            AudioOutputPicker(routeManager: routeManager) {
-                showingPicker = false
-            }
-            .onHover { hovering in
-                isHoveringPopover = hovering
-                if hovering {
-                    hideTask?.cancel()
-                    hideTask = nil
-                } else {
-                    scheduleHideIfNeeded()
-                }
-            }
-        }
-        .onChange(of: showingPicker) { _, isShowing in
-            vm.isPopoverActive = isShowing
-        }
-        .onDisappear {
-            hideTask?.cancel()
-            hideTask = nil
-            vm.isPopoverActive = false
-        }
-    }
-
-    /// Prefer the live device's own icon; fall back to the resolver's
-    /// classification before the first enumeration has run.
-    private var routeSymbol: String {
-        routeManager.activeDevice?.iconName ?? AudioOutputRouteResolver.shared.outputRouteSymbol()
-    }
-
-    private func scheduleHideIfNeeded() {
-        if isHoveringButton || isHoveringPopover { return }
-        hideTask?.cancel()
-        hideTask = Task {
-            try? await Task.sleep(for: .milliseconds(350))
-            guard !Task.isCancelled else { return }
-            await MainActor.run { withAnimation { showingPicker = false } }
-        }
     }
 }
 

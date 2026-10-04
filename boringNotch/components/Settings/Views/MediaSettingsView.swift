@@ -19,13 +19,6 @@ struct MediaSettingsView: View {
     @Default(.enableLyrics) var enableLyrics
     @ObservedObject private var musicManager = MusicManager.shared
 
-    private var realtimeAudioWaveformSupported: Bool {
-        if #available(macOS 14.2, *) {
-            return true
-        }
-        return false
-    }
-
     var body: some View {
         Form {
             Section {
@@ -118,21 +111,6 @@ struct MediaSettingsView: View {
                 Defaults.Toggle(key: .coloredSpectrogram) {
                     Text("Colored spectrogram")
                 }
-                Defaults.Toggle(key: .realtimeAudioWaveform) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Real-time audio waveform")
-                        Group {
-                            if realtimeAudioWaveformSupported {
-                                Text("Uses Accelerate FFT on the playing app's audio. Requires audio capture permission and uses slightly more CPU.")
-                            } else {
-                                Text("Requires macOS 14.2 or later. Update macOS to enable real-time audio waveform.")
-                            }
-                        }
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    }
-                }
-                .disabled(!realtimeAudioWaveformSupported)
                 Defaults.Toggle(key: .playerColorTinting) {
                     Text("Player tinting")
                 }

@@ -90,7 +90,6 @@ final class MusicManager: ObservableObject {
     @Published var animations: BoringAnimations = .init()
     @Published var avgColor: NSColor = .white
     @Published var bundleIdentifier: String?
-    @Published var audioCaptureBundleIdentifiers: [String] = []
     @Published var songDuration: TimeInterval = 0
     @Published var elapsedTime: TimeInterval = 0
     @Published var timestampDate: Date = .init()
@@ -404,7 +403,6 @@ final class MusicManager: ObservableObject {
         isPlayerIdle = true
         avgColor = .white
         bundleIdentifier = nil
-        audioCaptureBundleIdentifiers = []
         songDuration = 0
         elapsedTime = 0
         timestampDate = Date()
@@ -573,11 +571,6 @@ final class MusicManager: ObservableObject {
             self.bundleIdentifier = state.bundleIdentifier
             // Update volume control support from active controller
             self.volumeControlSupported = activeController?.supportsVolumeControl ?? false
-        }
-
-        let captureBundleIDs = state.effectiveAudioCaptureBundleIdentifiers
-        if captureBundleIDs != self.audioCaptureBundleIdentifiers {
-            self.audioCaptureBundleIdentifiers = captureBundleIDs
         }
 
         if repeatModeChanged {

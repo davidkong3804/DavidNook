@@ -9,41 +9,30 @@ import Cocoa
 import Defaults
 import SwiftUI
 
-class MusicVisualizerModel: NSView, AudioCaptureLevelsConsumer {
+class MusicVisualizerModel: NSView {
     private var barLayers: [CAGradientLayer] = []
     private var isPlaying = false
-    private var useRealtime = false
     private var tintColor: NSColor = .systemBlue
     private var lastTintColor: NSColor?
 
-    private weak var attachedManager: AudioCaptureManager?
-    private var lastAppliedLevels: [Float]
-    private static let levelChangeThreshold: Float = 0.005
-    private static let minBarScale: CGFloat = 0.12
     private static let idleBarScale: CGFloat = 0.3
     private static let animationKey = "scaleAnimation"
 
     private let barWidth: CGFloat = 2
-    private let barCount = AudioCaptureManager.barCount
+    private let barCount = 6
     private let spacing: CGFloat = 1
     private let totalHeight: CGFloat = 14
 
     override init(frame frameRect: NSRect) {
-        self.lastAppliedLevels = [Float](repeating: 0, count: AudioCaptureManager.barCount)
         super.init(frame: frameRect)
         wantsLayer = true
         setupBars()
     }
 
     required init?(coder: NSCoder) {
-        self.lastAppliedLevels = [Float](repeating: 0, count: AudioCaptureManager.barCount)
         super.init(coder: coder)
         wantsLayer = true
         setupBars()
-    }
-
-    deinit {
-        attachedManager?.clearLevelsConsumer(self)
     }
 
     private func setupBars() {
@@ -142,67 +131,10 @@ class MusicVisualizerModel: NSView, AudioCaptureLevelsConsumer {
         isPlaying = playing
         if playing {
             expandBars(animated: true)
-            if !useRealtime {
-                startRandomAnimating()
-            }
+            startRandomAnimating()
         } else {
             collapseBarsToDots()
         }
-    }
-
-    func setUseRealtime(_ enabled: Bool) {
-        guard useRealtime != enabled else { return }
-        useRealtime = enabled
-        // Force the next incoming frame through the threshold guard.
-        for i in 0..<lastAppliedLevels.count { lastAppliedLevels[i] = -1 }
-        guard isPlaying else { return }
-        if enabled {
-            stopRandomAnimating()
-        } else {
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            for barLayer in barLayers {
-                barLayer.transform = CATransform3DMakeScale(1.0, Self.idleBarScale, 1.0)
-            }
-            CATransaction.commit()
-            startRandomAnimating()
-        }
-    }
-
-    func attach(to manager: AudioCaptureManager) {
-        guard attachedManager !== manager else { return }
-        attachedManager?.clearLevelsConsumer(self)
-        attachedManager = manager
-        manager.setLevelsConsumer(self)
-    }
-
-    func syncCurrentLevels(from manager: AudioCaptureManager) {
-        guard attachedManager === manager,
-              let values = manager.latestLevelsSnapshot() else { return }
-        applyLevels(values)
-    }
-
-    func audioCaptureManager(_ manager: AudioCaptureManager, didProduceLevels values: [Float]) {
-        applyLevels(values)
-    }
-
-    private func applyLevels(_ values: [Float]) {
-        guard isPlaying, useRealtime, values.count == barCount else { return }
-        var maxDelta: Float = 0
-        for i in 0..<barCount {
-            let d = abs(values[i] - lastAppliedLevels[i])
-            if d > maxDelta { maxDelta = d }
-        }
-        guard maxDelta >= Self.levelChangeThreshold else { return }
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        for i in 0..<barCount {
-            let v = values[i]
-            lastAppliedLevels[i] = v
-            let clamped = max(Self.minBarScale, min(1.0, CGFloat(v)))
-            barLayers[i].transform = CATransform3DMakeScale(1.0, clamped, 1.0)
-        }
-        CATransaction.commit()
     }
 
     func setTintColor(_ color: NSColor) {
@@ -223,24 +155,17 @@ class MusicVisualizerModel: NSView, AudioCaptureLevelsConsumer {
 struct MusicVisualizer: NSViewRepresentable {
     let isPlaying: Bool
     let tintColor: Color
-    @Default(.realtimeAudioWaveform) var realtimeEnabled: Bool
-    @ObservedObject private var audioCapture = AudioCaptureManager.shared
 
     func makeNSView(context: Context) -> MusicVisualizerModel {
         let spectrum = MusicVisualizerModel()
         spectrum.setTintColor(NSColor(tintColor))
-        spectrum.setUseRealtime(realtimeEnabled && audioCapture.isCapturing)
         spectrum.setPlaying(isPlaying)
-        spectrum.attach(to: audioCapture)
-        spectrum.syncCurrentLevels(from: audioCapture)
         return spectrum
     }
 
     func updateNSView(_ nsView: MusicVisualizerModel, context: Context) {
         nsView.setTintColor(NSColor(tintColor))
-        nsView.setUseRealtime(realtimeEnabled && audioCapture.isCapturing)
         nsView.setPlaying(isPlaying)
-        nsView.syncCurrentLevels(from: audioCapture)
     }
 }
 

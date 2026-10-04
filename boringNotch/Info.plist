@@ -4,8 +4,6 @@
 <dict>
 	<key>CFBundleAllowMixedLocalizations</key>
 	<true/>
-	<key>NSAudioCaptureUsageDescription</key>
-	<string>boring.notch analyzes audio from your music app to draw a real-time waveform in the notch. Audio is processed locally and never leaves your Mac.</string>
 	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict/>
