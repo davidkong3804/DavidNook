@@ -18,7 +18,6 @@ struct WelcomeView: View {
                     .padding(.bottom)
                     .blur(radius: 3)
                     .offset(y: -5)
-                    .background(SparkleView().opacity(0.6))
                 VStack(spacing: 8) {
                     Image("logo2")
                         .resizable().scaledToFit()

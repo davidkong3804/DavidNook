@@ -8,7 +8,6 @@
 import SwiftUI
 import AVFoundation
 import Defaults
-import Sparkle
 
 enum OnboardingStep {
     case welcome
@@ -18,7 +17,6 @@ enum OnboardingStep {
     case audioCapturePermission
     case accessibilityPermission
     case musicPermission
-    case softwareUpdatePermission
     case finished
 }
 
@@ -26,7 +24,6 @@ private let calendarService = CalendarService()
 
 struct OnboardingView: View {
     @State var step: OnboardingStep = .welcome
-    let updater: SPUUpdater?
     let onFinish: () -> Void
     let onOpenSettings: () -> Void
 
@@ -155,21 +152,6 @@ struct OnboardingView: View {
                 MusicControllerSelectionView(
                     onContinue: {
                         withAnimation(.easeInOut(duration: 0.6)) {
-                            if BoringViewCoordinator.shared.firstLaunch {
-                                step = .softwareUpdatePermission
-                            } else {
-                                step = .finished
-                            }
-                        }
-                    }
-                )
-                .transition(.opacity)
-
-            case .softwareUpdatePermission:
-                SoftwareUpdatePermissionView(
-                    updater: updater,
-                    onContinue: {
-                        withAnimation(.easeInOut(duration: 0.6)) {
                             BoringViewCoordinator.shared.firstLaunch = false
                             step = .finished
                         }
@@ -207,79 +189,5 @@ struct OnboardingView: View {
             return .audioCapturePermission
         }
         return .accessibilityPermission
-    }
-}
-
-struct SoftwareUpdatePermissionView: View {
-    let updater: SPUUpdater?
-    let onContinue: () -> Void
-
-    @State private var automaticallyChecksForUpdates = true
-    @State private var automaticallyDownloadsUpdates = false
-
-    var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
-                .font(.system(size: 64))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundColor(.effectiveAccent)
-
-            Text("Keep Boring Notch Updated")
-                .font(.title)
-                .fontWeight(.semibold)
-
-            Text("Boring Notch can check for updates in the background. You can still check manually from the menu bar at any time.")
-                .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
-                .padding(.horizontal, 34)
-
-            VStack(alignment: .leading, spacing: 12) {
-                Toggle("Check for updates automatically", isOn: $automaticallyChecksForUpdates)
-
-                Toggle("Download and install updates automatically", isOn: $automaticallyDownloadsUpdates)
-                    .disabled(!automaticallyChecksForUpdates)
-                    .opacity(automaticallyChecksForUpdates ? 1 : 0.45)
-            }
-            .toggleStyle(.checkbox)
-            .padding(.horizontal, 44)
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            Spacer()
-
-            Button("Continue") {
-                applyUpdatePreference(
-                    checksAutomatically: automaticallyChecksForUpdates,
-                    downloadsAutomatically: automaticallyChecksForUpdates && automaticallyDownloadsUpdates
-                )
-                onContinue()
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .keyboardShortcut(.defaultAction)
-            .padding(.bottom, 24)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            VisualEffectView(material: .underWindowBackground, blendingMode: .behindWindow)
-                .ignoresSafeArea()
-        )
-        .onChange(of: automaticallyChecksForUpdates) { _, enabled in
-            if !enabled {
-                automaticallyDownloadsUpdates = false
-            }
-        }
-    }
-
-    private func applyUpdatePreference(checksAutomatically: Bool, downloadsAutomatically: Bool) {
-        guard let updater else {
-            UserDefaults.standard.set(checksAutomatically, forKey: "SUEnableAutomaticChecks")
-            UserDefaults.standard.set(downloadsAutomatically, forKey: "SUAutomaticallyUpdate")
-            return
-        }
-
-        updater.automaticallyChecksForUpdates = checksAutomatically
-        updater.automaticallyDownloadsUpdates = downloadsAutomatically
     }
 }

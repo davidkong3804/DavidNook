@@ -15,7 +15,7 @@ struct OnboardingFinishView: View {
         VStack(spacing: 20) {
             Spacer()
 
-            Image(systemName: "sparkles")
+            Image(systemName: "checkmark.circle")
                 .font(.system(size: 60))
                 .foregroundColor(.effectiveAccent)
                 .padding()

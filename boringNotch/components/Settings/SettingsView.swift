@@ -5,7 +5,6 @@
 //  Created by Richard Kunkli on 07/08/2024.
 //
 
-import Sparkle
 import SwiftUI
 import SwiftUIIntrospect
 
@@ -69,11 +68,9 @@ struct SettingsView: View {
     @State private var selectedTab: SettingsTab = .general
     @State private var accentColorUpdateTrigger = UUID()
 
-    let updaterController: SPUStandardUpdaterController?
     let camera: CameraModel
 
-    init(updaterController: SPUStandardUpdaterController? = nil, camera: CameraModel) {
-        self.updaterController = updaterController
+    init(camera: CameraModel) {
         self.camera = camera
     }
 
@@ -114,15 +111,7 @@ struct SettingsView: View {
                 case .shortcuts:
                     ShortcutsSettingsView()
                 case .about:
-                    if let controller = updaterController {
-                        AboutView(updaterController: controller)
-                    } else {
-                        // Fallback with a default controller
-                        AboutView(
-                            updaterController: SPUStandardUpdaterController(
-                                startingUpdater: false, updaterDelegate: nil,
-                                userDriverDelegate: nil))
-                    }
+                    AboutView()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
