@@ -120,7 +120,7 @@ final class ChineseScriptDetectorTests: XCTestCase {
     // MARK: - 逐行（mixed 文件使用）
 
     func testDetectEachLine() {
-        let lines = ["我愿意为你被放逐天际", "我願意為你被放逐天際", "Hello", "", "后来", "爱愛"]
+        let lines = ["我愿意为你被放逐天际", "我願意為你被放逐天際", "Hello", "", "后面", "爱愛"]
         XCTAssertEqual(
             detector.detectEachLine(lines),
             [.simplified, .traditional, .neutral, .neutral, .neutral, .mixed]
