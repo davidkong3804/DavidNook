@@ -3,7 +3,7 @@
 //  boringNotch
 //
 //  A smaller open-notch layout: just the now-playing essentials — art,
-//  title, scrubber, transport — with no tab bar, calendar or mirror.
+//  title, scrubber, transport — with no tab bar or calendar.
 //
 //  Layout and proportions follow Atoll's MinimalisticMusicPlayerView
 //  (https://github.com/Ebullioscopic/Atoll, GPL-3.0, itself a boring.notch

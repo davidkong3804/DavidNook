@@ -32,8 +32,8 @@ final class NotchWindowManager {
     private var windowScreenDidChangeObserver: Any?
     private var previousScreens: [NSScreen]?
 
-    init(camera: CameraModel) {
-        primaryViewModel = BoringViewModel(camera: camera)
+    init() {
+        primaryViewModel = BoringViewModel()
     }
 
     // MARK: - Public lookups (preserve AppDelegate's old API shape)
@@ -200,7 +200,7 @@ final class NotchWindowManager {
 
                 if contexts[uuid] == nil {
                     contexts[uuid] = ScreenContext(
-                        viewModel: BoringViewModel(screenUUID: uuid, camera: primaryViewModel.camera),
+                        viewModel: BoringViewModel(screenUUID: uuid),
                         window: nil,
                         dragDetector: nil
                     )

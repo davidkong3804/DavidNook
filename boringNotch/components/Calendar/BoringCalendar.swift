@@ -836,5 +836,5 @@ struct ReminderToggle: View {
     CalendarView()
         .frame(width: 215, height: 130)
         .background(.black)
-        .environmentObject(BoringViewModel(camera: CameraModel()))
+        .environmentObject(BoringViewModel())
 }

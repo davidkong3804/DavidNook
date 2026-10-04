@@ -177,7 +177,7 @@ struct NotchSettingsView: View {
         } header: {
             Text("Behavior")
         } footer: {
-            Text("Shows a smaller opened notch with just the music player — no tabs, calendar or mirror.")
+            Text("Shows a smaller opened notch with just the music player — no tabs or calendar.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

@@ -65,12 +65,11 @@ struct DynamicNotchApp: App {
 /// All notch-window / per-screen view-model / drag-detector lifecycle lives
 /// in `NotchWindowManager` (see managers/NotchWindowManager.swift).
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    let camera = CameraModel()
     var statusItem: NSStatusItem?
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     var quickShareService = QuickShareService.shared
     var closeNotchTask: Task<Void, Never>?
-    private lazy var windowManager = NotchWindowManager(camera: camera)
+    private lazy var windowManager = NotchWindowManager()
     private var onboardingWindowController: NSWindowController?
     private var screenLockedObserver: Any?
     private var screenUnlockedObserver: Any?
@@ -135,8 +134,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } catch {
             NSLog("Failed to migrate legacy Boring Notch app bundle: %@", error.localizedDescription)
         }
-
-        SettingsWindowController.shared.setCamera(camera)
 
         NotificationCenter.default.addObserver(
             self,

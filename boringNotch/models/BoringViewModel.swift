@@ -33,8 +33,6 @@ final class BoringViewModel: NSObject, ObservableObject {
     @Published var notchSize: CGSize = getClosedNotchSize()
     @Published var closedNotchSize: CGSize = getClosedNotchSize()
 
-    let camera: CameraModel
-
     deinit {
         destroy()
     }
@@ -44,9 +42,8 @@ final class BoringViewModel: NSObject, ObservableObject {
         cancellables.removeAll()
     }
 
-    init(screenUUID: String? = nil, camera: CameraModel) {
+    init(screenUUID: String? = nil) {
         animation = animationLibrary.animation
-        self.camera = camera
         self.screenUUID = screenUUID
 
         super.init()
@@ -122,44 +119,6 @@ final class BoringViewModel: NSObject, ObservableObject {
         return max(0, menuBarHeight - currentHeight)
     }
 
-    func toggleCameraPreview() {
-        switch camera.state {
-        case .running, .interrupted:
-            camera.stopSession()
-        case .stopped, .unavailable, .failed:
-            if camera.cameraAvailable {
-                camera.startSession()
-            }
-
-        case .permissionDenied:
-            DispatchQueue.main.async {
-                NSApp.setActivationPolicy(.regular)
-                NSApp.activate(ignoringOtherApps: true)
-
-                let alert = NSAlert()
-                alert.messageText = NSLocalizedString("Camera Access Required", comment: "Camera permission alert title")
-                alert.informativeText = NSLocalizedString("Please allow camera access in System Settings.", comment: "Camera permission alert message")
-                alert.addButton(withTitle: NSLocalizedString("Open Settings", comment: "Button title that opens app or system settings"))
-                alert.addButton(withTitle: NSLocalizedString("Cancel", comment: "Cancel button title"))
-
-                if alert.runModal() == .alertFirstButtonReturn {
-                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Camera") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-
-                NSApp.setActivationPolicy(.accessory)
-                NSApp.deactivate()
-            }
-
-        case .permissionRequired:
-            camera.requestAccess()
-
-        case .requestingPermission, .starting:
-            break
-        }
-    }
-
     func isMouseHovering(position: NSPoint = NSEvent.mouseLocation) -> Bool {
         let screenFrame = getScreenFrame(screenUUID)
         if let frame = screenFrame {
@@ -190,9 +149,6 @@ final class BoringViewModel: NSObject, ObservableObject {
         if SharingStateManager.shared.preventNotchClose {
             return
         }
-        // The camera is on-demand: the notch closing always ends capture.
-        // Intent clears too, so no recovery path can reopen it while closed.
-        camera.stopSession()
         self.notchSize = getClosedNotchSize(screenUUID: self.screenUUID)
         self.closedNotchSize = self.notchSize
         self.notchState = .closed

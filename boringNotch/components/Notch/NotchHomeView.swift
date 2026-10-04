@@ -236,12 +236,6 @@ struct MusicControlsView: View {
         )
         let padded = slotConfig.padded(to: sanitizedLimit, filler: .none)
         let result = Array(padded.prefix(sanitizedLimit))
-        // If calendar and camera are both visible alongside music, hide the edge slots
-        let shouldHideEdges = Defaults[.showCalendar] && Defaults[.showMirror] && vm.camera.cameraAvailable && vm.camera.isSessionRunning
-        if shouldHideEdges && result.count >= 5 {
-            return Array(result.dropFirst().dropLast())
-        }
-
         return result
     }
 
@@ -483,12 +477,8 @@ struct NotchHomeView: View {
             .transition(.opacity)
     }
 
-    private var shouldShowCamera: Bool {
-        Defaults[.showMirror] && vm.camera.cameraAvailable && vm.camera.isSessionRunning
-    }
-
     private var mainContent: some View {
-        HStack(alignment: .top, spacing: (shouldShowCamera && Defaults[.showCalendar]) ? 10 : 15) {
+        HStack(alignment: .top, spacing: 15) {
             MusicPlayerView(
                 albumArtNamespace: albumArtNamespace,
                 horizontalMediaGestureFeedback: horizontalMediaGestureFeedback,
@@ -497,20 +487,12 @@ struct NotchHomeView: View {
 
             if Defaults[.showCalendar] {
                 CalendarView()
-                    .frame(width: shouldShowCamera ? 170 : 215)
+                    .frame(width: 215)
                     .onHover { isHovering in
                         vm.isHoveringCalendar = isHovering
                     }
                     .environmentObject(vm)
                     .transition(.opacity)
-            }
-
-            if shouldShowCamera {
-                CameraPreviewView(camera: vm.camera)
-                    .scaledToFit()
-                    .opacity(vm.notchState == .closed ? 0 : 1)
-                    .animation(.interactiveSpring(response: 0.32, dampingFraction: 0.76, blendDuration: 0), value: shouldShowCamera)
-                
             }
         }
         .transition(.opacity)

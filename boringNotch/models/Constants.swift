@@ -366,10 +366,6 @@ extension Defaults.Keys {
 
     // MARK: Appearance
     // static let alwaysShowTabs = Key<Bool>("alwaysShowTabs", default: true)
-    static let showMirror = Key<Bool>("showMirror", default: false)
-    static let isMirrored = Key<Bool>("isMirrored", default: true)
-    static let mirrorShape = Key<MirrorShapeEnum>("mirrorShape", default: MirrorShapeEnum.rectangle)
-    static let mirrorCameraID = Key<String?>("mirrorCameraID", default: nil)
     static let settingsIconInNotch = Key<Bool>("settingsIconInNotch", default: true)
     static let lightingEffect = Key<Bool>("lightingEffect", default: true)
     static let enableShadow = Key<Bool>("enableShadow", default: true)
@@ -427,7 +423,7 @@ extension Defaults.Keys {
 
     // MARK: Layout
     /// Swaps the opened notch for a smaller, player-only layout: no tab
-    /// bar, calendar or mirror. Off by default so existing users keep the
+    /// bar or calendar. Off by default so existing users keep the
     /// layout they already have.
     static let compactMode = Key<Bool>("compactMode", default: false)
 

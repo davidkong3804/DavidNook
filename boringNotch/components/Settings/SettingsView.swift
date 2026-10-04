@@ -15,7 +15,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case media
     case calendar
     case shelf
-    case mirror
     case battery
     case osd
     case shortcuts
@@ -36,7 +35,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .media: "Media"
         case .calendar: "Calendar"
         case .shelf: "Shelf"
-        case .mirror: "Mirror"
         case .battery: "Battery"
         case .osd: "OSD"
         case .shortcuts: "Shortcuts"
@@ -52,7 +50,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .media: .system("play.rectangle")
         case .calendar: .system("calendar")
         case .shelf: .system("tray.and.arrow.down")
-        case .mirror: .system("video")
         case .battery: .system("battery.100.bolt")
         case .osd: .system("dial.medium.fill")
         case .shortcuts: .system("keyboard")
@@ -64,12 +61,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
 struct SettingsView: View {
     @State private var selectedTab: SettingsTab = .general
     @State private var accentColorUpdateTrigger = UUID()
-
-    let camera: CameraModel
-
-    init(camera: CameraModel) {
-        self.camera = camera
-    }
 
     var body: some View {
         NavigationSplitView {
@@ -101,8 +92,6 @@ struct SettingsView: View {
                     BatterySettingsView()
                 case .shelf:
                     ShelfSettingsView()
-                case .mirror:
-                    WebcamSettingsView(camera: camera)
                 case .shortcuts:
                     ShortcutsSettingsView()
                 case .about:

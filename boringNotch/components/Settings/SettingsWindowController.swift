@@ -11,7 +11,6 @@ import Defaults
 
 class SettingsWindowController: NSWindowController {
     static let shared = SettingsWindowController()
-    private var camera: CameraModel?
 
     private init() {
         let window = NSWindow(
@@ -30,13 +29,8 @@ class SettingsWindowController: NSWindowController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func setCamera(_ camera: CameraModel) {
-        self.camera = camera
-        setupWindow()
-    }
-
     private func setupWindow() {
-        guard let window, let camera else { return }
+        guard let window else { return }
 
         window.title = "Boring Notch Settings"
         window.titlebarAppearsTransparent = false
@@ -56,7 +50,7 @@ class SettingsWindowController: NSWindowController {
         window.identifier = NSUserInterfaceItemIdentifier("BoringNotchSettingsWindow")
 
         // Create the SwiftUI content
-        let settingsView = SettingsView(camera: camera)
+        let settingsView = SettingsView()
         let hostingView = NSHostingView(rootView: settingsView)
         window.contentView = hostingView
 

@@ -69,7 +69,7 @@ struct OpenNotchOSD: View {
 
 #Preview {
     OpenNotchOSD(type: .constant(.volume), value: .constant(0.5), icon: .constant(""), accent: .constant(nil))
-        .environmentObject(BoringViewModel(camera: CameraModel()))
+        .environmentObject(BoringViewModel())
         .padding()
         .background(Color.gray)
 }
