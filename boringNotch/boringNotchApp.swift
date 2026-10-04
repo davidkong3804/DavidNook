@@ -105,10 +105,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             MusicManager.shared.destroy()
             windowManager.cleanup()
         }
-        BetterDisplayManager.shared.stopObserving()
-        LunarManager.shared.stopListening()
-        LunarManager.shared.configureLunarOSD(hide: false)
-        XPCHelperClient.shared.stopMonitoringAccessibilityAuthorization()
 
         observers.forEach { NotificationCenter.default.removeObserver($0) }
         observers.removeAll()
@@ -283,10 +279,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             playWelcomeSound()
         }
-
-        // make sure OSD subsystems are in the right state now that initial
-        // notch windows have been created/cleaned up
-        coordinator.applyOSDSources()
     }
 
     func playWelcomeSound() {

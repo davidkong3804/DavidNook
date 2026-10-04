@@ -94,81 +94,6 @@ struct AppLanguage: RawRepresentable, Hashable, Identifiable, Defaults.Serializa
     }
 }
 
-// macOS 27 renamed the "Accessibility" privacy pane to "Device Control and
-// Data Access". Read the name from Apple's private UniversalAccess auth-warn
-// prompt bundle so it matches what the user sees in System Settings, falling
-// back to the localized catalog strings.
-enum AccessibilityPermission {
-    static var displayName: String {
-        if let appleName = appleLocalizedAccessibilityName() {
-            return appleName
-        }
-        if #available(macOS 27, *) {
-            return String(localized: "Device Control and Data Access")
-        } else {
-            return String(localized: "Accessibility")
-        }
-    }
-
-    static var systemImageName: String {
-        if #available(macOS 27, *) {
-            return "folder.badge.gearshape"
-        } else {
-            return "accessibility"
-        }
-    }
-
-    private static let osLocalizationPath =
-        "/System/Library/PrivateFrameworks/UniversalAccess.framework/Versions/A/Resources/universalAccessAuthWarn.app/Contents/Resources/Localizable.loctable"
-
-    private static let osPermissionKey = "window.title.accessibility"
-
-    private static let osLocalizedNameTables: [String: [String: String]]? = {
-        guard let plist = NSDictionary(contentsOfFile: osLocalizationPath) else {
-            return nil
-        }
-        var tables: [String: [String: String]] = [:]
-        for (key, value) in plist {
-            guard let locale = key as? String, let entries = value as? [String: Any] else {
-                continue
-            }
-            tables[locale] = entries.compactMapValues { $0 as? String }
-        }
-        return tables
-    }()
-
-    private static func appleLocalizedAccessibilityName() -> String? {
-        guard let tables = osLocalizedNameTables else {
-            return nil
-        }
-        for locale in preferredLocaleCandidates {
-            if let name = tables[locale]?[osPermissionKey] {
-                return name
-            }
-        }
-        return tables["en"]?[osPermissionKey]
-    }
-
-    private static var preferredLocaleCandidates: [String] {
-        let preferred = Bundle.main.preferredLocalizations + Locale.preferredLanguages
-        var candidates: [String] = []
-        for preference in preferred {
-            let identifier = preference.replacingOccurrences(of: "-", with: "_")
-            candidates.append(identifier)
-            if identifier.hasPrefix("zh_Hans") {
-                candidates.append("zh_CN")
-            } else if identifier.hasPrefix("zh_Hant") {
-                candidates.append("zh_TW")
-                candidates.append("zh_HK")
-            }
-            if let language = identifier.split(separator: "_", maxSplits: 1).first {
-                candidates.append(String(language))
-            }
-        }
-        return candidates
-    }
-}
-
 // Define notification names at file scope
 extension Notification.Name {
     // MARK: - Display
@@ -179,9 +104,6 @@ extension Notification.Name {
 
     // MARK: - Shelf
     static let expandedDragDetectionChanged = Notification.Name("expandedDragDetectionChanged")
-
-    // MARK: - System
-    static let accessibilityAuthorizationChanged = Notification.Name("accessibilityAuthorizationChanged")
 
     // MARK: - Sharing
     static let sharingDidFinish = Notification.Name("com.boringNotch.sharingDidFinish")
@@ -265,71 +187,6 @@ enum SneakPeekStyle: String, CaseIterable, Identifiable, Defaults.Serializable {
     }
 }
 
-// Action to perform when Option (⌥) is held while pressing media keys
-enum OptionKeyAction: String, CaseIterable, Identifiable, Defaults.Serializable {
-    case openSettings
-    case showOSD
-    case none
-
-    var id: String { self.rawValue }
-
-    init?(rawValue: String) {
-        switch rawValue {
-        case "openSettings", "Open System Settings": self = .openSettings
-        case "showOSD", "Show HUD": self = .showOSD
-        case "none", "No Action": self = .none
-        default: return nil
-        }
-    }
-
-    var localizedString: String {
-        switch self {
-        case .openSettings:
-            return String(localized: "Open System Settings", comment: "Option (⌥) key behavior: Open System Settings")
-        case .showOSD:
-            return String(localized: "Show OSD", comment: "Option (⌥) key behavior: Show OSD")
-        case .none:
-            return String(localized: "No action", comment: "Option (⌥) key behavior: No action")
-        }
-    }
-}
-
-// Source/provider for OSD control (user-facing: "Source")
-enum OSDControlSource: String, CaseIterable, Identifiable, Defaults.Serializable {
-    case builtin
-    case betterDisplay = "BetterDisplay"
-    case lunar = "Lunar"
-
-    var id: String { self.rawValue }
-
-    var localizedString: String {
-        switch self {
-        case .builtin:
-            return String(localized: "Built-in", comment: "OSD Sources: Built-in")
-        case .betterDisplay:
-            return "BetterDisplay"
-        case .lunar:
-            return "Lunar"
-        }
-    }
-}
-
-enum PreferenceCompatibility {
-    /// Runs before Defaults.Key registers its fallback, so a saved false is
-    /// distinguishable from a missing value. Keep the old key for older builds.
-    static func migratedKeyName(
-        _ name: String,
-        from legacyName: String,
-        in defaults: UserDefaults = .standard
-    ) -> String {
-        if defaults.object(forKey: name) == nil,
-           let legacyValue = defaults.object(forKey: legacyName) as? Bool {
-            defaults.set(legacyValue, forKey: name)
-        }
-        return name
-    }
-}
-
 extension Defaults.Keys {
     // MARK: General
     static let appLanguage = Key<AppLanguage>("appLanguage", default: .system)
@@ -402,27 +259,11 @@ extension Defaults.Keys {
     static let selectedDownloadIndicatorStyle = Key<DownloadIndicatorStyle>("selectedDownloadIndicatorStyle", default: DownloadIndicatorStyle.progress)
     static let selectedDownloadIconStyle = Key<DownloadIconStyle>("selectedDownloadIconStyle", default: DownloadIconStyle.onlyAppIcon)
 
-    // MARK: OSD
-    static let osdReplacement = Key<Bool>(PreferenceCompatibility.migratedKeyName("osdReplacement", from: "hudReplacement"), default: false)
-    static let inlineOSD = Key<Bool>(PreferenceCompatibility.migratedKeyName("inlineOSD", from: "inlineHUD"), default: false)
-
     // MARK: Layout
     /// Swaps the opened notch for a smaller, player-only layout: no tab
     /// bar or calendar. Off by default so existing users keep the
     /// layout they already have.
     static let compactMode = Key<Bool>("compactMode", default: false)
-
-    static let enableGradient = Key<Bool>("enableGradient", default: false)
-    static let systemEventIndicatorShadow = Key<Bool>("systemEventIndicatorShadow", default: false)
-    static let systemEventIndicatorUseAccent = Key<Bool>("systemEventIndicatorUseAccent", default: false)
-    static let showOpenNotchOSD = Key<Bool>(PreferenceCompatibility.migratedKeyName("showOpenNotchOSD", from: "showOpenNotchHUD"), default: true)
-    static let showOpenNotchOSDPercentage = Key<Bool>(PreferenceCompatibility.migratedKeyName("showOpenNotchOSDPercentage", from: "showOpenNotchHUDPercentage"), default: true)
-    static let showClosedNotchOSDPercentage = Key<Bool>(PreferenceCompatibility.migratedKeyName("showClosedNotchOSDPercentage", from: "showClosedNotchHUDPercentage"), default: false)
-    // Option key modifier behaviour for media keys
-    static let optionKeyAction = Key<OptionKeyAction>("optionKeyAction", default: OptionKeyAction.openSettings)
-    // Brightness/volume/keyboard source selection
-    static let osdBrightnessSource = Key<OSDControlSource>("osdBrightnessSource", default: .builtin)
-    static let osdVolumeSource = Key<OSDControlSource>("osdVolumeSource", default: .builtin)
 
     // MARK: Shelf
     static let boringShelf = Key<Bool>("boringShelf", default: true)

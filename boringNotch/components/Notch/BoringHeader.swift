@@ -37,33 +37,23 @@ struct BoringHeader: View {
 
             HStack(spacing: 4) {
                 if vm.notchState == .open {
-                    if isOSDType(coordinator.sneakPeekState(for: vm.screenUUID).type) && coordinator.shouldShowSneakPeek(on: vm.screenUUID) && Defaults[.showOpenNotchOSD] {
-                        OpenNotchOSD(
-                             type: coordinator.binding(for: vm.screenUUID).type,
-                             value: coordinator.binding(for: vm.screenUUID).value,
-                             icon: coordinator.binding(for: vm.screenUUID).icon,
-                             accent: coordinator.binding(for: vm.screenUUID).accent
-                        )
-                            .transition(.scale(scale: 0.8).combined(with: .opacity))
-                    } else {
-                        if Defaults[.settingsIconInNotch] {
-                            Button(action: {
-                                DispatchQueue.main.async {
-                                    SettingsWindowController.shared.showWindow()
-                                }
-                            }) {
-                                Capsule()
-                                    .fill(.black)
-                                    .frame(width: 30, height: 30)
-                                    .overlay {
-                                        Image(systemName: "gear")
-                                            .foregroundColor(.white)
-                                            .padding()
-                                            .imageScale(.medium)
-                                    }
+                    if Defaults[.settingsIconInNotch] {
+                        Button(action: {
+                            DispatchQueue.main.async {
+                                SettingsWindowController.shared.showWindow()
                             }
-                            .buttonStyle(PlainButtonStyle())
+                        }) {
+                            Capsule()
+                                .fill(.black)
+                                .frame(width: 30, height: 30)
+                                .overlay {
+                                    Image(systemName: "gear")
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .imageScale(.medium)
+                                }
                         }
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
             }
@@ -75,15 +65,6 @@ struct BoringHeader: View {
         }
         .foregroundColor(.gray)
         .environmentObject(vm)
-    }
-
-    func isOSDType(_ type: SneakContentType) -> Bool {
-        switch type {
-        case .volume, .brightness, .backlight, .mic:
-            return true
-        default:
-            return false
-        }
     }
 }
 

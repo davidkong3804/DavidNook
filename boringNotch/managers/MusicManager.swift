@@ -717,7 +717,7 @@ final class MusicManager: ObservableObject {
     private func updateSneakPeek() {
         guard isPlaying && Defaults[.enableSneakPeek] else { return }
         if Defaults[.sneakPeekStyles] == .standard {
-            NotchUIEventBus.events.send(.sneakPeek(type: .music, value: 0))
+            NotchUIEventBus.events.send(.sneakPeek(type: .music))
         } else {
             NotchUIEventBus.events.send(.expandingView(type: .music))
         }

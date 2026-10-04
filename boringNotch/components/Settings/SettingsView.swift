@@ -14,7 +14,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case appearance
     case media
     case shelf
-    case osd
     case shortcuts
     case about
 
@@ -32,7 +31,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .appearance: "Appearance"
         case .media: "Media"
         case .shelf: "Shelf"
-        case .osd: "OSD"
         case .shortcuts: "Shortcuts"
         case .about: "About"
         }
@@ -45,7 +43,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .appearance: .system("paintbrush")
         case .media: .system("play.rectangle")
         case .shelf: .system("tray.and.arrow.down")
-        case .osd: .system("dial.medium.fill")
         case .shortcuts: .system("keyboard")
         case .about: .system("info.circle")
         }
@@ -78,8 +75,6 @@ struct SettingsView: View {
                     AppearanceSettingsView()
                 case .media:
                     MediaSettingsView()
-                case .osd:
-                    OSDSettings()
                 case .shelf:
                     ShelfSettingsView()
                 case .shortcuts:

@@ -18,7 +18,6 @@
 		1113ABCC2E80E27000EC13B2 /* ShelfDropService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1113ABBD2E80E27000EC13B2 /* ShelfDropService.swift */; };
 		1113ABCE2E80E27000EC13B2 /* ShelfActionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1113ABBC2E80E27000EC13B2 /* ShelfActionService.swift */; };
 		1113ABD02E80E6BB00EC13B2 /* ThumbnailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1113ABCF2E80E6BB00EC13B2 /* ThumbnailService.swift */; };
-		111BE95D2ECD71E10079DD4E /* AsyncXPCConnection in Frameworks */ = {isa = PBXBuildFile; productRef = 111BE95C2ECD71E10079DD4E /* AsyncXPCConnection */; };
 		111BE9952ECF2DF40079DD4E /* DragDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111BE9942ECF2DEF0079DD4E /* DragDetector.swift */; };
 		111BEA512ECFBF7F0079DD4E /* MacroVisionKit in Frameworks */ = {isa = PBXBuildFile; productRef = 111BEA502ECFBF7F0079DD4E /* MacroVisionKit */; };
 		111BEA5F2ED07A340079DD4E /* MacroVisionKit in Frameworks */ = {isa = PBXBuildFile; productRef = 111BEA5E2ED07A340079DD4E /* MacroVisionKit */; };
@@ -37,7 +36,6 @@
 		1153BD9A2D98824300979FB0 /* SpotifyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1153BD992D98824300979FB0 /* SpotifyController.swift */; };
 		1153BD9C2D98853B00979FB0 /* NowPlayingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1153BD9B2D98853B00979FB0 /* NowPlayingController.swift */; };
 		1153BDA72D99B22200979FB0 /* YouTubeMusicController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1153BDA62D99B22200979FB0 /* YouTubeMusicController.swift */; };
-		115C12EC2ED3D003009754CA /* OpenNotchOSD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115C12EB2ED3D003009754CA /* OpenNotchOSD.swift */; };
 		1160F8D82DD98230006FBB94 /* NotchShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1160F8D72DD98230006FBB94 /* NotchShape.swift */; };
 		117AB5172E30E09C00558921 /* MediaRemoteAdapter.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 112B0EBA2E30DD5000562D6C /* MediaRemoteAdapter.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		118D1FD12E98FF5F00A2FF63 /* SharingStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 118D1FD02E98FF5F00A2FF63 /* SharingStateManager.swift */; };
@@ -48,24 +46,16 @@
 		1194E87C2EA19E09009C82D6 /* ImageProcessingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1194E87B2EA19E09009C82D6 /* ImageProcessingService.swift */; };
 		1194E8852EA57D23009C82D6 /* SkyLightWindow in Frameworks */ = {isa = PBXBuildFile; productRef = 1194E8842EA57D23009C82D6 /* SkyLightWindow */; };
 		1194E8872EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1194E8862EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift */; };
-		11985BE02F37A3C800F81585 /* BetterDisplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11985BDC2F37A3C800F81585 /* BetterDisplayManager.swift */; };
-		11985BE22F37A3C800F81585 /* LunarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11985BDE2F37A3C800F81585 /* LunarManager.swift */; };
-		11985BE62F37A3FC00F81585 /* BetterDisplayNotificationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11985BE42F37A3FC00F81585 /* BetterDisplayNotificationModels.swift */; };
-		11985BEF2F37E48900F81585 /* OSDIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11985BEE2F37E48900F81585 /* OSDIconView.swift */; };
-		11985BF42F38520A00F81585 /* DraggableProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11985BF32F38520A00F81585 /* DraggableProgressBar.swift */; };
 		11A45C792E34E63100CEB175 /* MediaChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11A45C782E34E63100CEB175 /* MediaChecker.swift */; };
 		11CC44A22CEE614100C7244B /* BoringViewCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CC44A12CEE614100C7244B /* BoringViewCoordinator.swift */; };
 		11CFC65B2E097E9D00748C80 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CFC65A2E097E9D00748C80 /* WelcomeView.swift */; };
 		11CFC65F2E097F2F00748C80 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CFC65E2E097F2100748C80 /* OnboardingView.swift */; };
-		11CFC6612E097F6800748C80 /* PermissionsRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CFC6602E097F6800748C80 /* PermissionsRequestView.swift */; };
 		11CFC6632E09918400748C80 /* MusicControllerSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CFC6622E09917B00748C80 /* MusicControllerSelectionView.swift */; };
 		11CFC6652E09C7B300748C80 /* OnboardingFinishView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CFC6642E09C7B300748C80 /* OnboardingFinishView.swift */; };
 		11D58EA22E760AE100FA8377 /* ImageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D58EA12E760AE100FA8377 /* ImageService.swift */; };
 		11DB26662EDD0BE1001EA0CF /* LyricsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11DB26652EDD0BE1001EA0CF /* LyricsService.swift */; };
 		11EFCD702E8E92D600D0B974 /* ShelfItemViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11EFCD6F2E8E92D600D0B974 /* ShelfItemViewModel.swift */; };
 		11F747CE2EC75CEA00F841DB /* DragPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F747CD2EC75CEA00F841DB /* DragPreviewView.swift */; };
-		11F7485B2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = 11F7484F2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		11F748692EC9AC9600F841DB /* XPCHelperClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F748662EC9AC9600F841DB /* XPCHelperClient.swift */; };
 		11F748732EC9DA9300F841DB /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 11F748722EC9DA9300F841DB /* Lottie */; };
 		11F748822ECB07A400F841DB /* MusicControlButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F748812ECB07A400F841DB /* MusicControlButton.swift */; };
 		14288DDC2C6E015000B9F80C /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14288DD62C6E015000B9F80C /* AudioPlayer.swift */; };
@@ -87,11 +77,8 @@
 		14D570C92C5F38890011E668 /* BoringViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14D570C82C5F38890011E668 /* BoringViewModel.swift */; };
 		14D570D22C5F6C6A0011E668 /* BoringExtrasMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14D570D12C5F6C6A0011E668 /* BoringExtrasMenu.swift */; };
 		1A8B65187F974EE9B7664F5C /* VisualEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0268933F488E47DFB58E48CF /* VisualEffectView.swift */; };
-		201C3E071A104384B8629328 /* AudioOutputRouteResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFAD1670A870402D88BFFE47 /* AudioOutputRouteResolver.swift */; };
 		507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507266DA2C908E2E00A2D00D /* HoverButton.swift */; };
-		5917FD112E57891600E87F1C /* MediaKeyInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */; };
 		5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */; };
-		59D8C23C2E589FAA00147B33 /* VolumeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D8C23B2E589FAA00147B33 /* VolumeManager.swift */; };
 		62A83B43C1AD411097E93D17 /* MediaAppBundleID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61F20E44C65E4DA1945BFF5C /* MediaAppBundleID.swift */; };
 		7EF93DF9889B42E9BCD4634F /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 033B8885979E4EA1A78E8ADC /* Log.swift */; };
 		80EA0C01BBCF4069AC5D133D /* AppleScriptControllerSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C26F24108F414781F79D4F /* AppleScriptControllerSupport.swift */; };
@@ -109,25 +96,15 @@
 		AFA82F21304B406590337862 /* ShelfContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = E49B58CAC648403F864E6D78 /* ShelfContextMenu.swift */; };
 		B1628B922CC260C0003D8DF3 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = B1628B912CC260C0003D8DF3 /* SwiftUIIntrospect */; };
 		B17266E12C6532560031BA0D /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = B17266E02C6532560031BA0D /* Localizable.xcstrings */; };
-		B172AAC02C95DA0B001623F1 /* InlineOSD.swift in Sources */ = {isa = PBXBuildFile; fileRef = B172AABF2C95DA0B001623F1 /* InlineOSD.swift */; };
 		B18654392C6F4990000B926A /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = B18654382C6F4990000B926A /* KeyboardShortcuts */; };
 		B186543C2C6F49AE000B926A /* ShortcutConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B186543B2C6F49AE000B926A /* ShortcutConstants.swift */; };
 		B19016222CC15B3D00E3F12E /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = B19016212CC15B3D00E3F12E /* Defaults */; };
 		B19016242CC15B5000E3F12E /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B19016232CC15B4D00E3F12E /* Constants.swift */; };
 		B1A78C822C8BA08100BD51B0 /* FullscreenMediaDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A78C812C8BA08100BD51B0 /* FullscreenMediaDetection.swift */; };
-		B1D365D02C6A9A6C0047BDBC /* SystemEventIndicatorModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D365CF2C6A9A6C0047BDBC /* SystemEventIndicatorModifier.swift */; };
-		B1F0A0022E60000100000001 /* BrightnessManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A0012E60000100000001 /* BrightnessManager.swift */; };
 		C0D300012F60000100000001 /* DropInteractionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D300022F60000100000001 /* DropInteractionState.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		11F748592EC9AABA00F841DB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 14CEF40A2C5CAED200855D72 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 11F7484E2EC9AABA00F841DB;
-			remoteInfo = BoringNotchXPCHelper;
-		};
 		A5167216301F85B40018095A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 14CEF40A2C5CAED200855D72 /* Project object */;
@@ -138,17 +115,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		11F748412EC8051E00F841DB /* Embed XPC Services */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
-			dstSubfolderSpec = 16;
-			files = (
-				11F7485B2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc in Embed XPC Services */,
-			);
-			name = "Embed XPC Services";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		B1ECFA062C6FE58A002ACD87 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
@@ -191,7 +157,6 @@
 		1153BD992D98824300979FB0 /* SpotifyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyController.swift; sourceTree = "<group>"; };
 		1153BD9B2D98853B00979FB0 /* NowPlayingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingController.swift; sourceTree = "<group>"; };
 		1153BDA62D99B22200979FB0 /* YouTubeMusicController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeMusicController.swift; sourceTree = "<group>"; };
-		115C12EB2ED3D003009754CA /* OpenNotchOSD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenNotchOSD.swift; sourceTree = "<group>"; };
 		1160F8D72DD98230006FBB94 /* NotchShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchShape.swift; sourceTree = "<group>"; };
 		118D1FD02E98FF5F00A2FF63 /* SharingStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharingStateManager.swift; sourceTree = "<group>"; };
 		118EBE242E92DCCB00D54B5A /* AssociatedObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssociatedObject.swift; sourceTree = "<group>"; };
@@ -200,24 +165,16 @@
 		118EBE3A2E9720C500D54B5A /* ShelfStateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfStateViewModel.swift; sourceTree = "<group>"; };
 		1194E87B2EA19E09009C82D6 /* ImageProcessingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProcessingService.swift; sourceTree = "<group>"; };
 		1194E8862EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoringNotchSkyLightWindow.swift; sourceTree = "<group>"; };
-		11985BDC2F37A3C800F81585 /* BetterDisplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterDisplayManager.swift; sourceTree = "<group>"; };
-		11985BDE2F37A3C800F81585 /* LunarManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LunarManager.swift; sourceTree = "<group>"; };
-		11985BE42F37A3FC00F81585 /* BetterDisplayNotificationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterDisplayNotificationModels.swift; sourceTree = "<group>"; };
-		11985BEE2F37E48900F81585 /* OSDIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSDIconView.swift; sourceTree = "<group>"; };
-		11985BF32F38520A00F81585 /* DraggableProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableProgressBar.swift; sourceTree = "<group>"; };
 		11A45C782E34E63100CEB175 /* MediaChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaChecker.swift; sourceTree = "<group>"; };
 		11CC44A12CEE614100C7244B /* BoringViewCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoringViewCoordinator.swift; sourceTree = "<group>"; };
 		11CFC65A2E097E9D00748C80 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		11CFC65E2E097F2100748C80 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		11CFC6602E097F6800748C80 /* PermissionsRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsRequestView.swift; sourceTree = "<group>"; };
 		11CFC6622E09917B00748C80 /* MusicControllerSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicControllerSelectionView.swift; sourceTree = "<group>"; };
 		11CFC6642E09C7B300748C80 /* OnboardingFinishView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFinishView.swift; sourceTree = "<group>"; };
 		11D58EA12E760AE100FA8377 /* ImageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageService.swift; sourceTree = "<group>"; };
 		11DB26652EDD0BE1001EA0CF /* LyricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsService.swift; sourceTree = "<group>"; };
 		11EFCD6F2E8E92D600D0B974 /* ShelfItemViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfItemViewModel.swift; sourceTree = "<group>"; };
 		11F747CD2EC75CEA00F841DB /* DragPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragPreviewView.swift; sourceTree = "<group>"; };
-		11F7484F2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = BoringNotchXPCHelper.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
-		11F748662EC9AC9600F841DB /* XPCHelperClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCHelperClient.swift; sourceTree = "<group>"; };
 		11F748812ECB07A400F841DB /* MusicControlButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicControlButton.swift; sourceTree = "<group>"; };
 		14288DD62C6E015000B9F80C /* AudioPlayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
 		14288E0B2C6F8EC000B9F80C /* AppIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcons.swift; sourceTree = "<group>"; };
@@ -242,9 +199,7 @@
 		14D570C82C5F38890011E668 /* BoringViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoringViewModel.swift; sourceTree = "<group>"; };
 		14D570D12C5F6C6A0011E668 /* BoringExtrasMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoringExtrasMenu.swift; sourceTree = "<group>"; };
 		507266DA2C908E2E00A2D00D /* HoverButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverButton.swift; sourceTree = "<group>"; };
-		5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaKeyInterceptor.swift; sourceTree = "<group>"; };
 		5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationRelauncher.swift; sourceTree = "<group>"; };
-		59D8C23B2E589FAA00147B33 /* VolumeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeManager.swift; sourceTree = "<group>"; };
 		61F20E44C65E4DA1945BFF5C /* MediaAppBundleID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaAppBundleID.swift; sourceTree = "<group>"; };
 		80E354C7D712441284085CEA /* NotchUIEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchUIEvent.swift; sourceTree = "<group>"; };
 		9A0887312C7A693000C160EA /* TabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabButton.swift; sourceTree = "<group>"; };
@@ -256,48 +211,25 @@
 		A5167212301F85B40018095A /* boringNotchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = boringNotchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA04LAS22E7A0001 /* LiveActivityStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityStack.swift; sourceTree = "<group>"; };
 		AA06CHV22E7A0001 /* CompactHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactHomeView.swift; sourceTree = "<group>"; };
-		AFAD1670A870402D88BFFE47 /* AudioOutputRouteResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioOutputRouteResolver.swift; sourceTree = "<group>"; };
 		B0C26F24108F414781F79D4F /* AppleScriptControllerSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleScriptControllerSupport.swift; sourceTree = "<group>"; };
 		B17266E02C6532560031BA0D /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
-		B172AABF2C95DA0B001623F1 /* InlineOSD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineOSD.swift; sourceTree = "<group>"; };
 		B186543B2C6F49AE000B926A /* ShortcutConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutConstants.swift; sourceTree = "<group>"; };
 		B19016232CC15B4D00E3F12E /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		B1A78C812C8BA08100BD51B0 /* FullscreenMediaDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenMediaDetection.swift; sourceTree = "<group>"; };
-		B1D365CF2C6A9A6C0047BDBC /* SystemEventIndicatorModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemEventIndicatorModifier.swift; sourceTree = "<group>"; };
-		B1F0A0012E60000100000001 /* BrightnessManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessManager.swift; sourceTree = "<group>"; };
 		C0D300022F60000100000001 /* DropInteractionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropInteractionState.swift; sourceTree = "<group>"; };
 		E49B58CAC648403F864E6D78 /* ShelfContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfContextMenu.swift; sourceTree = "<group>"; };
 		EAB1C3E8B149445A9E57C6AF /* NotchWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWindowManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		11F7485C2EC9AABA00F841DB /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 11F7484E2EC9AABA00F841DB /* BoringNotchXPCHelper */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		112FB72F2CCF12CC0015238C /* private */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = private; sourceTree = "<group>"; };
 		11DAAB303061BDED00E15887 /* Settings */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Settings; sourceTree = "<group>"; };
 		11DAAB463061BE1600E15887 /* LiveActivities */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LiveActivities; sourceTree = "<group>"; };
 		11DAAB583061BE3000E15887 /* extensions */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = extensions; sourceTree = "<group>"; };
-		11F748502EC9AABA00F841DB /* BoringNotchXPCHelper */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (11F7485C2EC9AABA00F841DB /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = BoringNotchXPCHelper; sourceTree = "<group>"; };
-		8137A8BA990F4D9CBA56CC7A /* Shared */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Shared; sourceTree = "<group>"; };
 		A5167213301F85B40018095A /* boringNotchTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = boringNotchTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		11F7484C2EC9AABA00F841DB /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		14CEF40F2C5CAED300855D72 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -312,7 +244,6 @@
 				111BEA512ECFBF7F0079DD4E /* MacroVisionKit in Frameworks */,
 				B18654392C6F4990000B926A /* KeyboardShortcuts in Frameworks */,
 				B19016222CC15B3D00E3F12E /* Defaults in Frameworks */,
-				111BE95D2ECD71E10079DD4E /* AsyncXPCConnection in Frameworks */,
 				B1628B922CC260C0003D8DF3 /* SwiftUIIntrospect in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -410,63 +341,6 @@
 			path = MediaControllers;
 			sourceTree = "<group>";
 		};
-		11985BDF2F37A3C800F81585 /* OSD */ = {
-			isa = PBXGroup;
-			children = (
-				11985BE72F37A4D100F81585 /* Managers */,
-				11985BE52F37A3FC00F81585 /* Models */,
-				11985BE92F37A55300F81585 /* Views */,
-			);
-			path = OSD;
-			sourceTree = "<group>";
-		};
-		11985BE52F37A3FC00F81585 /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				11985BE42F37A3FC00F81585 /* BetterDisplayNotificationModels.swift */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		11985BE72F37A4D100F81585 /* Managers */ = {
-			isa = PBXGroup;
-			children = (
-				11985BDC2F37A3C800F81585 /* BetterDisplayManager.swift */,
-				11985BDE2F37A3C800F81585 /* LunarManager.swift */,
-				11985BE82F37A4E300F81585 /* XPC */,
-			);
-			path = Managers;
-			sourceTree = "<group>";
-		};
-		11985BE82F37A4E300F81585 /* XPC */ = {
-			isa = PBXGroup;
-			children = (
-				B1F0A0012E60000100000001 /* BrightnessManager.swift */,
-				59D8C23B2E589FAA00147B33 /* VolumeManager.swift */,
-			);
-			path = XPC;
-			sourceTree = "<group>";
-		};
-		11985BE92F37A55300F81585 /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				11985BF32F38520A00F81585 /* DraggableProgressBar.swift */,
-				11985BEE2F37E48900F81585 /* OSDIconView.swift */,
-				B172AABF2C95DA0B001623F1 /* InlineOSD.swift */,
-				115C12EB2ED3D003009754CA /* OpenNotchOSD.swift */,
-				B1D365CF2C6A9A6C0047BDBC /* SystemEventIndicatorModifier.swift */,
-			);
-			path = Views;
-			sourceTree = "<group>";
-		};
-		11F748672EC9AC9600F841DB /* XPCHelperClient */ = {
-			isa = PBXGroup;
-			children = (
-				11F748662EC9AC9600F841DB /* XPCHelperClient.swift */,
-			);
-			path = XPCHelperClient;
-			sourceTree = "<group>";
-		};
 		14288DD92C6E015000B9F80C /* helpers */ = {
 			isa = PBXGroup;
 			children = (
@@ -477,7 +351,6 @@
 				14288DD62C6E015000B9F80C /* AudioPlayer.swift */,
 				5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */,
 				14288E0B2C6F8EC000B9F80C /* AppIcons.swift */,
-				AFAD1670A870402D88BFFE47 /* AudioOutputRouteResolver.swift */,
 			);
 			path = helpers;
 			sourceTree = "<group>";
@@ -487,7 +360,6 @@
 			children = (
 				111BE9942ECF2DEF0079DD4E /* DragDetector.swift */,
 				B1A78C812C8BA08100BD51B0 /* FullscreenMediaDetection.swift */,
-				5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */,
 			);
 			path = observers;
 			sourceTree = "<group>";
@@ -503,7 +375,6 @@
 		1471639B2C5D362F0068B555 /* components */ = {
 			isa = PBXGroup;
 			children = (
-				11985BDF2F37A3C800F81585 /* OSD */,
 				B141C23B2CA5F50900AC8CC8 /* Onboarding */,
 				9A987A042C73CA66005CA465 /* Shelf */,
 				11DAAB463061BE1600E15887 /* LiveActivities */,
@@ -535,11 +406,9 @@
 			children = (
 				112B0EB62E30DD0F00562D6C /* mediaremote-adapter */,
 				14CEF4142C5CAED300855D72 /* boringNotch */,
-				11F748502EC9AABA00F841DB /* BoringNotchXPCHelper */,
 				A5167213301F85B40018095A /* boringNotchTests */,
 				14CEF4132C5CAED300855D72 /* Products */,
 				14D031EC2C689DB70096E6A1 /* Frameworks */,
-				600E881A3042DEAD00B17BFC /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -547,7 +416,6 @@
 			isa = PBXGroup;
 			children = (
 				14CEF4122C5CAED300855D72 /* Boring Notch.app */,
-				11F7484F2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc */,
 				A5167212301F85B40018095A /* boringNotchTests.xctest */,
 			);
 			name = Products;
@@ -556,7 +424,6 @@
 		14CEF4142C5CAED300855D72 /* boringNotch */ = {
 			isa = PBXGroup;
 			children = (
-				11F748672EC9AC9600F841DB /* XPCHelperClient */,
 				14288DE22C6E016F00B9F80C /* observers */,
 				14288DD92C6E015000B9F80C /* helpers */,
 				B186543A2C6F49A4000B926A /* Shortcuts */,
@@ -631,14 +498,6 @@
 			path = models;
 			sourceTree = "<group>";
 		};
-		600E881A3042DEAD00B17BFC /* Recovered References */ = {
-			isa = PBXGroup;
-			children = (
-				8137A8BA990F4D9CBA56CC7A /* Shared */,
-			);
-			name = "Recovered References";
-			sourceTree = "<group>";
-		};
 		9A0887332C7AFF7E00C160EA /* Tabs */ = {
 			isa = PBXGroup;
 			children = (
@@ -664,7 +523,6 @@
 			children = (
 				11CFC6642E09C7B300748C80 /* OnboardingFinishView.swift */,
 				11CFC6622E09917B00748C80 /* MusicControllerSelectionView.swift */,
-				11CFC6602E097F6800748C80 /* PermissionsRequestView.swift */,
 				11CFC65E2E097F2100748C80 /* OnboardingView.swift */,
 				11CFC65A2E097E9D00748C80 /* WelcomeView.swift */,
 			);
@@ -704,27 +562,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		11F7484E2EC9AABA00F841DB /* BoringNotchXPCHelper */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 11F7485D2EC9AABA00F841DB /* Build configuration list for PBXNativeTarget "BoringNotchXPCHelper" */;
-			buildPhases = (
-				11F7484B2EC9AABA00F841DB /* Sources */,
-				11F7484C2EC9AABA00F841DB /* Frameworks */,
-				11F7484D2EC9AABA00F841DB /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				11F748502EC9AABA00F841DB /* BoringNotchXPCHelper */,
-				8137A8BA990F4D9CBA56CC7A /* Shared */,
-			);
-			name = BoringNotchXPCHelper;
-			productName = BoringNotchXPCHelper;
-			productReference = 11F7484F2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc */;
-			productType = "com.apple.product-type.xpc-service";
-		};
 		14CEF4112C5CAED300855D72 /* boringNotch */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 14CEF4212C5CAED400855D72 /* Build configuration list for PBXNativeTarget "boringNotch" */;
@@ -733,19 +570,16 @@
 				14CEF40F2C5CAED300855D72 /* Frameworks */,
 				14CEF4102C5CAED300855D72 /* Resources */,
 				B1ECFA062C6FE58A002ACD87 /* Embed Frameworks */,
-				11F748412EC8051E00F841DB /* Embed XPC Services */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				11F7485A2EC9AABA00F841DB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				112FB72F2CCF12CC0015238C /* private */,
 				11DAAB303061BDED00E15887 /* Settings */,
 				11DAAB463061BE1600E15887 /* LiveActivities */,
 				11DAAB583061BE3000E15887 /* extensions */,
-				8137A8BA990F4D9CBA56CC7A /* Shared */,
 			);
 			name = boringNotch;
 			packageProductDependencies = (
@@ -756,7 +590,6 @@
 				B1628B912CC260C0003D8DF3 /* SwiftUIIntrospect */,
 				1194E8842EA57D23009C82D6 /* SkyLightWindow */,
 				11F748722EC9DA9300F841DB /* Lottie */,
-				111BE95C2ECD71E10079DD4E /* AsyncXPCConnection */,
 				111BEA502ECFBF7F0079DD4E /* MacroVisionKit */,
 				111BEA5E2ED07A340079DD4E /* MacroVisionKit */,
 				111BEA6E2ED166E20079DD4E /* MacroVisionKit */,
@@ -798,9 +631,6 @@
 				LastSwiftUpdateCheck = 2660;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
-					11F7484E2EC9AABA00F841DB = {
-						CreatedOnToolsVersion = 16.4;
-					};
 					14CEF4112C5CAED300855D72 = {
 						CreatedOnToolsVersion = 15.4;
 						LastSwiftMigration = 1640;
@@ -829,7 +659,6 @@
 				B1628B902CC260C0003D8DF3 /* XCRemoteSwiftPackageReference "swiftui-introspect" */,
 				1194E8832EA57D23009C82D6 /* XCRemoteSwiftPackageReference "SkyLightWindow" */,
 				11F748712EC9DA9300F841DB /* XCRemoteSwiftPackageReference "lottie-spm" */,
-				111BE95B2ECD71E10079DD4E /* XCRemoteSwiftPackageReference "AsyncXPCConnection" */,
 				111BEA6D2ED166E20079DD4E /* XCRemoteSwiftPackageReference "MacroVisionKit" */,
 			);
 			productRefGroup = 14CEF4132C5CAED300855D72 /* Products */;
@@ -837,20 +666,12 @@
 			projectRoot = "";
 			targets = (
 				14CEF4112C5CAED300855D72 /* boringNotch */,
-				11F7484E2EC9AABA00F841DB /* BoringNotchXPCHelper */,
 				A5167211301F85B40018095A /* boringNotchTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		11F7484D2EC9AABA00F841DB /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		14CEF4102C5CAED300855D72 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -874,18 +695,10 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		11F7484B2EC9AABA00F841DB /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		14CEF40E2C5CAED300855D72 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				115C12EC2ED3D003009754CA /* OpenNotchOSD.swift in Sources */,
 				5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */,
 				1100292A2E8691B400035A57 /* FileShareView.swift in Sources */,
 				147163982C5D35B70068B555 /* MusicVisualizer.swift in Sources */,
@@ -897,15 +710,12 @@
 				11CFC65B2E097E9D00748C80 /* WelcomeView.swift in Sources */,
 				14D570C02C5EA5870011E668 /* AnimatedFace.swift in Sources */,
 				111BE9952ECF2DF40079DD4E /* DragDetector.swift in Sources */,
-				B1D365D02C6A9A6C0047BDBC /* SystemEventIndicatorModifier.swift in Sources */,
 				1194E87C2EA19E09009C82D6 /* ImageProcessingService.swift in Sources */,
 				1194E8872EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift in Sources */,
 				A7F4A06476BC4B029B6BECEA /* NotchUIEvent.swift in Sources */,
 				9A0887322C7A693000C160EA /* TabButton.swift in Sources */,
 				1153BD9C2D98853B00979FB0 /* NowPlayingController.swift in Sources */,
 				A1B2C3D4E5F60718293A4B5D /* NowPlayingStreamSupport.swift in Sources */,
-				11985BEF2F37E48900F81585 /* OSDIconView.swift in Sources */,
-				59D8C23C2E589FAA00147B33 /* VolumeManager.swift in Sources */,
 				14D570B92C5E98A20011E668 /* drop.swift in Sources */,
 				11EFCD702E8E92D600D0B974 /* ShelfItemViewModel.swift in Sources */,
 				1153BDA72D99B22200979FB0 /* YouTubeMusicController.swift in Sources */,
@@ -923,16 +733,13 @@
 				1100292E2E86940F00035A57 /* QuickShareService.swift in Sources */,
 				1113ABCE2E80E27000EC13B2 /* ShelfActionService.swift in Sources */,
 				1160F8D82DD98230006FBB94 /* NotchShape.swift in Sources */,
-				5917FD112E57891600E87F1C /* MediaKeyInterceptor.swift in Sources */,
 				AA06CHV12E7A0001 /* CompactHomeView.swift in Sources */,
 				AA04LAS12E7A0001 /* LiveActivityStack.swift in Sources */,
 				1471639A2C5D35FF0068B555 /* MusicManager.swift in Sources */,
 				1132E5162E777C140068732D /* YouTubeMusicAuthentication.swift in Sources */,
 				14A7E5882C64A89C008C1BE9 /* HelloAnimation.swift in Sources */,
 				1153BD8F2D986B1F00979FB0 /* MediaControllerProtocol.swift in Sources */,
-				11985BF42F38520A00F81585 /* DraggableProgressBar.swift in Sources */,
 				9AB0C6BD2C73C9CB00F7CD30 /* NotchHomeView.swift in Sources */,
-				B172AAC02C95DA0B001623F1 /* InlineOSD.swift in Sources */,
 				1153BD912D986DB300979FB0 /* PlaybackState.swift in Sources */,
 				B1A78C822C8BA08100BD51B0 /* FullscreenMediaDetection.swift in Sources */,
 				14D570C92C5F38890011E668 /* BoringViewModel.swift in Sources */,
@@ -956,26 +763,19 @@
 				118EBE3B2E9720C500D54B5A /* ShelfStateViewModel.swift in Sources */,
 				11F747CE2EC75CEA00F841DB /* DragPreviewView.swift in Sources */,
 				118D1FD12E98FF5F00A2FF63 /* SharingStateManager.swift in Sources */,
-				11985BE62F37A3FC00F81585 /* BetterDisplayNotificationModels.swift in Sources */,
 				118EBE252E92DCCB00D54B5A /* AssociatedObject.swift in Sources */,
-				11F748692EC9AC9600F841DB /* XPCHelperClient.swift in Sources */,
 				118EBE2D2E97165600D54B5A /* Bookmark.swift in Sources */,
-				11985BE02F37A3C800F81585 /* BetterDisplayManager.swift in Sources */,
-				11985BE22F37A3C800F81585 /* LunarManager.swift in Sources */,
 				9A0887352C7AFF8E00C160EA /* TabSelectionView.swift in Sources */,
 				112FB7352CCF16F70015238C /* NotchSpaceManager.swift in Sources */,
 				90ED6E81035940418671DCEA /* NotchWindowManager.swift in Sources */,
 				1153BD982D9881F900979FB0 /* AppleScriptHelper.swift in Sources */,
-				11CFC6612E097F6800748C80 /* PermissionsRequestView.swift in Sources */,
 				14D570D22C5F6C6A0011E668 /* BoringExtrasMenu.swift in Sources */,
 				11D58EA22E760AE100FA8377 /* ImageService.swift in Sources */,
 				11F748822ECB07A400F841DB /* MusicControlButton.swift in Sources */,
 				14288DDC2C6E015000B9F80C /* AudioPlayer.swift in Sources */,
-				201C3E071A104384B8629328 /* AudioOutputRouteResolver.swift in Sources */,
 				14288E0C2C6F8EC000B9F80C /* AppIcons.swift in Sources */,
 				B19016242CC15B5000E3F12E /* Constants.swift in Sources */,
 				11CFC6632E09918400748C80 /* MusicControllerSelectionView.swift in Sources */,
-				B1F0A0022E60000100000001 /* BrightnessManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -989,11 +789,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		11F7485A2EC9AABA00F841DB /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 11F7484E2EC9AABA00F841DB /* BoringNotchXPCHelper */;
-			targetProxy = 11F748592EC9AABA00F841DB /* PBXContainerItemProxy */;
-		};
 		A5167217301F85B40018095A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 14CEF4112C5CAED300855D72 /* boringNotch */;
@@ -1002,58 +797,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		11F7485E2EC9AABA00F841DB /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = BoringNotchXPCHelper/BoringNotchXPCHelper.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 272;
-				DEVELOPMENT_TEAM = "";
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = BoringNotchXPCHelper/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = BoringNotchXPCHelper;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024-2026 The Bored Team. Licensed under GPL-3.0.";
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = "2.8-beta.0";
-				PRODUCT_BUNDLE_IDENTIFIER = theboringteam.boringnotch.BoringNotchXPCHelper;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		11F7485F2EC9AABA00F841DB /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = BoringNotchXPCHelper/BoringNotchXPCHelper.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 272;
-				DEVELOPMENT_TEAM = "";
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = BoringNotchXPCHelper/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = BoringNotchXPCHelper;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024-2026 The Bored Team. Licensed under GPL-3.0.";
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = "2.8-beta.0";
-				PRODUCT_BUNDLE_IDENTIFIER = theboringteam.boringnotch.BoringNotchXPCHelper;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
 		14CEF41F2C5CAED400855D72 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1200,8 +943,6 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
-				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1262,8 +1003,6 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
-				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/mediaremote-adapter",
@@ -1352,15 +1091,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		11F7485D2EC9AABA00F841DB /* Build configuration list for PBXNativeTarget "BoringNotchXPCHelper" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				11F7485E2EC9AABA00F841DB /* Debug */,
-				11F7485F2EC9AABA00F841DB /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		14CEF40D2C5CAED200855D72 /* Build configuration list for PBXProject "boringNotch" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1391,14 +1121,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		111BE95B2ECD71E10079DD4E /* XCRemoteSwiftPackageReference "AsyncXPCConnection" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ChimeHQ/AsyncXPCConnection";
-			requirement = {
-				kind = exactVersion;
-				version = 1.3.0;
-			};
-		};
 		111BEA6D2ED166E20079DD4E /* XCRemoteSwiftPackageReference "MacroVisionKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/TheBoredTeam/MacroVisionKit";
@@ -1474,11 +1196,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		111BE95C2ECD71E10079DD4E /* AsyncXPCConnection */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 111BE95B2ECD71E10079DD4E /* XCRemoteSwiftPackageReference "AsyncXPCConnection" */;
-			productName = AsyncXPCConnection;
-		};
 		111BEA502ECFBF7F0079DD4E /* MacroVisionKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = MacroVisionKit;

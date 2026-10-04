@@ -122,9 +122,6 @@ final class NotchWindowManager {
             }
             primaryWindow = nil
         }
-
-        // ensure OSD integration reflects the current window state
-        BoringViewCoordinator.shared.applyOSDSources()
     }
 
     private func createBoringNotchWindow(for screen: NSScreen, with viewModel: BoringViewModel) -> NSWindow {
@@ -253,10 +250,6 @@ final class NotchWindowManager {
                 }
             }
         }
-
-        // windows might have been added/removed during the earlier logic –
-        // update the OSD subsystems accordingly.
-        coordinator.applyOSDSources()
     }
 
     func screenConfigurationDidChange() {

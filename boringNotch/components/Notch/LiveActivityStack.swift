@@ -16,10 +16,7 @@ import SwiftUI
 
 /// One entry in the closed-notch stack.
 ///
-/// Deliberately excludes the momentary HUDs — volume/brightness OSD and the
-/// battery pill. Those are interrupts, not activities: they take over for
-/// ~1.5s and aren't something you'd want to swipe back to, which is also how
-/// iOS separates them from live activities.
+/// Only long-lived activities belong here, not momentary interrupts.
 enum LiveActivityItem: Identifiable, Equatable {
     case music
 

@@ -1,10 +1,8 @@
-# SwiftLint configuration for boring.notch
+# SwiftLint configuration for DavidNook
 # Run with: swiftlint --config .swiftlint.yml
 
 included:
   - boringNotch
-  - BoringNotchXPCHelper
-  - Shared
 
 excluded:
   - boringNotch/Assets.xcassets

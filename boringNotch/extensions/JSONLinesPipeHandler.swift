@@ -11,8 +11,7 @@
 import Foundation
 
 /// Streams newline-delimited JSON from a pipe, decoding each line.
-/// Used by the app (mediaremote-adapter now-playing stream) and the XPC
-/// helper (Lunar daemon event stream).
+/// Used by the app's mediaremote-adapter now-playing stream.
 actor JSONLinesPipeHandler {
     nonisolated let outputPipe: Pipe
     nonisolated let fileHandle: FileHandle

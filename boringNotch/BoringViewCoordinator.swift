@@ -11,33 +11,18 @@ import Defaults
 import SwiftUI
 
 enum SneakContentType {
-    case brightness
-    case volume
-    case backlight
     case music
-    case mic
-    case download
 }
 
 struct SneakPeekState {
     var show: Bool = false
     var type: SneakContentType = .music
-    var value: CGFloat = 0
-    var icon: String = ""
-    var accent: Color?
     var targetScreenUUID: String?
-}
-
-enum BrowserType {
-    case chromium
-    case safari
 }
 
 struct ExpandedItem {
     var show: Bool = false
     var type: SneakContentType = .music
-    var value: CGFloat = 0
-    var browser: BrowserType = .chromium
 }
 
 @MainActor
@@ -46,11 +31,9 @@ final class BoringViewCoordinator: ObservableObject {
 
     @Published var currentView: NotchViews = .home
     @Published var helloAnimationRunning: Bool = false
-    private var osdEnableTask: Task<Void, Never>?
 
     @AppStorage("firstLaunch") var firstLaunch: Bool = true
     @AppStorage("musicLiveActivityEnabled") var musicLiveActivityEnabled: Bool = true
-    @AppStorage("currentMicStatus") var currentMicStatus: Bool = true
 
     @AppStorage("alwaysShowTabs") var alwaysShowTabs: Bool = true {
         didSet {
@@ -86,11 +69,7 @@ final class BoringViewCoordinator: ObservableObject {
 
     @Published var selectedScreenUUID: String = NSScreen.main?.displayUUID ?? ""
 
-    @Published var optionKeyPressed: Bool = true
-    private var accessibilityObserver: Any?
-    private var osdReplacementCancellable: AnyCancellable?
     private var boringShelfCancellable: AnyCancellable?
-    private var osdSourceCancellables: [AnyCancellable] = []
     private var uiEventCancellable: AnyCancellable?
 
     private init() {
@@ -114,26 +93,6 @@ final class BoringViewCoordinator: ObservableObject {
         }
 
         selectedScreenUUID = preferredScreenUUID ?? NSScreen.main?.displayUUID ?? ""
-        // Observe changes to accessibility authorization and react accordingly
-        accessibilityObserver = NotificationCenter.default.addObserver(
-            forName: Notification.Name.accessibilityAuthorizationChanged,
-            object: nil,
-            queue: .main
-        ) { _ in
-            Task { @MainActor in
-                let authorized = await XPCHelperClient.shared.isAccessibilityAuthorized()
-                if authorized {
-                    if Defaults[.osdReplacement] {
-                        await MediaKeyInterceptor.shared.start(promptIfNeeded: false)
-                    }
-                } else {
-                    MediaKeyInterceptor.shared.stop()
-                }
-            }
-        }
-
-        XPCHelperClient.shared.startMonitoringAccessibilityAuthorization()
-
         // Managers publish presentation events through the bus instead of
         // calling into the coordinator directly; the coordinator is the
         // single presenter (and keeps all show/hide policy in one place).
@@ -142,41 +101,16 @@ final class BoringViewCoordinator: ObservableObject {
                 Task { @MainActor in
                     guard let self else { return }
                     switch event {
-                    case .sneakPeek(let type, let value, let icon, let accent, let uuid, let duration):
+                    case .sneakPeek(let type, let uuid, let duration):
                         self.toggleSneakPeek(
-                            status: true, type: type, duration: duration, value: value,
-                            icon: icon, accent: accent, targetScreenUUID: uuid)
+                            status: true, type: type, duration: duration,
+                            targetScreenUUID: uuid)
                     case .expandingView(let type):
                         self.toggleExpandingView(status: true, type: type)
                     }
                 }
             }
 
-        // Observe changes to osdReplacement
-        osdReplacementCancellable = Defaults.publisher(.osdReplacement)
-            .sink { [weak self] change in
-                Task { @MainActor in
-                    guard let self = self else { return }
-
-                    self.osdEnableTask?.cancel()
-                    self.osdEnableTask = nil
-
-                    if change.newValue {
-                        self.osdEnableTask = Task { @MainActor in
-                            await MediaKeyInterceptor.shared.start(promptIfNeeded: false)
-                        }
-                    } else {
-                        MediaKeyInterceptor.shared.stop()
-                    }
-
-                    self.applyOSDSources()
-                }
-            }
-        // Observe changes to any of the OSD source selections
-        osdSourceCancellables = [
-            Defaults.publisher(.osdBrightnessSource).sink { [weak self] _ in Task { @MainActor in self?.applyOSDSources() } },
-            Defaults.publisher(.osdVolumeSource).sink { [weak self] _ in Task { @MainActor in self?.applyOSDSources() } }
-        ]
         boringShelfCancellable = Defaults.publisher(.boringShelf)
             .sink { [weak self] change in
                 Task { @MainActor in
@@ -189,12 +123,6 @@ final class BoringViewCoordinator: ObservableObject {
 
         Task { @MainActor in
             helloAnimationRunning = firstLaunch
-
-            if Defaults[.osdReplacement] {
-                await MediaKeyInterceptor.shared.start(promptIfNeeded: false)
-            }
-
-            self.applyOSDSources()
         }
     }
 
@@ -207,16 +135,9 @@ final class BoringViewCoordinator: ObservableObject {
     private var sneakPeekTasks: [String: Task<Void, Never>] = [:]
 
     func toggleSneakPeek(
-        status: Bool, type: SneakContentType, duration: TimeInterval = 1.5, value: CGFloat = 0,
-        icon: String = "", accent: Color? = nil, targetScreenUUID: String? = nil
+        status: Bool, type: SneakContentType, duration: TimeInterval = 1.5,
+        targetScreenUUID: String? = nil
     ) {
-        if type != .music {
-            // close()
-            if !Defaults[.osdReplacement] {
-                return
-            }
-        }
-
         Task { @MainActor in
             // Helper to update state for a specific UUID
             @MainActor
@@ -227,9 +148,6 @@ final class BoringViewCoordinator: ObservableObject {
                 withAnimation(.smooth) {
                     state.show = status
                     state.type = type
-                    state.value = value
-                    state.icon = icon
-                    state.accent = accent
                     state.targetScreenUUID = uuid // Ensure UUID is set
                     self.sneakPeekStates[uuid] = state
                 }
@@ -261,50 +179,6 @@ final class BoringViewCoordinator: ObservableObject {
                 }
             }
         }
-
-        if type == .mic {
-            currentMicStatus = value == 1
-        }
-    }
-
-     func applyOSDSources() {
-        if NotchSpaceManager.shared.notchSpace.windows.isEmpty {
-            BetterDisplayManager.shared.stopObserving()
-            LunarManager.shared.stopListening()
-            LunarManager.shared.configureLunarOSD(hide: false)
-            MediaKeyInterceptor.shared.stop()
-            return
-        }
-
-        guard Defaults[.osdReplacement] else {
-            BetterDisplayManager.shared.stopObserving()
-            LunarManager.shared.stopListening()
-            LunarManager.shared.configureLunarOSD(hide: false)
-            MediaKeyInterceptor.shared.stop()
-            return
-        }
-
-        let brightness = Defaults[.osdBrightnessSource]
-        let volume = Defaults[.osdVolumeSource]
-
-        Task { @MainActor in
-            await MediaKeyInterceptor.shared.start(promptIfNeeded: false)
-        }
-        // BetterDisplay is used when either brightness or volume is set to it
-        if brightness == .betterDisplay || volume == .betterDisplay {
-            BetterDisplayManager.shared.startObserving()
-        } else {
-            BetterDisplayManager.shared.stopObserving()
-        }
-
-        // Lunar only supports brightness; disable Lunar's OSD when we replace it, restore when we don't
-        if brightness == .lunar {
-            LunarManager.shared.configureLunarOSD(hide: true)
-            LunarManager.shared.startListening()
-        } else {
-            LunarManager.shared.stopListening()
-            LunarManager.shared.configureLunarOSD(hide: false)
-        }
     }
 
     func shouldShowSneakPeek(on screenUUID: String?) -> Bool {
@@ -320,20 +194,6 @@ final class BoringViewCoordinator: ObservableObject {
     func sneakPeekState(for screenUUID: String?) -> SneakPeekState {
         guard let uuid = screenUUID else { return SneakPeekState() }
         return sneakPeekStates[uuid] ?? SneakPeekState(targetScreenUUID: uuid)
-    }
-
-    // Helper to get binding for SwiftUI views
-    func binding(for screenUUID: String?) -> Binding<SneakPeekState> {
-        Binding(
-            get: { [weak self] in
-                guard let self = self, let uuid = screenUUID else { return SneakPeekState() }
-                return self.sneakPeekStates[uuid] ?? SneakPeekState(targetScreenUUID: uuid)
-            },
-            set: { [weak self] newValue in
-                guard let self = self, let uuid = screenUUID else { return }
-                self.sneakPeekStates[uuid] = newValue
-            }
-        )
     }
 
     private func scheduleSneakPeekHide(for screenUUID: String, duration: TimeInterval) {
@@ -360,16 +220,12 @@ final class BoringViewCoordinator: ObservableObject {
 
     func toggleExpandingView(
         status: Bool,
-        type: SneakContentType,
-        value: CGFloat = 0,
-        browser: BrowserType = .chromium
+        type: SneakContentType
     ) {
         Task { @MainActor in
             withAnimation(.smooth) {
                 self.expandingView.show = status
                 self.expandingView.type = type
-                self.expandingView.value = value
-                self.expandingView.browser = browser
             }
         }
     }
@@ -380,7 +236,7 @@ final class BoringViewCoordinator: ObservableObject {
         didSet {
             if expandingView.show {
                 expandingViewTask?.cancel()
-                let duration: TimeInterval = (expandingView.type == .download ? 2 : 3)
+                let duration: TimeInterval = 3
                 let currentType = expandingView.type
                 expandingViewTask = Task { [weak self] in
                     try? await Task.sleep(for: .seconds(duration))

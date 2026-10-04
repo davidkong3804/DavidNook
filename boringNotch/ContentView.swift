@@ -18,8 +18,6 @@ struct ContentView: View {
     @EnvironmentObject var vm: BoringViewModel
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @ObservedObject var musicManager = MusicManager.shared
-    @ObservedObject var brightnessManager = BrightnessManager.shared
-    @ObservedObject var volumeManager = VolumeManager.shared
     /// Which entry of the closed-notch activity stack is on top.
     @State private var activityIndex: Int = 0
     @State private var hoverTask: Task<Void, Never>?
@@ -140,7 +138,7 @@ struct ContentView: View {
     private enum ClosedNotchContent: Equatable {
         case hello
         case nowPlayingFallback
-        case osd(SneakContentType)
+        case sneakPeek(SneakContentType)
         case activities([LiveActivityItem])
         case face
         case idle
@@ -150,7 +148,7 @@ struct ContentView: View {
         if coordinator.helloAnimationRunning { return .hello }
         if nowPlayingFallbackNoticeActive { return .nowPlayingFallback }
         if coordinator.shouldShowSneakPeek(on: vm.screenUUID) {
-            return .osd(coordinator.sneakPeekState(for: vm.screenUUID).type)
+            return .sneakPeek(coordinator.sneakPeekState(for: vm.screenUUID).type)
         }
         if !liveActivities.isEmpty, !vm.hideOnClosed {
             return .activities(liveActivities)
@@ -396,16 +394,6 @@ struct ContentView: View {
                        let notice = musicManager.nowPlayingNotice {
                         nowPlayingFallbackNotice(notice)
                             .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
-                        } else if coordinator.shouldShowSneakPeek(on: vm.screenUUID) && Defaults[.inlineOSD] && (coordinator.sneakPeekState(for: vm.screenUUID).type != .music) && vm.notchState == .closed {
-                           InlineOSD(
-                              type: coordinator.binding(for: vm.screenUUID).type,
-                              value: coordinator.binding(for: vm.screenUUID).value,
-                              icon: coordinator.binding(for: vm.screenUUID).icon,
-                              accent: coordinator.binding(for: vm.screenUUID).accent,
-                              hoverAnimation: $isHovering,
-                              gestureProgress: $gestureProgress
-                          )
-                              .transition(.opacity)
                       } else if !liveActivities.isEmpty && vm.notchState == .closed && !vm.hideOnClosed {
                           LiveActivityStack(items: liveActivities, index: $activityIndex) { item in
                               switch item {
@@ -434,29 +422,8 @@ struct ContentView: View {
                        }
 
                         if coordinator.shouldShowSneakPeek(on: vm.screenUUID) {
-                           if (coordinator.sneakPeekState(for: vm.screenUUID).type != .music) && !Defaults[.inlineOSD] && vm.notchState == .closed {
-                              SystemEventIndicatorModifier(
-                                  eventType: coordinator.binding(for: vm.screenUUID).type,
-                                  value: coordinator.binding(for: vm.screenUUID).value,
-                                  icon: coordinator.binding(for: vm.screenUUID).icon,
-                                  accent: coordinator.binding(for: vm.screenUUID).accent,
-                                  sendEventBack: { newVal in
-                                      switch coordinator.sneakPeekState(for: vm.screenUUID).type {
-                                      case .volume:
-                                          VolumeManager.shared.setAbsolute(Float32(newVal))
-                                      case .brightness:
-                                          BrightnessManager.shared.setAbsolute(value: Float32(newVal))
-                                      default:
-                                          break
-                                      }
-                                  }
-                              )
-                              .padding(.bottom, 10)
-                              .padding(.leading, 4)
-                              .padding(.trailing, 8)
-                          }
                            // Old sneak peek music
-                           else if coordinator.sneakPeekState(for: vm.screenUUID).type == .music {
+                           if coordinator.sneakPeekState(for: vm.screenUUID).type == .music {
                                if vm.notchState == .closed && !vm.hideOnClosed && Defaults[.sneakPeekStyles] == .standard {
                                    HStack(alignment: .center) {
                                        Image(systemName: "music.note")
@@ -471,7 +438,7 @@ struct ContentView: View {
                        }
                         }
                       }
-                      .conditionalModifier((coordinator.shouldShowSneakPeek(on: vm.screenUUID) && (coordinator.sneakPeekState(for: vm.screenUUID).type == .music) && vm.notchState == .closed && !vm.hideOnClosed && Defaults[.sneakPeekStyles] == .standard) || (coordinator.shouldShowSneakPeek(on: vm.screenUUID) && (coordinator.sneakPeekState(for: vm.screenUUID).type != .music) && (vm.notchState == .closed))) { view in
+                      .conditionalModifier(coordinator.shouldShowSneakPeek(on: vm.screenUUID) && (coordinator.sneakPeekState(for: vm.screenUUID).type == .music) && vm.notchState == .closed && !vm.hideOnClosed && Defaults[.sneakPeekStyles] == .standard) { view in
                           view
                               .fixedSize()
                       }
