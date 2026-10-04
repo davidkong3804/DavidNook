@@ -138,16 +138,19 @@ final class ClipboardLoggingTests: XCTestCase {
         guard let enumerator = FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil) else {
             return XCTFail("找不到 \(sources.path)")
         }
-        let forbidden = ["print(", "debugPrint(", "NSLog(", "os_log(", "Logger(", "dump(", "import os", "import OSLog", "fputs("]
+        // 前面不能緊接識別字字元，避免誤判 NoOpClipboardLogger() 這類名稱
+        let call = try NSRegularExpression(pattern: "(?<![A-Za-z0-9_])(print|debugPrint|NSLog|os_log|Logger|dump|fputs)\\(")
+        let imp = try NSRegularExpression(pattern: "^\\s*import\\s+(os|OSLog)\\b")
         var scanned = 0
         for case let url as URL in enumerator where url.pathExtension == "swift" {
             scanned += 1
             let text = try String(contentsOf: url, encoding: .utf8)
             for (index, line) in text.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
-                let trimmed = line.trimmingCharacters(in: .whitespaces)
-                if trimmed.hasPrefix("//") { continue }
-                for token in forbidden where trimmed.contains(token) {
-                    XCTFail("\(url.lastPathComponent):\(index + 1) 含有 \(token)")
+                let content = String(line)
+                if content.trimmingCharacters(in: .whitespaces).hasPrefix("//") { continue }
+                let range = NSRange(content.startIndex..., in: content)
+                if call.firstMatch(in: content, range: range) != nil || imp.firstMatch(in: content, range: range) != nil {
+                    XCTFail("\(url.lastPathComponent):\(index + 1) 含有直接輸出／系統 log 呼叫：\(content)")
                 }
             }
         }
