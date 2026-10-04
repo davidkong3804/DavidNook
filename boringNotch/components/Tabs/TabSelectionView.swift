@@ -14,9 +14,10 @@ struct TabModel: Identifiable {
     let view: NotchViews
 }
 
+/// Extension point for notch tabs: add a `NotchViews` case, a `TabModel`
+/// here, and a matching `case` in `ContentView`'s `switch coordinator.currentView`.
 let tabs = [
-    TabModel(label: "Home", icon: "house.fill", view: .home),
-    TabModel(label: "Shelf", icon: "tray.fill", view: .shelf)
+    TabModel(label: "Home", icon: "house.fill", view: .home)
 ]
 
 struct TabSelectionView: View {

@@ -67,7 +67,6 @@ struct DynamicNotchApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     @ObservedObject var coordinator = BoringViewCoordinator.shared
-    var quickShareService = QuickShareService.shared
     var closeNotchTask: Task<Void, Never>?
     private lazy var windowManager = NotchWindowManager()
     private var onboardingWindowController: NSWindowController?
@@ -88,9 +87,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         if isMigratingLegacyBundle { return }
-
-        // Flush debounced shelf persistence to avoid losing recent changes
-        ShelfStateViewModel.shared.flushSync()
 
         NotificationCenter.default.removeObserver(self)
         if let observer = screenLockedObserver {
@@ -143,7 +139,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ) { [weak self] _ in
             Task { @MainActor in
                 self?.windowManager.adjustWindowPosition(changeAlpha: true)
-                self?.windowManager.setupDragDetectors()
             }
         })
 
@@ -152,7 +147,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ) { [weak self] _ in
             Task { @MainActor in
                 self?.windowManager.adjustWindowPosition()
-                self?.windowManager.setupDragDetectors()
             }
         })
 
@@ -172,15 +166,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let self = self else { return }
                 self.windowManager.cleanupWindows(shouldInvert: true)
                 self.windowManager.adjustWindowPosition(changeAlpha: true)
-                self.windowManager.setupDragDetectors()
-            }
-        })
-
-        observers.append(NotificationCenter.default.addObserver(
-            forName: Notification.Name.expandedDragDetectionChanged, object: nil, queue: nil
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.windowManager.setupDragDetectors()
             }
         })
 

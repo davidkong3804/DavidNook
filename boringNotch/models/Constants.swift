@@ -102,12 +102,6 @@ extension Notification.Name {
     static let showOnAllDisplaysChanged = Notification.Name("showOnAllDisplaysChanged")
     static let automaticallySwitchDisplayChanged = Notification.Name("automaticallySwitchDisplayChanged")
 
-    // MARK: - Shelf
-    static let expandedDragDetectionChanged = Notification.Name("expandedDragDetectionChanged")
-
-    // MARK: - Sharing
-    static let sharingDidFinish = Notification.Name("com.boringNotch.sharingDidFinish")
-
     // MARK: - UI
     static let accentColorChanged = Notification.Name("AccentColorChanged")
 }
@@ -264,16 +258,6 @@ extension Defaults.Keys {
     /// bar or calendar. Off by default so existing users keep the
     /// layout they already have.
     static let compactMode = Key<Bool>("compactMode", default: false)
-
-    // MARK: Shelf
-    static let boringShelf = Key<Bool>("boringShelf", default: true)
-    static let openShelfByDefault = Key<Bool>("openShelfByDefault", default: true)
-    static let shelfTapToOpen = Key<Bool>("shelfTapToOpen", default: true)
-    static let quickShareProvider = Key<String>("quickShareProvider", default: QuickShareProvider.defaultProvider.id)
-    static let copyOnDrag = Key<Bool>("copyOnDrag", default: false)
-    static let autoRemoveShelfItems = Key<Bool>("autoRemoveShelfItems", default: false)
-    static let expandedDragDetection = Key<Bool>("expandedDragDetection", default: true)
-    static let reverseShelfOrdering = Key<Bool>("reverseShelfOrdering", default: false)
 
     // MARK: Fullscreen Media Detection
     static let hideNotchOption = Key<HideNotchOption>("hideNotchOption", default: .nowPlayingOnly)

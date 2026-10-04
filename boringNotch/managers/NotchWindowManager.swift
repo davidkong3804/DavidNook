@@ -4,8 +4,8 @@
 //
 //  SPDX-License-Identifier: GPL-3.0-only
 //
-//  Extracted from AppDelegate: all notch-window, per-screen view-model and
-//  drag-detector lifecycle in one place. AppDelegate keeps app-lifecycle
+//  Extracted from AppDelegate: all notch-window and per-screen view-model
+//  lifecycle in one place. AppDelegate keeps app-lifecycle
 //  glue (shortcuts, onboarding, termination) and forwards to this manager.
 //
 
@@ -15,18 +15,16 @@ import SwiftUI
 @MainActor
 final class NotchWindowManager {
     /// All per-screen state in one value — replaces the parallel
-    /// windows/viewModels/dragDetectors dictionaries that previously had
-    /// to be mutated in lockstep (a missed mutation leaked observers).
+    /// windows/viewModels dictionaries that previously had to be mutated
+    /// in lockstep (a missed mutation leaked observers).
     struct ScreenContext {
         let viewModel: BoringViewModel
         var window: NSWindow?
-        var dragDetector: DragDetector?
     }
 
     private(set) var contexts: [String: ScreenContext] = [:] // UUID -> ScreenContext
     private(set) var primaryWindow: NSWindow?
     let primaryViewModel: BoringViewModel
-    private var primaryDragDetector: DragDetector?
 
     private(set) var isScreenLocked: Bool = false
     private var windowScreenDidChangeObserver: Any?
@@ -63,7 +61,6 @@ final class NotchWindowManager {
         isScreenLocked = false
         if !Defaults[.showOnLockScreen] {
             adjustWindowPosition(changeAlpha: true)
-            setupDragDetectors()
         } else {
             disableSkyLightOnAllWindows()
         }
@@ -106,12 +103,9 @@ final class NotchWindowManager {
                 if let window = context.window {
                     NotchSpaceManager.shared.notchSpace.windows.remove(window)
                 }
-                context.dragDetector?.stopMonitoring()
                 contexts.removeValue(forKey: uuid)
             }
         } else {
-            primaryDragDetector?.stopMonitoring()
-            primaryDragDetector = nil
             if let window = primaryWindow {
                 window.close()
                 NotchSpaceManager.shared.notchSpace.windows.remove(window)
@@ -145,20 +139,6 @@ final class NotchWindowManager {
         window.orderFrontRegardless()
         NotchSpaceManager.shared.notchSpace.windows.insert(window)
 
-        // Observe when the window's screen changes so we can update drag detectors.
-        // Remove any previous observer first — recreating windows used to
-        // overwrite the token and leak the earlier observer each cycle.
-        if let obs = windowScreenDidChangeObserver {
-            NotificationCenter.default.removeObserver(obs)
-        }
-        windowScreenDidChangeObserver = NotificationCenter.default.addObserver(
-            forName: NSWindow.didChangeScreenNotification,
-            object: window,
-            queue: .main) { [weak self] _ in
-                Task { @MainActor in
-                    self?.setupDragDetectors()
-                }
-        }
         return window
     }
 
@@ -187,7 +167,6 @@ final class NotchWindowManager {
                     window.close()
                     NotchSpaceManager.shared.notchSpace.windows.remove(window)
                 }
-                contexts[uuid]?.dragDetector?.stopMonitoring()
                 contexts.removeValue(forKey: uuid)
             }
 
@@ -198,8 +177,7 @@ final class NotchWindowManager {
                 if contexts[uuid] == nil {
                     contexts[uuid] = ScreenContext(
                         viewModel: BoringViewModel(screenUUID: uuid),
-                        window: nil,
-                        dragDetector: nil
+                        window: nil
                     )
                 }
 
@@ -270,93 +248,12 @@ final class NotchWindowManager {
 
                 self?.cleanupWindows()
                 self?.adjustWindowPosition()
-                self?.setupDragDetectors()
             }
         }
     }
 
     func noteInitialScreens() {
         previousScreens = NSScreen.screens
-    }
-
-    // MARK: - Drag detection
-
-    func cleanupDragDetectors() {
-        primaryDragDetector?.stopMonitoring()
-        primaryDragDetector = nil
-        for uuid in contexts.keys {
-            contexts[uuid]?.dragDetector?.stopMonitoring()
-            contexts[uuid]?.dragDetector = nil
-        }
-    }
-
-    func setupDragDetectors() {
-        cleanupDragDetectors()
-
-        guard Defaults[.expandedDragDetection] else { return }
-
-        if Defaults[.showOnAllDisplays] {
-            for screen in NSScreen.screens {
-                setupDragDetectorForScreen(screen)
-            }
-        } else {
-            let preferredScreen: NSScreen? = primaryWindow?.screen
-                ?? NSScreen.screen(withUUID: BoringViewCoordinator.shared.selectedScreenUUID)
-                ?? NSScreen.main
-
-            if let screen = preferredScreen {
-                setupDragDetectorForScreen(screen)
-            }
-        }
-    }
-
-    private func setupDragDetectorForScreen(_ screen: NSScreen) {
-        guard let uuid = screen.displayUUID else { return }
-        // Per-display detectors belong to windows created by adjustWindowPosition.
-        guard !Defaults[.showOnAllDisplays] || contexts[uuid]?.window != nil else { return }
-
-        let screenFrame = screen.frame
-        let notchHeight = openNotchSize.height
-        let notchWidth = openNotchSize.width
-
-        // Create notch region at the top-center of the screen where an open notch would occupy
-        let notchRegion = CGRect(
-            x: screenFrame.midX - notchWidth / 2,
-            y: screenFrame.maxY - notchHeight,
-            width: notchWidth,
-            height: notchHeight
-        )
-
-        let detector = DragDetector(notchRegion: notchRegion)
-
-        detector.onDragEntersNotchRegion = { [weak self] in
-            Task { @MainActor in
-                self?.handleDragEntersNotchRegion(onScreen: screen)
-            }
-        }
-
-        if Defaults[.showOnAllDisplays] {
-            contexts[uuid]?.dragDetector = detector
-        } else {
-            primaryDragDetector = detector
-        }
-        detector.startMonitoring()
-    }
-
-    private func handleDragEntersNotchRegion(onScreen screen: NSScreen) {
-        guard Defaults[.boringShelf] else { return }
-        guard let uuid = screen.displayUUID else { return }
-
-        let coordinator = BoringViewCoordinator.shared
-        if Defaults[.showOnAllDisplays], let viewModel = contexts[uuid]?.viewModel {
-            if viewModel.open() {
-                coordinator.currentView = .shelf
-            }
-        } else if !Defaults[.showOnAllDisplays], let windowScreen = primaryWindow?.screen, screen == windowScreen {
-            if primaryViewModel.open() {
-                coordinator.currentView = .shelf
-            }
-        }
     }
 
     // MARK: - Initial setup
@@ -374,7 +271,6 @@ final class NotchWindowManager {
             adjustWindowPosition(changeAlpha: true)
         }
 
-        setupDragDetectors()
         noteInitialScreens()
     }
 
@@ -387,7 +283,6 @@ final class NotchWindowManager {
     }
 
     func cleanup() {
-        cleanupDragDetectors()
         cleanupWindows()
     }
 }

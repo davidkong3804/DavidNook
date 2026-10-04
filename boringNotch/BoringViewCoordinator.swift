@@ -39,9 +39,7 @@ final class BoringViewCoordinator: ObservableObject {
         didSet {
             if !alwaysShowTabs {
                 openLastTabByDefault = false
-                if ShelfStateViewModel.shared.isEmpty || !Defaults[.openShelfByDefault] {
-                    currentView = .home
-                }
+                currentView = .home
             }
         }
     }
@@ -69,7 +67,6 @@ final class BoringViewCoordinator: ObservableObject {
 
     @Published var selectedScreenUUID: String = NSScreen.main?.displayUUID ?? ""
 
-    private var boringShelfCancellable: AnyCancellable?
     private var uiEventCancellable: AnyCancellable?
 
     private init() {
@@ -107,16 +104,6 @@ final class BoringViewCoordinator: ObservableObject {
                             targetScreenUUID: uuid)
                     case .expandingView(let type):
                         self.toggleExpandingView(status: true, type: type)
-                    }
-                }
-            }
-
-        boringShelfCancellable = Defaults.publisher(.boringShelf)
-            .sink { [weak self] change in
-                Task { @MainActor in
-                    guard let self = self else { return }
-                    if !change.newValue && self.currentView == .shelf {
-                        self.currentView = .home
                     }
                 }
             }

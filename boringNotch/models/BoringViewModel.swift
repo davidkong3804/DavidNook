@@ -15,7 +15,6 @@ final class BoringViewModel: NSObject, ObservableObject {
 
     let animationLibrary: BoringAnimations = .init()
     let animation: Animation?
-    let dropInteraction = DropInteractionState()
 
     @Published private(set) var notchState: NotchState = .closed
 
@@ -144,10 +143,6 @@ final class BoringViewModel: NSObject, ObservableObject {
     }
 
     func close() {
-        // Do not close while a share picker or sharing service is active
-        if SharingStateManager.shared.preventNotchClose {
-            return
-        }
         self.notchSize = getClosedNotchSize(screenUUID: self.screenUUID)
         self.closedNotchSize = self.notchSize
         self.notchState = .closed
@@ -157,11 +152,8 @@ final class BoringViewModel: NSObject, ObservableObject {
         }
         self.edgeAutoOpenActive = false
 
-        // Set the current view to shelf if it contains files and the user enables openShelfByDefault
-        // Otherwise, if the user has not enabled openLastShelfByDefault, set the view to home
-        if Defaults[.boringShelf] && !ShelfStateViewModel.shared.isEmpty && Defaults[.openShelfByDefault] {
-            coordinator.currentView = .shelf
-        } else if !coordinator.openLastTabByDefault {
+        // Return to the home tab unless the user wants the last tab remembered.
+        if !coordinator.openLastTabByDefault {
             coordinator.currentView = .home
         }
     }

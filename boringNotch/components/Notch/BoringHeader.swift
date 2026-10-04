@@ -11,14 +11,13 @@ import SwiftUI
 struct BoringHeader: View {
     @EnvironmentObject var vm: BoringViewModel
     @ObservedObject var coordinator = BoringViewCoordinator.shared
-    @StateObject var shelfState = ShelfStateViewModel.shared
     var body: some View {
         HStack(spacing: 0) {
             HStack {
-                if (!shelfState.isEmpty || coordinator.alwaysShowTabs) && Defaults[.boringShelf] {
+                // A tab bar with a single tab is just noise; it appears as soon
+                // as a second NotchViews case is added to `tabs`.
+                if coordinator.alwaysShowTabs && tabs.count > 1 {
                     TabSelectionView()
-                } else if vm.notchState == .open {
-                    EmptyView()
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

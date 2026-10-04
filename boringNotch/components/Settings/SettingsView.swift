@@ -13,7 +13,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case notch
     case appearance
     case media
-    case shelf
     case shortcuts
     case about
 
@@ -30,7 +29,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .notch: "Notch"
         case .appearance: "Appearance"
         case .media: "Media"
-        case .shelf: "Shelf"
         case .shortcuts: "Shortcuts"
         case .about: "About"
         }
@@ -42,7 +40,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .notch: .custom("notch")
         case .appearance: .system("paintbrush")
         case .media: .system("play.rectangle")
-        case .shelf: .system("tray.and.arrow.down")
         case .shortcuts: .system("keyboard")
         case .about: .system("info.circle")
         }
@@ -75,8 +72,6 @@ struct SettingsView: View {
                     AppearanceSettingsView()
                 case .media:
                     MediaSettingsView()
-                case .shelf:
-                    ShelfSettingsView()
                 case .shortcuts:
                     ShortcutsSettingsView()
                 case .about:

@@ -22,7 +22,6 @@ struct ContentView: View {
     @State private var activityIndex: Int = 0
     @State private var hoverTask: Task<Void, Never>?
     @State private var isHovering: Bool = false
-    @State private var anyDropDebounceTask: Task<Void, Never>?
 
     @State private var gestureProgress: CGFloat = .zero
     @State private var horizontalMediaGestureTriggered = false
@@ -214,8 +213,6 @@ struct ContentView: View {
     private var displayClosedNotchHeight: CGFloat { isNotchHeightZero ? 10 : vm.effectiveClosedNotchHeight }
 
     var body: some View {
-        @Bindable var dropInteraction = vm.dropInteraction
-
         // Calculate scale based on gesture progress only
         let gestureScale: CGFloat = {
             guard gestureProgress != 0 else { return 1.0 }
@@ -298,9 +295,6 @@ struct ContentView: View {
                                 handlePreviousTrackGesture(translation: translation, phase: phase)
                             }
                     }
-                    .onReceive(NotificationCenter.default.publisher(for: .sharingDidFinish)) { _ in
-                        scheduleCloseIfNotHovering(overNotch: vm)
-                    }
                     // Activities disappear on their own (music stops). Keep
                     // the selection in range so the stack falls back to
                     // whatever is left instead of pointing past the end.
@@ -341,42 +335,12 @@ struct ContentView: View {
             anchor: .top
         )
         .animation(.smooth, value: gestureProgress)
-        .background(dragDetector)
         .preferredColorScheme(.dark)
         .environmentObject(vm)
-        .onChange(of: dropInteraction.anyDropZoneTargeting) { _, isTargeted in
-            anyDropDebounceTask?.cancel()
-
-            if isTargeted {
-                if Defaults[.boringShelf] && vm.notchState == .closed {
-                    if doOpen() {
-                        coordinator.currentView = .shelf
-                    }
-                }
-                return
-            }
-
-            anyDropDebounceTask = Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(500))
-                guard !Task.isCancelled else { return }
-
-                if dropInteraction.dropEvent {
-                    dropInteraction.dropEvent = false
-                    return
-                }
-
-                dropInteraction.dropEvent = false
-                if !SharingStateManager.shared.preventNotchClose {
-                    vm.close()
-                }
-            }
-        }
     }
 
     @ViewBuilder
     func NotchLayout() -> some View {
-        @Bindable var dropInteraction = vm.dropInteraction
-
         VStack(alignment: .leading) {
             VStack(alignment: .leading) {
                 if coordinator.helloAnimationRunning {
@@ -405,11 +369,6 @@ struct ContentView: View {
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace] && !vm.hideOnClosed {
                           BoringFaceAnimation()
                        } else if showsHeader {
-                           // No tab bar over a notification: it's a glance,
-                           // not a place to switch between home and shelf —
-                           // and the header spans the full notch width,
-                           // which is what was stretching the whole panel
-                           // out around a short message.
                            BoringHeader()
                                .frame(height: max(38, displayClosedNotchHeight))
                                .opacity(gestureProgress != 0 ? 1.0 - min(abs(gestureProgress) * 0.1, 0.3) : 1.0)
@@ -447,8 +406,8 @@ struct ContentView: View {
                 VStack {
                     if Defaults[.compactMode] {
                         // Player only — no tab switching, so currentView is
-                        // ignored here rather than offering a shelf the
-                        // compact layout has no room (or tab bar) for.
+                        // ignored here (the compact layout has no room for
+                        // a tab bar).
                         // 336 = Atoll's 420 base less 20%, which also lands
                         // within a few points of their Dynamic Island width
                         // (340) — the tighter of their two compact sizes.
@@ -471,11 +430,6 @@ struct ContentView: View {
                                 horizontalMediaGestureFeedback: horizontalMediaGestureFeedback,
                                 isHoveringMusicArea: $isHoveringMusicArea
                             )
-                        case .shelf:
-                            ShelfView(
-                                dropInteraction: vm.dropInteraction,
-                                animation: vm.animation
-                            )
                         }
                     }
                 }
@@ -489,7 +443,6 @@ struct ContentView: View {
                 .opacity(gestureProgress != 0 ? 1.0 - min(abs(gestureProgress) * 0.1, 0.3) : 1.0)
             }
         }
-        .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText, .data], delegate: GeneralDropTargetDelegate(isTargeted: $dropInteraction.generalDropTargeting))
     }
 
     private func nowPlayingFallbackNotice(_ notice: NowPlayingFallbackNotice) -> some View {
@@ -685,24 +638,6 @@ struct ContentView: View {
         )
     }
 
-    @ViewBuilder
-    var dragDetector: some View {
-        @Bindable var dropInteraction = vm.dropInteraction
-
-        if Defaults[.boringShelf] && vm.notchState == .closed && !shouldDisplayNowPlayingFallbackNotice {
-            Color.clear
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentShape(Rectangle())
-        .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText, .data], isTargeted: $dropInteraction.dragDetectorTargeting) { providers in
-            dropInteraction.dropEvent = true
-            ShelfStateViewModel.shared.load(providers)
-            return true
-        }
-        } else {
-            EmptyView()
-        }
-    }
-
 }
 // MARK: - Gesture & Hover Handling
 
@@ -731,8 +666,7 @@ extension ContentView {
             await MainActor.run {
                 if self.vm.notchState == .open,
                    !self.isHovering,
-                   !self.vm.isPopoverActive,
-                   !SharingStateManager.shared.preventNotchClose {
+                   !self.vm.isPopoverActive {
                     self.vm.close()
                 }
             }
@@ -781,8 +715,7 @@ extension ContentView {
                     }
 
                     if self.vm.notchState == .open,
-                       !self.vm.isPopoverActive,
-                       !SharingStateManager.shared.preventNotchClose {
+                       !self.vm.isPopoverActive {
                         self.vm.close()
                     }
                 }
@@ -832,10 +765,8 @@ extension ContentView {
             withAnimation(animationSpring) {
                 isHovering = false
             }
-            if !SharingStateManager.shared.preventNotchClose {
-                gestureProgress = .zero
-                vm.close()
-            }
+            gestureProgress = .zero
+            vm.close()
 
             if Defaults[.enableHaptics] {
                 haptics.toggle()
@@ -925,45 +856,6 @@ extension ContentView {
             }
             return coordinator.currentView == .home && !musicManager.isPlayerIdle && isHoveringMusicArea
         }
-    }
-}
-
-struct FullScreenDropDelegate: DropDelegate {
-    @Binding var isTargeted: Bool
-    let onDrop: () -> Void
-
-    func dropEntered(info _: DropInfo) {
-        isTargeted = true
-    }
-
-    func dropExited(info _: DropInfo) {
-        isTargeted = false
-    }
-
-    func performDrop(info _: DropInfo) -> Bool {
-        isTargeted = false
-        onDrop()
-        return true
-    }
-}
-
-struct GeneralDropTargetDelegate: DropDelegate {
-    @Binding var isTargeted: Bool
-
-    func dropEntered(info: DropInfo) {
-        isTargeted = true
-    }
-
-    func dropExited(info: DropInfo) {
-        isTargeted = false
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        return DropProposal(operation: .cancel)
-    }
-
-    func performDrop(info: DropInfo) -> Bool {
-        return false
     }
 }
 
