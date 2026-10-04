@@ -1,5 +1,5 @@
 {
-  "originHash" : "b760ad2c3fb4d10bd862e06ff30cd91b74ae74d5e371bcfad14964501a74e3d9",
+  "originHash" : "d57336d06c106f0651ac59864a9fde43407d4b32408e92a2536d5ef67a26ebbe",
   "pins" : [
     {
       "identity" : "defaults",
@@ -29,30 +29,12 @@
       }
     },
     {
-      "identity" : "lottie-spm",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/airbnb/lottie-spm.git",
-      "state" : {
-        "revision" : "0aff16288f8dc1e3dab35cbf5cf45979673fd3df",
-        "version" : "4.6.1"
-      }
-    },
-    {
       "identity" : "macrovisionkit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/TheBoredTeam/MacroVisionKit",
       "state" : {
         "revision" : "da481a6be8d8b1bf7fcb218507a72428bbcae7b0",
         "version" : "0.2.0"
-      }
-    },
-    {
-      "identity" : "pow",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/EmergeTools/Pow",
-      "state" : {
-        "revision" : "1b4b1dda28c50b95f0872927ee2226fe8b58950e",
-        "version" : "1.0.6"
       }
     },
     {
@@ -65,30 +47,12 @@
       }
     },
     {
-      "identity" : "swift-collections",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-collections.git",
-      "state" : {
-        "revision" : "a0cb0954ecb21e4e31b0070e6ed5674e8556685a",
-        "version" : "1.6.0"
-      }
-    },
-    {
       "identity" : "swift-syntax",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
         "revision" : "79e4b74a295b6eb74a8b585e3a39d29e70c1dbd1",
         "version" : "603.0.2"
-      }
-    },
-    {
-      "identity" : "swiftui-introspect",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/siteline/swiftui-introspect",
-      "state" : {
-        "revision" : "821a3d468fcf603cc4aa66ddb8542e91bd80b6c2",
-        "version" : "26.1.0"
       }
     }
   ],

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SwiftUIIntrospect
 
 private enum SettingsTab: String, CaseIterable, Identifiable {
     case general
