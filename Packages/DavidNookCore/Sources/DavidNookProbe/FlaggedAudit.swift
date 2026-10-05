@@ -39,7 +39,16 @@ enum FlaggedAudit {
             has(next(s, i), "對前臨容積孔板具相試談孔紗") || has(prev(s, i), "前後裡外上下對場局表正反地一方封畫海水")
         },
         Rule(name: "里未轉", char: "里") { s, i in
-            has(prev(s, i), "心夢眼這那哪腦手懷家城山水夜海風雨天地") && !has(prev(s, i), "公千萬鄰鄉")
+            has(prev(s, i), "心夢眼這那哪腦手懷家城山水夜海風雨天地本影景涼間國界世生活記憶空氣中") && !has(prev(s, i), "公千萬鄰鄉")
+        },
+        Rule(name: "註疑似注", char: "註") { s, i in
+            has(next(s, i), "定意視重")
+        },
+        Rule(name: "谷疑似穀", char: "谷") { s, i in
+            has(next(s, i), "堆物倉粒類")
+        },
+        Rule(name: "扎疑似紮", char: "扎") { s, i in
+            has(next(s, i), "馬辮頭根營實起")
         },
         Rule(name: "后未轉", char: "后") { s, i in
             !has(prev(s, i), "皇太王母貴")
