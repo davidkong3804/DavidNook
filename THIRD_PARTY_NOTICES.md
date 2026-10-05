@@ -17,7 +17,7 @@ DavidNook 整體以 **GPL-3.0** 發佈（見 [`LICENSE`](LICENSE)，為上游 bo
 
 | 名稱 | 授權 | 位置／說明 |
 | --- | --- | --- |
-| [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter)（Jonas van den Berg 與貢獻者） | BSD-3-Clause | `mediaremote-adapter/`。**目前沿用上游 boring.notch 內的預編譯品**（`MediaRemoteAdapter.framework`、`MediaRemoteAdapterTestClient`，對應上游 tag `v0.7.7`），**M2 會改為由原始碼自行重建**。 |
+| [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter)（Jonas van den Berg 與貢獻者） | BSD-3-Clause | `mediaremote-adapter/`。**由上游原始碼自行建置**：tag `v0.7.7`，完整 SHA `e3ff5021eb0875858bd05f48d2e9ba2e962d1cf6`（`MediaRemoteAdapter.framework`、`MediaRemoteAdapterTestClient`、`mediaremote-adapter.pl`），以 `Tools/build_adapter.sh` 重建；來源、建置指令、雜湊與授權全文見 `Vendor/mediaremote-adapter/PROVENANCE.md`。framework 只嵌入、不連結。 |
 | [DynamicNotchKit](https://github.com/MrKai77/DynamicNotchKit)（Kai Azim） | MIT | `boringNotch/components/Notch/NotchShape.swift` 檔頭「Original source」。 |
 | [NotchDrop](https://github.com/Lakr233/NotchDrop)（Lakr Aream） | MIT | 上游 `THIRD_PARTY_LICENSES` 列為參考來源；程式碼層級的引用範圍未查（本 fork 已移除 Shelf）。 |
 | [Parrot](https://github.com/avaidyam/Parrot)（Aditya Vaidyam 與貢獻者） | MPL-2.0 | `boringNotch/private/CGSSpace.swift`（檔頭為 MPL-2.0 聲明；該檔維持 MPL-2.0 條款）。 |

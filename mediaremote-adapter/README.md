@@ -1,65 +1,24 @@
-# MediaRemoteAdapter (vendored)
+# MediaRemoteAdapter（由原始碼自行建置）
 
-This directory contains a **vendored copy** of
-[ungive/mediaremote-adapter](https://github.com/ungive/mediaremote-adapter),
-vendored under the terms of its BSD 3-Clause license
-(see [../THIRD_PARTY_LICENSES](../THIRD_PARTY_LICENSES)).
+本目錄放 [ungive/mediaremote-adapter](https://github.com/ungive/mediaremote-adapter)（BSD-3-Clause）
+`v0.7.7`（commit `e3ff5021eb0875858bd05f48d2e9ba2e962d1cf6`）的**自行建置產物**。
+來源、建置指令、雜湊與授權全文見 [`../Vendor/mediaremote-adapter/PROVENANCE.md`](../Vendor/mediaremote-adapter/PROVENANCE.md)；
+重新建置請執行 [`../Tools/build_adapter.sh`](../Tools/build_adapter.sh)（請勿手動替換本目錄的檔案）。
 
-## Why it's here
+## 檔案與用途
 
-`MediaRemote.framework` is a private Apple framework. The sandboxed app
-cannot link it directly, so `NowPlayingController` spawns
-`mediaremote-adapter.pl` as a child process; the script dynamically loads
-`MediaRemoteAdapter.framework`, which exposes now-playing data and commands
-as a stream of JSON lines on stdout.
-
-| File | Used as |
+| 檔案 | 用途 |
 |---|---|
-| `mediaremote-adapter.pl` | Copied into the app bundle's Resources; spawned by `NowPlayingController` (`stream` command) |
-| `MediaRemoteAdapter.framework` | Embedded in `Contents/Frameworks`; loaded by the script at runtime |
-| `MediaRemoteAdapterTestClient` | Bundled diagnostic executable (`test` command) that verifies the adapter is functional/entitled on the host macOS |
+| `mediaremote-adapter.pl` | 複製到 app 的 Resources；由 `NowPlayingController` 以 `/usr/bin/perl` 執行（`stream` 命令） |
+| `MediaRemoteAdapter.framework` | 嵌入 `Contents/Frameworks`；由上述 perl 腳本於執行期載入。**只嵌入，不連結** |
+| `MediaRemoteAdapterTestClient` | 隨附的診斷執行檔（`test` 命令），啟動時用來自檢 adapter 是否可用；失敗則退回 Music.app 備援 |
 
-## Pinned version
+## 不可違反的約束
 
-- **Upstream tag: `v0.7.7`**
-  (commit [`e3ff502`](https://github.com/ungive/mediaremote-adapter/commit/e3ff502))
-- Previously pinned at `v0.7.2` (commit `61487af`, 2025-08-14); artifacts were
-  updated to an untagged post-`v0.7.3` build in `1600df61` before this pin was
-  corrected.
-- `mediaremote-adapter.pl` is byte-identical to the upstream
-  `bin/mediaremote-adapter.pl` at that tag.
-- The framework binary reports `CFBundleShortVersionString = 0.1`
-  (upstream does not sync this with release tags; the script match is the
-  authoritative pin).
-- The binaries are built from upstream source with CMake
-  (`cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build`) and
-  ad-hoc signed; see "Signing caveat" below.
+- framework **不得**加入 target 的 Link Binary With Libraries、app 不得 `import MediaRemoteAdapter`
+  （ad-hoc 簽章＋Hardened Runtime 下連結內嵌 framework 會在啟動時被 library validation 擋下而崩潰）。
+- 不得關閉 Hardened Runtime，也不得加入 `disable-library-validation` 等放寬的 entitlement。
 
-## Updating to a new upstream release
+## 簽章
 
-1. Check the upstream
-   [releases page](https://github.com/ungive/mediaremote-adapter/releases)
-   and pick a tag.
-2. Build the framework and test client from source at that tag
-   (see the upstream `README.md` / `Makefile`), **or** download the
-   release artifacts published on the tag and verify their checksums
-   against the values published upstream.
-3. Replace `MediaRemoteAdapter.framework`, `MediaRemoteAdapterTestClient`
-   and `mediaremote-adapter.pl` (upstream path: `bin/mediaremote-adapter.pl`)
-   in this directory.
-4. Re-sign the binaries ad-hoc if you built from source
-   (`codesign -s - --force --deep MediaRemoteAdapter.framework`), matching
-   what the Xcode build phase expects.
-5. Verify: run the app, confirm now-playing updates stream in, and run
-   `MediaRemoteAdapterTestClient` (or `mediaremote-adapter.pl … test`)
-   on the oldest supported macOS version.
-6. **Update the pin in this README** (tag + commit hash) in the same commit.
-
-## Signing caveat
-
-The checked-in binaries were built on a maintainer's machine and are ad-hoc
-signed (`codesign -dv` shows `Signature=adhoc`). They are **not**
-independently verifiable bit-for-bit against the upstream source. Until the
-build is wired to fetch pinned upstream release artifacts (with SHA-256
-verification) instead of committing binaries, treat this directory as
-trusted-but-unverifiable and prefer rebuilding from source when updating.
+產物為 ad-hoc 簽章（`codesign -dv` 顯示 `Signature=adhoc`）；app 建置時 Xcode 以 CodeSignOnCopy 重新簽章。

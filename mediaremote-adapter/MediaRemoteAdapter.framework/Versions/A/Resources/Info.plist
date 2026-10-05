@@ -12,8 +12,6 @@
 	<string>com.vandenbe.MediaRemoteAdapter</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>MediaRemoteAdapter</string>
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleSignature</key>
