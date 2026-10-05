@@ -36,7 +36,15 @@ public enum LyricsPipeline {
         let detector = ChineseScriptDetector()
         let toSimplified = try? LyricsChineseConverter.cached(.traditionalToSimplified)
         let stripper = LyricsMetaStripper(normalize: { toSimplified?.convert($0) ?? $0 })
-        return LyricsCandidatePicker(scriptClassifier: { detector.detect($0) }, stripper: stripper)
+        // 殘留簡體字：原生繁體歌詞裡沒轉乾淨的簡體專有字（日韓行不算：新字體不是簡體）。
+        let residue: @Sendable ([String]) -> Int = { lines in
+            lines.reduce(0) { total, line in
+                detector.isJapaneseOrKorean(line) ? total : total + detector.evidence(in: line).simplified
+            }
+        }
+        return LyricsCandidatePicker(
+            scriptClassifier: { detector.detect($0) }, stripper: stripper, residualSimplifiedCounter: residue
+        )
     }
 
     /// LRCLIB 用戶端（原樣＋簡繁變體；`User-Agent` 帶 `appVersion`）。

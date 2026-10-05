@@ -16,7 +16,9 @@ import Foundation
 /// 2. 原生繁體優先：`traditional`、`neutral` 同級最優；`simplified`、`mixed`（需要轉換者）次之。
 /// 3. 首句（剝除檔頭後第一個非空白行，並扣掉檔內 `[offset:]`）時間貼近**候選群中位數**；
 ///    以 0.5 秒為一格，同一格視為相同。中位數只用通過過濾的候選計算，偶數個時取中間兩個的平均。
-/// 4. LRCLIB `id`（小者優先），確保結果與輸入順序無關。
+/// 4. **簡體殘留字數較少者優先**（只計 `traditional`／`mixed` 候選，由注入的 `residualSimplifiedCounter` 計算；
+///    預設恆為 0）。放在時間軸共識之後：殘留的簡體字可由後續轉換修復，錯誤的時間軸卻無法修復。
+/// 5. LRCLIB `id`（小者優先），確保結果與輸入順序無關。
 ///
 /// 絕不使用 `albumName`（來源資料很髒）。
 ///
@@ -58,6 +60,7 @@ public struct LyricsCandidatePicker: Sendable {
             var picked: PickedLyrics
             var durationDiff: Double
             var firstLineMs: Int
+            var residue: Int
         }
 
         var pool: [Entry] = []
@@ -91,7 +94,11 @@ public struct LyricsCandidatePicker: Sendable {
                 offsetMs: document.offsetMs,
                 metadata: document.metadata
             )
-            pool.append(Entry(picked: picked, durationDiff: diff, firstLineMs: first.timeMs - document.offsetMs))
+            let residue = (script == .traditional || script == .mixed)
+                ? residualSimplifiedCounter(spoken.map(\.text)) : 0
+            pool.append(Entry(
+                picked: picked, durationDiff: diff, firstLineMs: first.timeMs - document.offsetMs, residue: residue
+            ))
         }
         guard !pool.isEmpty else { return nil }
 
@@ -105,7 +112,7 @@ public struct LyricsCandidatePicker: Sendable {
             case .simplified, .mixed: scriptRank = 1
             }
             let medianBucket = Int((abs(Double(e.firstLineMs) - median) / 500).rounded())
-            return [durationRank, scriptRank, medianBucket, e.picked.candidateID]
+            return [durationRank, scriptRank, medianBucket, e.residue, e.picked.candidateID]
         }
 
         return pool.min { rankKey($0).lexicographicallyPrecedes(rankKey($1)) }?.picked
