@@ -11,7 +11,7 @@ DavidNook 是 [boring.notch](https://github.com/TheBoredTeam/boring.notch)（The
 
 - 瀏海展開／收合與 hover、多螢幕、無瀏海螢幕
 - Now Playing（播放／暫停／上一首／下一首）與逐行同步歌詞（LRCLIB；簡體來源自動轉繁體，可逐曲調整偏移）
-- 剪貼簿歷史（文字／圖片／檔案路徑；搜尋、類型篩選、釘選、點選貼回、暫停記錄、筆數與保留時間可設；設定 → 剪貼簿）。略過密碼管理員標記的項目；資料只存在本機。「點選後自動貼上」為實驗性選項（預設關）
+- 剪貼簿歷史（文字／圖片／檔案路徑；搜尋、類型篩選、釘選、點選貼回、暫停記錄、筆數與保留時間可設；設定 → 剪貼簿）。略過密碼管理員標記的項目；資料只存在本機。「點選後自動貼上」為實驗性選項（預設關；焦點在密碼等安全輸入欄位時不會貼）
 - 分頁結構可擴充（`NotchViews` 列舉 + `TabSelectionView` + `ContentView` 的 switch）；目前有 Home 與剪貼簿兩個分頁
 
 已從上游移除：Shelf（含 QuickShare/AirDrop）、行事曆／提醒事項、Mirror 相機、電池 live activity、
