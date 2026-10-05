@@ -1,328 +1,274 @@
 //
 //  LyricsService.swift
-//  boringNotch
+//  DavidNook
 //
-//  Extracted from MusicManager for better separation of concerns.
+//  薄適配層：把 DavidNookCore 的歌詞管線（LrclibClient → LyricsCandidatePicker → LyricsRepository →
+//  LyricsLocalizer → LyricsTimeline）接到 App 的狀態。原上游的 LyricsService（Apple Music 內嵌歌詞、
+//  取搜尋結果第一筆、無簡轉繁、無偏移）已整個移除；歌詞只來自 LRCLIB。
+//
+//  隱私：歌名、歌手、歌詞內容一律不寫進 log（本檔沒有任何 log 呼叫）。
+//  顯示與查詢一律使用播放器提供的原始歌名／歌手名，不做簡繁轉換；只有「歌詞內文」會被本地化，
+//  而查詢用的簡／繁變體只在原樣查不到時才額外嘗試（由 LrclibClient 處理）。
 //
 
-import AppKit
+import DavidNookCore
+import Defaults
 import Foundation
 
-/// Service responsible for fetching and parsing lyrics for the currently playing track.
+/// 目前曲目（來自播放器的原始值）。
+struct LyricsTrack: Equatable, Sendable {
+    var title: String
+    var artist: String
+    var album: String
+    /// 秒；0 代表未知。
+    var duration: TimeInterval
+
+    /// 沒有實際曲目時 Music.app 備援會回報的占位內容，不拿去查歌詞。
+    var isPlaceholder: Bool {
+        title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || (title == "Not Playing" && artist == "Unknown")
+    }
+
+    var key: TrackKey { TrackKey(title: title, artist: artist, duration: duration) }
+}
+
 @MainActor
 final class LyricsService: ObservableObject {
     static let shared = LyricsService()
 
-    @Published var currentLyrics: String = ""
-    @Published var isFetchingLyrics: Bool = false
-    @Published var syncedLyrics: [(time: Double, text: String)] = []
+    enum Status: Equatable {
+        /// 沒有要查的曲目，或歌詞功能關閉。
+        case idle
+        case loading
+        case loaded
+        /// LRCLIB 確定沒有符合的同步歌詞（也包含純音樂；目前管線無法區分兩者）。
+        case notFound
+        /// 網路或伺服器錯誤（不會被快取，下一次換歌會重查）。
+        case error
+    }
 
-    // Cache to avoid redundant fetches; NSCache evicts under memory pressure
-    // instead of growing for the whole session.
-    private final class LyricsEntry {
-        let plain: String
-        let synced: [(time: Double, text: String)]
-        init(plain: String, synced: [(time: Double, text: String)]) {
-            self.plain = plain
-            self.synced = synced
+    /// 每次調整偏移的步長（毫秒）。
+    static let offsetStepMs = 500
+    /// 偏移上下限（毫秒）。
+    static let offsetLimitMs = 60_000
+
+    @Published private(set) var status: Status = .idle
+    /// 已本地化（簡→繁）的顯示行，與 `timeline.lines` 一一對應；空字串是間奏／空白行。
+    @Published private(set) var lines: [String] = []
+    /// 目前曲目的使用者偏移（毫秒；正值＝歌詞提早）。
+    @Published private(set) var offsetMs: Int = 0
+
+    private(set) var timeline = LyricsTimeline(lines: [])
+
+    var isFetchingLyrics: Bool { status == .loading }
+
+    // MARK: 內部狀態
+
+    private let repository: LyricsRepository
+    private let cacheStore: FileLyricsCacheStore?
+    private let offsetStore: any TrackOffsetStore
+    private let localizer = LyricsLocalizer.shared
+    private var track: LyricsTrack?
+    private var loadedKey: TrackKey?
+    private var picked: PickedLyrics?
+    private var fetchTask: Task<Void, Never>?
+    private var localizeTask: Task<Void, Never>?
+    private var retryTask: Task<Void, Never>?
+    private var enableObservation: Task<Void, Never>?
+    private var idiomObservation: Task<Void, Never>?
+
+    /// 換歌後等多久才真的查詢：duration、artist 常常比 title 晚幾十毫秒到，等它們穩定可避免白打一次請求。
+    private static let debounce: Duration = .milliseconds(450)
+    /// 網路／伺服器錯誤後的自動重試間隔與次數（LRCLIB 有限流，不要打太密）。
+    private static let retryDelay: Duration = .seconds(15)
+    private static let maxRetries = 3
+
+    private init() {
+        let store = Self.makeCacheStore()
+        cacheStore = store
+        repository = Self.makeRepository(store: store)
+        offsetStore = UserDefaultsTrackOffsetStore(suiteName: nil) ?? MemoryTrackOffsetStore()
+
+        enableObservation = Task { @MainActor [weak self] in
+            for await _ in Defaults.updates(.enableLyrics, initial: false) {
+                self?.evaluate()
+            }
+        }
+        idiomObservation = Task { @MainActor [weak self] in
+            for await _ in Defaults.updates(.lyricsTaiwanIdioms, initial: false) {
+                self?.relocalize()
+            }
         }
     }
-    private let lyricsCache = NSCache<NSString, LyricsEntry>()
-    private var currentFetchTask: Task<Void, Never>?
 
-    private init() {}
+    // MARK: - 公開 API
 
-    // MARK: - Public API
+    /// 告知目前曲目（nil＝沒有曲目）。可重複呼叫；曲目鍵（歌名＋歌手＋取整秒長度）沒變就什麼都不做。
+    func setTrack(_ newTrack: LyricsTrack?) {
+        let normalized = (newTrack?.isPlaceholder ?? true) ? nil : newTrack
+        track = normalized
+        evaluate()
+    }
 
-    /// Fetches lyrics for the given track, preferring native Apple Music lyrics when available.
-    func fetchLyrics(bundleIdentifier: String?, title: String, artist: String) async {
-        // Cancel any pending fetch
-        currentFetchTask?.cancel()
+    /// 清除目前的歌詞狀態（例如切換播放來源）。
+    func clear() {
+        track = nil
+        evaluate()
+    }
 
-        guard !title.isEmpty else {
-            clearLyrics()
+    /// 目前行索引（對應 `lines`／`timeline.lines`）；尚未開始或沒有歌詞回傳 nil。
+    func currentIndex(at position: TimeInterval) -> Int? {
+        guard status == .loaded else { return nil }
+        return timeline.currentIndex(at: position, userOffsetMs: offsetMs)
+    }
+
+    /// 逐曲偏移：以 `offsetStepMs` 為單位增減（`steps` 可為負），並依曲目記住。
+    func adjustOffset(steps: Int) {
+        setOffset(offsetMs + steps * Self.offsetStepMs)
+    }
+
+    func resetOffset() {
+        setOffset(0)
+    }
+
+    /// 清除磁碟上的歌詞快取（設定頁的按鈕）。回傳刪除的檔案數；失敗回傳 nil。
+    @discardableResult
+    func clearCache() -> Int? {
+        try? cacheStore?.removeAll()
+    }
+
+    // MARK: - 流程
+
+    /// 依「功能是否開啟」與「目前曲目」決定要清除、保持或重新載入。
+    private func evaluate() {
+        guard Defaults[.enableLyrics], let track else {
+            reset(to: .idle)
             return
         }
+        let key = track.key
+        // 同一首（含錯誤狀態）不重複查：錯誤由有限次數的自動重試或 retry() 處理，避免每次狀態更新都打網路。
+        if key == loadedKey { return }
 
-        // Check cache first
-        let cacheKey = cacheKey(title: title, artist: artist)
-        if let cached = lyricsCache.object(forKey: cacheKey as NSString) {
-            currentLyrics = cached.plain
-            syncedLyrics = cached.synced
-            isFetchingLyrics = false
-            return
-        }
-
-        isFetchingLyrics = true
-        currentLyrics = ""
-        syncedLyrics = []
-
-        let task = Task { [weak self] in
-            guard let self = self else { return }
-
-            // Try Apple Music first if applicable
-            if let bundleIdentifier = bundleIdentifier, bundleIdentifier.contains(MediaAppBundleID.appleMusic) {
-                if let lyrics = await self.fetchAppleMusicLyrics() {
-                    guard !Task.isCancelled else { return }
-                    await MainActor.run {
-                        self.currentLyrics = lyrics
-                        self.syncedLyrics = []
-                        self.isFetchingLyrics = false
-                        self.lyricsCache.setObject(LyricsEntry(plain: lyrics, synced: []), forKey: cacheKey as NSString)
-                    }
-                    return
-                }
-            }
-
-            // Fallback to web
-            guard !Task.isCancelled else { return }
-            let webResult = await self.fetchLyricsFromWeb(title: title, artist: artist)
-
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                self.currentLyrics = webResult.plain
-                self.syncedLyrics = webResult.synced
-                self.isFetchingLyrics = false
-                if !webResult.plain.isEmpty {
-                    self.lyricsCache.setObject(LyricsEntry(plain: webResult.plain, synced: webResult.synced), forKey: cacheKey as NSString)
-                }
-            }
-        }
-
-        currentFetchTask = task
-        await task.value
+        cancelWork()
+        loadedKey = key
+        picked = nil
+        timeline = LyricsTimeline(lines: [])
+        lines = []
+        offsetMs = offsetStore.offsetMs(for: key)
+        load(track, key: key, attempt: 0, delay: Self.debounce)
     }
 
-    /// Clears all lyrics data.
-    func clearLyrics() {
-        currentFetchTask?.cancel()
-        currentFetchTask = nil
-        currentLyrics = ""
-        syncedLyrics = []
-        isFetchingLyrics = false
+    /// 手動重試（例如錯誤狀態下使用者再按一次）。
+    func retry() {
+        guard status == .error || status == .notFound else { return }
+        loadedKey = nil
+        evaluate()
     }
 
-    /// Returns the lyric line at the given elapsed time for synced lyrics.
-    func lyricLine(at elapsed: Double) -> String {
-        lyricLineContext(at: elapsed).text
-    }
-
-    /// Returns the active synced lyric line and its timing window.
-    func lyricLineContext(at elapsed: Double) -> (text: String, startTime: Double, endTime: Double?) {
-        guard !syncedLyrics.isEmpty else { return (currentLyrics, 0, nil) }
-
-        // Binary search for last line with time <= elapsed
-        var low = 0
-        var high = syncedLyrics.count - 1
-        var idx = 0
-        while low <= high {
-            let mid = (low + high) / 2
-            if syncedLyrics[mid].time <= elapsed {
-                idx = mid
-                low = mid + 1
-            } else {
-                high = mid - 1
-            }
-        }
-
-        let nextIndex = syncedLyrics.index(after: idx)
-        let endTime = nextIndex < syncedLyrics.endIndex ? syncedLyrics[nextIndex].time : nil
-        return (syncedLyrics[idx].text, syncedLyrics[idx].time, endTime)
-    }
-
-    // MARK: - Private Methods
-
-    private func cacheKey(title: String, artist: String) -> String {
-        "\(normalizedQuery(title))|\(normalizedQuery(artist))"
-    }
-
-    private func fetchAppleMusicLyrics() async -> String? {
-        let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: MediaAppBundleID.appleMusic)
-        guard !runningApps.isEmpty else { return nil }
-
-        let script = """
-        tell application "Music"
-            if it is running then
-                if player state is playing or player state is paused then
-                    try
-                        set l to lyrics of current track
-                        if l is missing value then
-                            return ""
-                        else
-                            return l
-                        end if
-                    on error
-                        return ""
-                    end try
-                else
-                    return ""
-                end if
-            else
-                return ""
-            end if
-        end tell
-        """
-
-        do {
-            if let result = try await AppleScriptHelper.execute(script),
-               let lyricsString = result.stringValue,
-               !lyricsString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                return lyricsString.trimmingCharacters(in: .whitespacesAndNewlines)
-            }
-        } catch {
-            // Fall through to return nil
-        }
-        return nil
-    }
-
-    private func fetchLyricsFromWeb(title: String, artist: String) async -> (plain: String, synced: [(time: Double, text: String)]) {
-        let cleanTitle = normalizedQuery(title)
-        let cleanArtist = normalizedQuery(artist)
-
-        guard let encodedTitle = cleanTitle.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            return ("", [])
-        }
-
-        // Try with artist first, then without if no results
-        let searchStrategies: [String] = {
-            var strategies: [String] = []
-
-            // Strategy 1: Search with artist (if provided)
-            if !cleanArtist.isEmpty,
-               let encodedArtist = cleanArtist.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
-                strategies.append("https://lrclib.net/api/search?track_name=\(encodedTitle)&artist_name=\(encodedArtist)")
-            }
-
-            // Strategy 2: Search with title only (always include as fallback)
-            strategies.append("https://lrclib.net/api/search?track_name=\(encodedTitle)")
-
-            return strategies
-        }()
-
-        for urlString in searchStrategies {
-            guard let url = URL(string: urlString) else { continue }
-
+    private func load(_ track: LyricsTrack, key: TrackKey, attempt: Int, delay: Duration) {
+        status = .loading
+        // 查詢一律用播放器原值；不送專輯名（來源資料很髒，只會降低命中率；也與設定頁的揭露文字一致）。
+        let query = LyricsQuery(title: track.title, artist: track.artist, album: nil, duration: track.duration)
+        let repository = repository
+        fetchTask = Task { @MainActor [weak self] in
             do {
-                var request = URLRequest(url: url)
-                request.timeoutInterval = 10
-
-                let (data, response) = try await URLSession.shared.data(for: request)
-                guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-                    continue
-                }
-
-                if let jsonArray = try JSONSerialization.jsonObject(with: data) as? [[String: Any]],
-                   let first = findBestMatch(in: jsonArray, title: cleanTitle, artist: cleanArtist) {
-                    let plain = (first["plainLyrics"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                    let synced = (first["syncedLyrics"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-                    if !plain.isEmpty || !synced.isEmpty {
-                        let resolvedPlain = plain.isEmpty ? synced : plain
-                        let parsedSynced = synced.isEmpty ? [] : parseLRC(synced)
-                        return (resolvedPlain, parsedSynced)
-                    }
-                }
+                try await Task.sleep(for: delay)
+                let result = try await repository.lyrics(for: query)
+                guard let self, !Task.isCancelled, self.loadedKey == key else { return }
+                self.apply(result)
+            } catch is CancellationError {
+                return
             } catch {
-                continue
+                guard let self, !Task.isCancelled, self.loadedKey == key else { return }
+                self.status = .error
+                self.scheduleRetry(track, key: key, attempt: attempt)
             }
         }
-
-        return ("", [])
     }
 
-    /// Find the best matching result from the search results based on title similarity
-    private func findBestMatch(in results: [[String: Any]], title: String, artist: String) -> [String: Any]? {
-        guard !results.isEmpty else { return nil }
-
-        // If only one result, use it
-        if results.count == 1 { return results.first }
-
-        let normalizedTitle = title.lowercased()
-        let normalizedArtist = artist.lowercased()
-
-        // Score each result and pick the best
-        var bestResult: [String: Any]?
-        var bestScore = 0
-
-        for result in results {
-            var score = 0
-
-            // Check title match
-            if let resultTitle = result["trackName"] as? String {
-                if resultTitle.lowercased() == normalizedTitle {
-                    score += 10
-                } else if resultTitle.lowercased().contains(normalizedTitle) || normalizedTitle.contains(resultTitle.lowercased()) {
-                    score += 5
-                }
-            }
-
-            // Check artist match (bonus if provided and matches)
-            if !normalizedArtist.isEmpty, let resultArtist = result["artistName"] as? String {
-                if resultArtist.lowercased() == normalizedArtist {
-                    score += 8
-                } else if resultArtist.lowercased().contains(normalizedArtist) || normalizedArtist.contains(resultArtist.lowercased()) {
-                    score += 4
-                }
-            }
-
-            // Prefer results with lyrics
-            if let plain = result["plainLyrics"] as? String, !plain.isEmpty {
-                score += 2
-            }
-            if let synced = result["syncedLyrics"] as? String, !synced.isEmpty {
-                score += 3
-            }
-
-            if score > bestScore {
-                bestScore = score
-                bestResult = result
-            }
+    private func scheduleRetry(_ track: LyricsTrack, key: TrackKey, attempt: Int) {
+        guard attempt < Self.maxRetries else { return }
+        retryTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: Self.retryDelay)
+            guard let self, !Task.isCancelled, self.loadedKey == key, self.status == .error else { return }
+            self.load(track, key: key, attempt: attempt + 1, delay: .zero)
         }
-
-        return bestResult ?? results.first
     }
 
-    // MARK: - Synced lyrics helpers
+    private func cancelWork() {
+        fetchTask?.cancel()
+        localizeTask?.cancel()
+        retryTask?.cancel()
+        fetchTask = nil
+        localizeTask = nil
+        retryTask = nil
+    }
 
-    private func parseLRC(_ lrc: String) -> [(time: Double, text: String)] {
-        var result: [(Double, String)] = []
-        let pattern = #"\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\]"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+    private func reset(to newStatus: Status) {
+        cancelWork()
+        loadedKey = nil
+        picked = nil
+        timeline = LyricsTimeline(lines: [])
+        lines = []
+        offsetMs = 0
+        status = newStatus
+    }
 
-        for lineSub in lrc.split(separator: "\n") {
-            let line = String(lineSub)
-            let nsLine = line as NSString
-
-            guard let match = regex.firstMatch(in: line, range: NSRange(location: 0, length: nsLine.length)) else {
-                continue
-            }
-
-            let minStr = nsLine.substring(with: match.range(at: 1))
-            let secStr = nsLine.substring(with: match.range(at: 2))
-            let msRange = match.range(at: 3)
-            let msStr = msRange.location != NSNotFound ? nsLine.substring(with: msRange) : "0"
-
-            let minutes = Double(minStr) ?? 0
-            let seconds = Double(secStr) ?? 0
-            // Handle both centiseconds (2 digits) and milliseconds (3 digits)
-            let msValue = Double(msStr) ?? 0
-            let msDivisor = msStr.count == 3 ? 1000.0 : 100.0
-            let time = minutes * 60 + seconds + msValue / msDivisor
-
-            let textStart = match.range.location + match.range.length
-            let text = nsLine.substring(from: textStart).trimmingCharacters(in: .whitespaces)
-            if !text.isEmpty {
-                result.append((time, text))
-            }
+    private func apply(_ result: PickedLyrics?) {
+        guard let result else {
+            picked = nil
+            status = .notFound
+            return
         }
-
-        return result.sorted { $0.0 < $1.0 }
+        picked = result
+        timeline = result.timeline
+        localize(result, publishAs: .loaded)
     }
 
-    private func normalizedQuery(_ string: String) -> String {
-        string
-            .folding(options: .diacriticInsensitive, locale: .current)
-            .replacingOccurrences(of: "\u{FFFD}", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+    /// 簡繁設定（台灣慣用詞）變更時，用已載入的歌詞重新轉換，不必重查。
+    private func relocalize() {
+        guard let picked, status == .loaded else { return }
+        localize(picked, publishAs: .loaded)
+    }
+
+    private func localize(_ lyrics: PickedLyrics, publishAs newStatus: Status) {
+        localizeTask?.cancel()
+        let texts = lyrics.timeline.lines.map(\.text)
+        let options = LyricsLocalizationOptions(useTaiwanIdioms: Defaults[.lyricsTaiwanIdioms])
+        let localizer = localizer
+        let key = loadedKey
+        localizeTask = Task { @MainActor [weak self] in
+            // 首次使用要載入字典（約 20–30 ms），放到背景做，避免卡住主執行緒。
+            let converted = await Task.detached(priority: .userInitiated) {
+                (try? localizer.localize(lines: texts, options: options).lines) ?? texts
+            }.value
+            guard let self, !Task.isCancelled, self.loadedKey == key else { return }
+            self.lines = converted
+            self.status = newStatus
+        }
+    }
+
+    private func setOffset(_ ms: Int) {
+        guard let key = loadedKey else { return }
+        let clamped = min(max(ms, -Self.offsetLimitMs), Self.offsetLimitMs)
+        offsetMs = clamped
+        offsetStore.setOffsetMs(clamped, for: key)
+    }
+
+    // MARK: - 組裝 Core 管線
+
+    private static func makeCacheStore() -> FileLyricsCacheStore? {
+        guard let support = try? FileManager.default.url(
+            for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true
+        ) else { return nil }
+        let directory = support.appendingPathComponent("DavidNook/Lyrics", isDirectory: true)
+        return try? FileLyricsCacheStore(directory: directory)
+    }
+
+    private static func makeRepository(store: FileLyricsCacheStore?) -> LyricsRepository {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+            ?? DavidNookCore.version
+        let cache: any LyricsCacheStore = store ?? MemoryLyricsCacheStore()
+        // 組裝（簡繁感知的挑選／剝檔頭／查詢變體）在 Core 的 LyricsPipeline，有離線測試；HTTP 走 URLSessionTransport。
+        return LyricsPipeline.makeRepository(transport: URLSessionTransport(), store: cache, appVersion: version)
     }
 }

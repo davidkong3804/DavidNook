@@ -152,47 +152,6 @@ struct MusicControlsView: View {
                 frameWidth: width
             )
             .fontWeight(.medium)
-            if Defaults[.enableLyrics] {
-                TimelineView(.animation(minimumInterval: 0.25)) { timeline in
-                    let currentElapsed: Double = {
-                        guard musicManager.isPlaying else { return musicManager.elapsedTime }
-                        let delta = timeline.date.timeIntervalSince(musicManager.timestampDate)
-                        let progressed = musicManager.elapsedTime + (delta * musicManager.playbackRate)
-                        return min(max(progressed, 0), musicManager.songDuration)
-                    }()
-                    let lyricDisplay: (line: String, displayDuration: Double?, animationID: Double?) = {
-                        if LyricsService.shared.isFetchingLyrics { return ("Loading lyrics…", nil, nil) }
-                        if !LyricsService.shared.syncedLyrics.isEmpty {
-                            let context = LyricsService.shared.lyricLineContext(at: currentElapsed)
-                            let displayDuration = context.endTime.map { max($0 - currentElapsed, 0) }
-                            return (context.text, displayDuration, context.startTime)
-                        }
-                        let trimmed = musicManager.currentLyrics.trimmingCharacters(in: .whitespacesAndNewlines)
-                        let line = trimmed.isEmpty ? "No lyrics found" : trimmed.replacingOccurrences(of: "\n", with: " ")
-                        return (line, nil, nil)
-                    }()
-                    let line = lyricDisplay.line
-                    let isPersian = line.unicodeScalars.contains { scalar in
-                        let v = scalar.value
-                        return v >= 0x0600 && v <= 0x06FF
-                    }
-                    let lyricFont: Font = isPersian
-                        ? .custom("Vazirmatn-Regular", size: NSFont.preferredFont(forTextStyle: .subheadline).pointSize)
-                        : .subheadline
-                    TimedLyricText(
-                        line,
-                        font: lyricFont,
-                        nsFont: .subheadline,
-                        color: musicManager.isFetchingLyrics ? .gray.opacity(0.7) : .gray,
-                        displayDuration: lyricDisplay.displayDuration,
-                        animationID: lyricDisplay.animationID,
-                        frameWidth: width
-                    )
-                    .lineLimit(1)
-                    .opacity(musicManager.isPlaying ? 1 : 0)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-                }
-            }
         }
     }
 

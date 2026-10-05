@@ -105,11 +105,8 @@ final class MusicManager: ObservableObject {
     @Published var usingAppIconForArtwork: Bool = false
     @Published var canFavoriteTrack: Bool = false
 
-    // Lyrics are now managed by LyricsService
+    // 歌詞由 LyricsService（DavidNookCore 的 LRCLIB 管線）管理。
     var lyricsService: LyricsService { LyricsService.shared }
-    var currentLyrics: String { lyricsService.currentLyrics }
-    var isFetchingLyrics: Bool { lyricsService.isFetchingLyrics }
-    var syncedLyrics: [(time: Double, text: String)] { lyricsService.syncedLyrics }
     @Published var isFavoriteTrack: Bool = false
 
     private var artworkData: Data?
@@ -419,7 +416,7 @@ final class MusicManager: ObservableObject {
         lastArtworkArtist = ""
         lastArtworkAlbum = ""
         lastArtworkBundleIdentifier = nil
-        lyricsService.clearLyrics()
+        lyricsService.clear()
     }
 
     private func handleRuntimeFailure(from controller: any NowPlayingRuntimeControlling) {
@@ -537,9 +534,6 @@ final class MusicManager: ObservableObject {
             if !state.title.isEmpty && !state.artist.isEmpty && state.isPlaying {
                 self.updateSneakPeek()
             }
-
-            // Fetch lyrics on content change
-            self.fetchLyricsIfAvailable(bundleIdentifier: state.bundleIdentifier, title: state.title, artist: state.artist)
         }
 
         let timeChanged = state.currentTime != self.elapsedTime
@@ -594,6 +588,12 @@ final class MusicManager: ObservableObject {
             self.volume = state.volume
         }
 
+        // 歌詞：每次狀態更新都告知目前曲目；LyricsService 以（歌名＋歌手＋取整秒長度）去重，
+        // 並等 duration 等欄位穩定後才查詢。查詢一律用播放器原值。
+        lyricsService.setTrack(LyricsTrack(
+            title: state.title, artist: state.artist, album: state.album, duration: state.duration
+        ))
+
         // The slider extrapolates from (elapsedTime, timestampDate); only
         // republish when an extrapolation input actually changed — otherwise
         // every no-op stream event invalidates the whole view tree. A pause/
@@ -624,20 +624,6 @@ final class MusicManager: ObservableObject {
     /// Placeholder dislike function
     func dislikeCurrentTrack() {
         setFavorite(false)
-    }
-
-    // MARK: - Lyrics
-    private func fetchLyricsIfAvailable(bundleIdentifier: String?, title: String, artist: String) {
-        guard Defaults[.enableLyrics], !title.isEmpty else {
-            Task { @MainActor in
-                lyricsService.clearLyrics()
-            }
-            return
-        }
-
-        Task { @MainActor in
-            await lyricsService.fetchLyrics(bundleIdentifier: bundleIdentifier, title: title, artist: artist)
-        }
     }
 
     private func triggerFlipAnimation() {

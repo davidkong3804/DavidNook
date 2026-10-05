@@ -223,7 +223,10 @@ extension Defaults.Keys {
     static let sneakPeekStyles = Key<SneakPeekStyle>("sneakPeekStyles", default: .standard)
     static let waitInterval = Key<Double>("waitInterval", default: 3)
     static let showShuffleAndRepeat = Key<Bool>("showShuffleAndRepeat", default: false)
-    static let enableLyrics = Key<Bool>("enableLyrics", default: false)
+    /// 歌詞（LRCLIB）預設開啟；開啟時會把曲名、歌手與長度送到 lrclib.net 查詢。
+    static let enableLyrics = Key<Bool>("enableLyrics", default: true)
+    /// 簡體歌詞轉繁體時是否套用台灣慣用詞（軟件→軟體…）。預設關：慣用詞層對歌詞有風險（支持→支援、打开→開啟）。
+    static let lyricsTaiwanIdioms = Key<Bool>("lyricsTaiwanIdioms", default: false)
     static let showRemainingTime = Key<Bool>("showRemainingTime", default: false)
     static let musicControlSlots = Key<[MusicControlButton]>(
         "musicControlSlots",
