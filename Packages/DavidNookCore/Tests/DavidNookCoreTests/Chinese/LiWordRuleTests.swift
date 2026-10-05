@@ -119,11 +119,11 @@ final class LiWordRuleTests: XCTestCase {
 
     func testDictionaryDerivedTransliterationPrefixesKeepLi() {
         // 辭典掃描（OpenCC STPhrases 保留「里」的詞）找到的誤傷模式：克里米亞、烏蘇里江、佛羅里達、薩里郡、弗里曼…
-        for prefix in "克蘇苏羅罗薩萨弗佛伊尤亞亚烏乌費费歐欧瓦庫库凱凯餘余托貝贝" {
+        for prefix in "克蘇苏羅罗薩萨弗佛伊尤亞亚烏乌費费歐欧瓦凱凯餘余托貝贝" {
             let text = "\(prefix)里某地"
             XCTAssertEqual(LiWordRule.apply(to: text), text, "前綴 \(prefix)")
         }
-        assertKept(["克里米亞半島", "烏蘇里江", "佛羅里達州", "格里高利曆", "劈里啪啦", "稀里嘩啦", "炸里脊"])
+        assertKept(["克里米亞半島", "烏蘇里江", "佛羅里達州", "格里高利曆", "劈里啪啦", "稀里嘩啦", "炸里脊", "漫步香榭里大道", "左鄰右里"])
     }
 
     func testPlausibleLyricContextsStillBecomeLi() {
@@ -134,6 +134,7 @@ final class LiWordRuleTests: XCTestCase {
             ("嘴巴里含著糖", "嘴巴裡含著糖"),
             ("雨里有你的聲音", "雨裡有你的聲音"),
             ("稀里糊塗地過", "稀裡糊塗地過"),
+            ("躲在車庫里", "躲在車庫裡"),
         ])
     }
 
