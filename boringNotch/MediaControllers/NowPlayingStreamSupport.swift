@@ -233,16 +233,24 @@ struct NowPlayingUpdate: Codable, Sendable {
     let diff: Bool?
 }
 
+/// mediaremote-adapter `stream` 的 payload。
+///
+/// 時間欄位有兩組（欄位格式見 `AdapterTime`，依上游 README 與原始碼；未用真實播放驗證）：
+/// - `--micros`（DavidNook 一律使用）：`durationMicros`、`elapsedTimeMicros`、`timestampEpochMicros`（微秒）。
+/// - 預設輸出（備援）：`duration`、`elapsedTime`（秒）與 `timestamp`（UTC、**秒級解析度**的 ISO-8601 字串）。
 struct NowPlayingPayload: Codable, Sendable {
     let title: String?
     let artist: String?
     let album: String?
     let duration: Double?
+    let durationMicros: Double?
     let elapsedTime: Double?
+    let elapsedTimeMicros: Double?
     let shuffleMode: Int?
     let repeatMode: Int?
     let artworkData: String?
     let timestamp: String?
+    let timestampEpochMicros: Double?
     let playbackRate: Double?
     let playing: Bool?
     let parentApplicationBundleIdentifier: String?

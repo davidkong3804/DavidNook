@@ -7,6 +7,7 @@
 
 import AppKit
 import Combine
+import DavidNookCore
 import Foundation
 
 @MainActor
@@ -183,7 +184,8 @@ final class NowPlayingController: NowPlayingRuntimeControlling {
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/perl")
-        process.arguments = [adapterScriptURL.path, adapterFrameworkPath, "stream"]
+        // --micros：時間欄位改為微秒（預設的 timestamp 只有秒級解析度，會讓歌詞同步最多差 1 秒）。
+        process.arguments = [adapterScriptURL.path, adapterFrameworkPath, "stream", "--micros"]
 
         let session = NowPlayingStreamSession(
             process: process,
@@ -220,19 +222,40 @@ final class NowPlayingController: NowPlayingRuntimeControlling {
         newPlaybackState.title = payload.title ?? (diff ? self.playbackState.title : "")
         newPlaybackState.artist = payload.artist ?? (diff ? self.playbackState.artist : "")
         newPlaybackState.album = payload.album ?? (diff ? self.playbackState.album : "")
-        newPlaybackState.duration = payload.duration ?? (diff ? self.playbackState.duration : 0)
+        newPlaybackState.duration = AdapterTime.seconds(micros: payload.durationMicros, seconds: payload.duration)
+            ?? (diff ? self.playbackState.duration : 0)
 
-        if let elapsedTime = payload.elapsedTime {
+        // 播放位置錨點（elapsed, timestamp）：位置 = elapsed + (now − timestamp) × rate，不靠輪詢。
+        // 只有「同一則更新同時帶了 elapsed」時，timestamp 才可信；否則沿用舊錨點。
+        let receivedAt = Date()
+        let newPlaying = payload.playing ?? (diff ? self.playbackState.isPlaying : false)
+        let newRate = payload.playbackRate ?? (diff ? self.playbackState.playbackRate : 1.0)
+        if let elapsedTime = AdapterTime.seconds(micros: payload.elapsedTimeMicros, seconds: payload.elapsedTime) {
+            // seek、換歌、暫停/恢復時 adapter 會給新的 elapsed + timestamp：整個取代舊錨點。
             newPlaybackState.currentTime = elapsedTime
-        } else if diff {
-            if payload.playing == false {
-                let timeSinceLastUpdate = Date().timeIntervalSince(self.playbackState.lastUpdated)
-                newPlaybackState.currentTime = self.playbackState.currentTime + (self.playbackState.playbackRate * timeSinceLastUpdate)
+            newPlaybackState.lastUpdated = AdapterTime.date(
+                epochMicros: payload.timestampEpochMicros, iso8601: payload.timestamp
+            ) ?? receivedAt
+        } else if diff, self.playbackState.lastUpdated != .distantPast {
+            if newPlaying != self.playbackState.isPlaying || newRate != self.playbackState.playbackRate {
+                // 播放狀態或速率變了，但沒有新錨點：先在舊狀態下固定當下位置，再換成新狀態，
+                // 否則暫停→恢復時會多算暫停的那段時間。
+                let rebased = PlaybackSnapshot(
+                    elapsedTime: self.playbackState.currentTime,
+                    timestamp: self.playbackState.lastUpdated,
+                    playbackRate: self.playbackState.playbackRate,
+                    isPlaying: self.playbackState.isPlaying,
+                    duration: newPlaybackState.duration
+                ).rebased(at: receivedAt)
+                newPlaybackState.currentTime = rebased.elapsedTime
+                newPlaybackState.lastUpdated = rebased.timestamp
             } else {
                 newPlaybackState.currentTime = self.playbackState.currentTime
+                newPlaybackState.lastUpdated = self.playbackState.lastUpdated
             }
         } else {
             newPlaybackState.currentTime = 0
+            newPlaybackState.lastUpdated = receivedAt
         }
 
         if let shuffleMode = payload.shuffleMode {
@@ -260,17 +283,8 @@ final class NowPlayingController: NowPlayingRuntimeControlling {
             newPlaybackState.artwork = self.playbackState.artwork
         }
 
-        if let dateString = payload.timestamp,
-           let date = ISO8601DateFormatter().date(from: dateString) {
-            newPlaybackState.lastUpdated = date
-        } else if !diff {
-            newPlaybackState.lastUpdated = Date()
-        } else {
-            newPlaybackState.lastUpdated = self.playbackState.lastUpdated
-        }
-
-        newPlaybackState.playbackRate = payload.playbackRate ?? (diff ? self.playbackState.playbackRate : 1.0)
-        newPlaybackState.isPlaying = payload.playing ?? (diff ? self.playbackState.isPlaying : false)
+        newPlaybackState.playbackRate = newRate
+        newPlaybackState.isPlaying = newPlaying
         newPlaybackState.bundleIdentifier = resolvedBundleIdentifier
 
         newPlaybackState.volume = payload.volume ?? (diff ? self.playbackState.volume : 0.5)

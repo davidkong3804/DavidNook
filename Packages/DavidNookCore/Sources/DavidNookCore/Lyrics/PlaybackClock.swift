@@ -71,18 +71,6 @@ public final class PlaybackClock: @unchecked Sendable {
         let current = snapshot
         lock.unlock()
         guard let s = current else { return nil }
-
-        let elapsed = s.elapsedTime.isFinite ? s.elapsedTime : 0
-        let rate = s.playbackRate.isFinite ? s.playbackRate : 0
-        var position = elapsed
-        if s.isPlaying && rate != 0 {
-            let delta = max(0, date.timeIntervalSince(s.timestamp))
-            position = elapsed + delta * rate
-        }
-        position = max(0, position)
-        if let duration = s.duration, duration.isFinite, duration > 0 {
-            position = min(position, duration)
-        }
-        return position
+        return s.position(at: date)   // 演算法在 PlaybackSnapshot.position(at:)（AdapterTime.swift）
     }
 }

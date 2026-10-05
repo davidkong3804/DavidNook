@@ -6,6 +6,7 @@
 //
 import AppKit
 import Combine
+import DavidNookCore
 import Defaults
 import SwiftUI
 
@@ -94,6 +95,9 @@ final class MusicManager: ObservableObject {
     @Published var elapsedTime: TimeInterval = 0
     @Published var timestampDate: Date = .init()
     @Published var playbackRate: Double = 1
+    /// 播放位置內插時鐘（歌詞與進度條共用）：位置 = elapsed + (now − timestamp) × rate，不靠輪詢。
+    /// 每個來源（adapter 或 Music.app 備援）的每次狀態更新都會以一組一致的 (elapsed, timestamp) 取代舊錨點。
+    let playbackClock = PlaybackClock()
     @Published var isShuffled: Bool = false
     @Published var repeatMode: RepeatMode = .off
     @Published var volume: Double = 0.5
@@ -403,6 +407,7 @@ final class MusicManager: ObservableObject {
         elapsedTime = 0
         timestampDate = Date()
         playbackRate = 1
+        playbackClock.reset()
         isShuffled = false
         repeatMode = .off
         volume = 0.5
@@ -462,6 +467,15 @@ final class MusicManager: ObservableObject {
     // MARK: - Update Methods
     private func updateFromPlaybackState(_ state: PlaybackState) {
         guard state.lastUpdated != .distantPast else { return }
+
+        // 先更新時鐘：換歌、seek、暫停/恢復都會帶來新錨點，整個取代舊的。
+        playbackClock.update(PlaybackSnapshot(
+            elapsedTime: state.currentTime,
+            timestamp: state.lastUpdated,
+            playbackRate: state.playbackRate,
+            isPlaying: state.isPlaying,
+            duration: state.duration > 0 ? state.duration : nil
+        ))
 
         if effectiveMediaController == .nowPlaying,
            MediaControllerType(nowPlayingBundleIdentifier: state.bundleIdentifier) != nil,
@@ -687,11 +701,7 @@ final class MusicManager: ObservableObject {
 
     // MARK: - Playback Position Estimation
     func estimatedPlaybackPosition(at date: Date = Date()) -> TimeInterval {
-        guard isPlaying else { return min(elapsedTime, songDuration) }
-
-        let timeDifference = date.timeIntervalSince(timestampDate)
-        let estimated = elapsedTime + (timeDifference * playbackRate)
-        return min(max(0, estimated), songDuration)
+        playbackClock.position(at: date) ?? 0
     }
 
     func calculateAverageColor() {

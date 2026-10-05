@@ -46,6 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var screenLockedObserver: Any?
     private var screenUnlockedObserver: Any?
     private var observers: [Any] = []
+    private var terminationSignalSource: DispatchSourceSignal?
 
     /// Kept for existing internal readers; the state itself moved to the manager.
     var windows: [String: NSWindow] { windowManager.windows }
@@ -87,6 +88,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // SIGTERM（例如 pkill、關機）預設不會走 applicationWillTerminate，adapter 的 perl 子行程會變成孤兒
+        // 一直活著；改成走正常的終止流程（MusicManager.destroy 會關掉子行程）。
+        signal(SIGTERM, SIG_IGN)
+        let termination = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+        termination.setEventHandler { NSApplication.shared.terminate(nil) }
+        termination.resume()
+        terminationSignalSource = termination
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(screenConfigurationDidChange),
