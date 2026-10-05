@@ -12,6 +12,8 @@ public final class FileClipboardPersistence: ClipboardPersistence, @unchecked Se
     public static let indexFileName = "index.json"
     /// 損毀索引的備份副檔名後綴。
     public static let corruptSuffix = ".corrupt"
+    /// 損毀索引隔離檔最長保留時間（24 小時）：它保留完整明文，不能比使用者設定的保留期活得更久。
+    public static let quarantineMaxAge: TimeInterval = 24 * 60 * 60
     /// 目前索引格式版本。
     static let indexVersion = 1
     private static let tempMarker = ".tmp-"

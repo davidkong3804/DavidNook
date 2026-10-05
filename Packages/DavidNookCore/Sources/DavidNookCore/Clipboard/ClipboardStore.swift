@@ -71,6 +71,9 @@ public actor ClipboardStore {
 
     // MARK: 讀取
 
+    /// 記憶體中有尚未成功寫入磁碟索引的變動（索引寫入失敗後會重試）。
+    public var hasUnsavedChanges: Bool { false }
+
     /// 全部條目：釘選在前，其餘依 lastUsedAt 由新到舊。
     public var items: [ClipboardItem] {
         Self.displayOrder(storage)
