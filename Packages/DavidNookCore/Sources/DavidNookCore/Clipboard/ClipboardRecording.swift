@@ -59,12 +59,19 @@ public enum ClipboardRecordingPlanner {
         storeIsPaused: Bool,
         monitorIsRunning: Bool
     ) -> [ClipboardRecordingStep] {
-        var result: [ClipboardRecordingStep] = []
         let wantPaused = effectivePaused(inputs)
+        let wantMonitor = shouldMonitor(inputs)
+        let resume = !wantPaused && storeIsPaused
+        let start = wantMonitor && !monitorIsRunning
+
+        var result: [ClipboardRecordingStep] = []
         if wantPaused, !storeIsPaused { result.append(.pauseStore) }
-        if !wantPaused, storeIsPaused { result.append(.resumeStore) }
-        if shouldMonitor(inputs), !monitorIsRunning { result.append(.startMonitor) }
-        if !shouldMonitor(inputs), monitorIsRunning { result.append(.stopMonitor) }
+        // 任何「恢復讀取」的路徑（恢復記錄、重新啟用功能、權限由拒絕轉允許）都先對齊基準，
+        // 這樣暫停／停止期間發生的複製不會在恢復後被補記。
+        if resume || start { result.append(.syncBaseline) }
+        if resume { result.append(.resumeStore) }
+        if start { result.append(.startMonitor) }
+        if !wantMonitor, monitorIsRunning { result.append(.stopMonitor) }
         return result
     }
 
@@ -86,8 +93,8 @@ public enum ClipboardRecordingPlanner {
 
 /// 定期維護：以固定間隔對 store 做 prune（保留期、隔離檔、索引重試）。
 public final class ClipboardMaintenance: @unchecked Sendable {
-    /// 預設維護間隔（秒）。
-    public static let pruneInterval: TimeInterval = 3600
+    /// 預設維護間隔（秒）：每 5 分鐘一次，確保「保留 1 天」不會實際拖到 25 小時才清。
+    public static let pruneInterval: TimeInterval = 300
 
     private let store: ClipboardStore
     private let scheduler: ClipboardScheduler

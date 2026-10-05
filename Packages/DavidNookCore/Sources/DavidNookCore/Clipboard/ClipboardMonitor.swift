@@ -96,8 +96,13 @@ public actor ClipboardMonitor {
         }
     }
 
-    /// 把基準 changeCount 對齊到當下（不讀內容）。
-    public func syncBaseline() {}
+    /// 把基準 changeCount 對齊到「當下」，不讀任何內容。
+    ///
+    /// 恢復記錄（或重新允許讀取）之前必須先呼叫：暫停期間複製、但還沒被下一次輪詢消耗掉的變動，
+    /// 否則恢復後的第一次輪詢會把它當成新內容補記進歷史。
+    public func syncBaseline() {
+        lastChangeCount = reader.changeCount
+    }
 
     /// 停止輪詢。
     public func stop() {

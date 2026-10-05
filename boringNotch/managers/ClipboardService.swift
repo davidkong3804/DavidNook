@@ -3,7 +3,7 @@
 //  DavidNook
 //
 //  薄適配層：把 DavidNookCore 的剪貼簿管線（ClipboardStore ＋ ClipboardMonitor ＋ NSPasteboard 讀寫端）
-//  接到 App：啟動時依設定決定是否監看、設定變更即時套用、每小時 prune、處理 macOS 的剪貼簿存取隱私設定。
+//  接到 App：啟動時依設定決定是否監看、設定變更即時套用、每 5 分鐘 prune、處理 macOS 的剪貼簿存取隱私設定。
 //  過濾（密碼管理員標記型別、大小上限、自己寫回的標記）、去重、釘選、保留期都在 Core，有測試。
 //
 //  隱私：
@@ -39,6 +39,15 @@ enum ClipboardAccess: Equatable, Sendable {
     case denied
 
     var needsPermission: Bool { self != .allowed }
+
+    /// 對應到 Core 的存取狀態（暫停／恢復的決策在 Core，有測試）。
+    var coreState: ClipboardAccessState {
+        switch self {
+        case .allowed: return .allowed
+        case .askEveryTime: return .askEveryTime
+        case .denied: return .denied
+        }
+    }
 
     /// 讀取目前狀態。`accessBehavior` 只是個屬性（標頭沒有說讀它會觸發提示），不會讀剪貼簿內容。
     static func current(of pasteboard: NSPasteboard) -> ClipboardAccess {
@@ -102,6 +111,8 @@ final class ClipboardService: ObservableObject {
     private let pasteboard: NSPasteboard
     private let store: ClipboardStore
     private let monitor: ClipboardMonitor
+    /// 定期維護（prune）：Core 排程，間隔見 `ClipboardMaintenance.pruneInterval`（≤ 5 分鐘）。
+    private let maintenance: ClipboardMaintenance
     private let writer: NSPasteboardWriter
     /// 圖片檔所在目錄（磁碟版持久化才有；記憶體後備模式為 nil）。
     private let imageDirectory: URL?
@@ -109,13 +120,10 @@ final class ClipboardService: ObservableObject {
     private var started = false
     private var settingsTask: Task<Void, Never>?
     private var accessTask: Task<Void, Never>?
-    private var pruneTask: Task<Void, Never>?
     private var reconcileTask: Task<Void, Never>?
     private var refreshPending = false
     private var appNameCache: [String: String?] = [:]
 
-    /// 定時 prune 的間隔（啟動時另外會先 prune 一次）。
-    private static let pruneInterval: Duration = .seconds(3600)
     /// 檢查系統存取設定的間隔（只讀屬性，很便宜）。
     private static let accessPollInterval: Duration = .seconds(3)
 
@@ -151,9 +159,11 @@ final class ClipboardService: ObservableObject {
             policy: ClipboardPolicy(),
             logger: logger
         )
+        maintenance = ClipboardMaintenance(store: store) { signal.fire() }
         writer = NSPasteboardWriter(pasteboard: general)
-        isPaused = Self.effectivePaused()
-        access = ClipboardAccess.current(of: general)
+        let initialAccess = ClipboardAccess.current(of: general)
+        access = initialAccess
+        isPaused = ClipboardRecordingPlanner.effectivePaused(Self.recordingInputs(access: initialAccess))
 
         signal.setHandler { [weak self] in
             Task { @MainActor in self?.scheduleRefresh() }
@@ -189,14 +199,7 @@ final class ClipboardService: ObservableObject {
                 }
             }
         }
-        pruneTask = Task { [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(for: Self.pruneInterval)
-                guard let self, !Task.isCancelled else { return }
-                await self.store.prune()
-                self.scheduleRefresh()
-            }
-        }
+        maintenance.start()
         scheduleRefresh()
     }
 
@@ -204,7 +207,7 @@ final class ClipboardService: ObservableObject {
     func stop() {
         settingsTask?.cancel()
         accessTask?.cancel()
-        pruneTask?.cancel()
+        maintenance.stop()
         reconcileTask?.cancel()
         let monitor = monitor
         Task { await monitor.stop() }
@@ -352,23 +355,17 @@ final class ClipboardService: ObservableObject {
     }
 
     private func reconcile() async {
-        let enabled = Defaults[.clipboardEnabled]
-        let effectivePaused = Self.effectivePaused()
+        let inputs = Self.recordingInputs(access: access)
+        let effectivePaused = ClipboardRecordingPlanner.effectivePaused(inputs)
         if isPaused != effectivePaused { isPaused = effectivePaused }
 
-        // 先套用暫停，再啟動 monitor：暫停中 monitor 只消耗 changeCount，不讀內容。
-        if effectivePaused { await store.pause() } else { await store.resume() }
+        // 暫停／恢復／啟停 monitor 的決策與順序在 Core（ClipboardRecordingPlanner，有測試）：
+        // 暫停中 monitor 只消耗 changeCount，不讀內容；任何恢復路徑都會先 syncBaseline，
+        // 所以暫停期間複製的內容不會在恢復後被補記。功能關閉，或系統設定需要使用者先處理（詢問／拒絕）時完全不讀。
+        await ClipboardRecordingPlanner.apply(inputs, store: store, monitor: monitor)
         await store.setMaxItems(Defaults[.clipboardMaxItems])
         await store.setRetention(Self.retention(days: Defaults[.clipboardRetentionDays]))
         await store.prune()
-
-        // 功能關閉，或系統設定需要使用者先處理（詢問／拒絕）時完全不讀；
-        // 其餘情況輪詢 changeCount，只有變動時 Core 才讀內容。
-        if enabled && !access.needsPermission {
-            await monitor.start()
-        } else {
-            await monitor.stop()
-        }
         scheduleRefresh()
     }
 
@@ -385,8 +382,12 @@ final class ClipboardService: ObservableObject {
         }
     }
 
-    private static func effectivePaused() -> Bool {
-        !Defaults[.clipboardEnabled] || Defaults[.clipboardPaused]
+    private static func recordingInputs(access: ClipboardAccess) -> ClipboardRecordingInputs {
+        ClipboardRecordingInputs(
+            enabled: Defaults[.clipboardEnabled],
+            userPaused: Defaults[.clipboardPaused],
+            access: access.coreState
+        )
     }
 
     /// 保留天數 → 秒；0（或負值）= 永久。
