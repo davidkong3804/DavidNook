@@ -3,7 +3,7 @@
 //  DavidNook
 //
 //  薄適配層：把 DavidNookCore 的剪貼簿管線（ClipboardStore ＋ ClipboardMonitor ＋ NSPasteboard 讀寫端）
-//  接到 App：啟動時依設定決定是否監看、設定變更即時套用、每小時 prune、處理 macOS 的剪貼簿存取隱私設定。
+//  接到 App：啟動時依設定決定是否監看、設定變更即時套用、每 5 分鐘 prune、處理 macOS 的剪貼簿存取隱私設定。
 //  過濾（密碼管理員標記型別、大小上限、自己寫回的標記）、去重、釘選、保留期都在 Core，有測試。
 //
 //  隱私：
@@ -18,6 +18,7 @@ import Carbon.HIToolbox
 import DavidNookCore
 import Defaults
 import Foundation
+import SwiftUI
 
 // MARK: - 系統的「從其他 App 貼上」設定
 
@@ -40,6 +41,15 @@ enum ClipboardAccess: Equatable, Sendable {
 
     var needsPermission: Bool { self != .allowed }
 
+    /// 對應到 Core 的存取狀態（暫停／恢復的決策在 Core，有測試）。
+    var coreState: ClipboardAccessState {
+        switch self {
+        case .allowed: return .allowed
+        case .askEveryTime: return .askEveryTime
+        case .denied: return .denied
+        }
+    }
+
     /// 讀取目前狀態。`accessBehavior` 只是個屬性（標頭沒有說讀它會觸發提示），不會讀剪貼簿內容。
     static func current(of pasteboard: NSPasteboard) -> ClipboardAccess {
         guard #available(macOS 15.4, *) else { return .allowed }
@@ -59,14 +69,25 @@ enum ClipboardAccess: Equatable, Sendable {
 private final class ClipboardChangeSignal: @unchecked Sendable {
     private let lock = NSLock()
     private var handler: (@Sendable () -> Void)?
+    private var storageHandler: (@Sendable (Bool) -> Void)?
 
     func setHandler(_ handler: @escaping @Sendable () -> Void) {
         lock.withLock { self.handler = handler }
     }
 
+    /// 索引連續寫入失敗（`true`）或恢復（`false`）。
+    func setStorageHandler(_ handler: @escaping @Sendable (Bool) -> Void) {
+        lock.withLock { self.storageHandler = handler }
+    }
+
     func fire() {
         let current = lock.withLock { handler }
         current?()
+    }
+
+    func fireStorage(failing: Bool) {
+        let current = lock.withLock { storageHandler }
+        current?(failing)
     }
 }
 
@@ -75,12 +96,118 @@ private struct ClipboardChangeLogger: ClipboardLogging {
 
     func log(_ event: ClipboardLogEvent) {
         switch event {
+        case .indexWriteFailing:
+            signal.fireStorage(failing: true)
+        case .indexWriteRecovered:
+            signal.fireStorage(failing: false)
         case .snapshotSkipped, .ownWriteDetected, .recordingPaused, .recordingResumed,
              .persistenceFailed, .indexCorrupted, .itemsDropped:
             return
         default:
             signal.fire()
         }
+    }
+}
+
+// MARK: - 短暫提示（toast）
+
+/// 需要讓使用者知道、但不值得打斷的事件。文案以 `String(localized:)` 提供（zh-Hant 與 en 都在 Localizable.xcstrings）。
+/// 文案本身不含任何剪貼簿內容。
+enum ClipboardNotice: Equatable {
+    /// 自動貼上被擋下：目前焦點在安全輸入欄位（密碼欄等），內容已留在剪貼簿。
+    case autoPasteSkippedSecureInput
+    /// 索引連續寫入失敗（磁碟已滿或無法寫入）：新的複製可能沒有被保存。
+    case storageWriteFailed
+
+    var message: String {
+        switch self {
+        case .storageWriteFailed:
+            return String(
+                localized: "Can't write clipboard history. Check available disk space.",
+                comment: "Brief notice shown once when the clipboard history index repeatedly fails to save (disk full or read-only)."
+            )
+        case .autoPasteSkippedSecureInput:
+            return String(
+                localized: "Copied; focus is in a secure input field, so it was not pasted automatically",
+                comment: "Brief notice after clicking a clipboard item with auto-paste on, when the focused field is a secure (password) field."
+            )
+        }
+    }
+}
+
+private struct ClipboardToastView: View {
+    let text: String
+
+    var body: some View {
+        Text(verbatim: text)
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(Color.white)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: 360)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(Capsule().fill(Color.black.opacity(0.88)))
+            .padding(6)
+    }
+}
+
+/// 在滑鼠所在螢幕的上方中央短暫顯示一則提示（不搶焦點、不攔截滑鼠、幾秒後自動消失）。
+@MainActor
+private final class ClipboardToastPresenter {
+    static let shared = ClipboardToastPresenter()
+
+    private var panel: NSPanel?
+    private var hideTask: Task<Void, Never>?
+
+    func show(_ text: String, duration: Duration = .seconds(3)) {
+        hideTask?.cancel()
+        let hosting = NSHostingView(rootView: ClipboardToastView(text: text))
+        let size = hosting.fittingSize
+        let panel = self.panel ?? makePanel()
+        self.panel = panel
+        panel.contentView = hosting
+        panel.setContentSize(size)
+
+        let mouse = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { $0.frame.contains(mouse) } ?? NSScreen.main
+        if let frame = screen?.visibleFrame {
+            panel.setFrameOrigin(NSPoint(x: frame.midX - size.width / 2, y: frame.maxY - size.height - 8))
+        }
+        panel.alphaValue = 1
+        panel.orderFrontRegardless()
+
+        // 給 VoiceOver 使用者同樣的訊息（提示只出現幾秒，視覺上容易錯過）。
+        NSAccessibility.post(
+            element: NSApp as Any,
+            notification: .announcementRequested,
+            userInfo: [.announcement: text, .priority: NSAccessibilityPriorityLevel.high.rawValue]
+        )
+
+        hideTask = Task { [weak panel] in
+            try? await Task.sleep(for: duration)
+            guard !Task.isCancelled else { return }
+            panel?.orderOut(nil)
+        }
+    }
+
+    private func makePanel() -> NSPanel {
+        let panel = NSPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 10, height: 10),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: true
+        )
+        panel.isFloatingPanel = true
+        panel.level = .statusBar
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = true
+        panel.ignoresMouseEvents = true
+        panel.hidesOnDeactivate = false
+        panel.isReleasedWhenClosed = false
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        return panel
     }
 }
 
@@ -96,12 +223,16 @@ final class ClipboardService: ObservableObject {
     @Published private(set) var isPaused: Bool = false
     /// 系統的剪貼簿存取設定；不是 `.allowed` 時不讀取內容。
     @Published private(set) var access: ClipboardAccess = .allowed
+    /// 索引正連續寫入失敗（磁碟已滿等）。進入這個狀態時只提示一次，恢復後歸零。
+    @Published private(set) var storageWriteFailing: Bool = false
 
     var needsPermission: Bool { access.needsPermission }
 
     private let pasteboard: NSPasteboard
     private let store: ClipboardStore
     private let monitor: ClipboardMonitor
+    /// 定期維護（prune）：Core 排程，間隔見 `ClipboardMaintenance.pruneInterval`（≤ 5 分鐘）。
+    private let maintenance: ClipboardMaintenance
     private let writer: NSPasteboardWriter
     /// 圖片檔所在目錄（磁碟版持久化才有；記憶體後備模式為 nil）。
     private let imageDirectory: URL?
@@ -109,13 +240,10 @@ final class ClipboardService: ObservableObject {
     private var started = false
     private var settingsTask: Task<Void, Never>?
     private var accessTask: Task<Void, Never>?
-    private var pruneTask: Task<Void, Never>?
     private var reconcileTask: Task<Void, Never>?
     private var refreshPending = false
     private var appNameCache: [String: String?] = [:]
 
-    /// 定時 prune 的間隔（啟動時另外會先 prune 一次）。
-    private static let pruneInterval: Duration = .seconds(3600)
     /// 檢查系統存取設定的間隔（只讀屬性，很便宜）。
     private static let accessPollInterval: Duration = .seconds(3)
 
@@ -151,12 +279,17 @@ final class ClipboardService: ObservableObject {
             policy: ClipboardPolicy(),
             logger: logger
         )
+        maintenance = ClipboardMaintenance(store: store) { signal.fire() }
         writer = NSPasteboardWriter(pasteboard: general)
-        isPaused = Self.effectivePaused()
-        access = ClipboardAccess.current(of: general)
+        let initialAccess = ClipboardAccess.current(of: general)
+        access = initialAccess
+        isPaused = ClipboardRecordingPlanner.effectivePaused(Self.recordingInputs(access: initialAccess))
 
         signal.setHandler { [weak self] in
             Task { @MainActor in self?.scheduleRefresh() }
+        }
+        signal.setStorageHandler { [weak self] failing in
+            Task { @MainActor in self?.storageWriteStateChanged(failing: failing) }
         }
     }
 
@@ -189,14 +322,7 @@ final class ClipboardService: ObservableObject {
                 }
             }
         }
-        pruneTask = Task { [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(for: Self.pruneInterval)
-                guard let self, !Task.isCancelled else { return }
-                await self.store.prune()
-                self.scheduleRefresh()
-            }
-        }
+        maintenance.start()
         scheduleRefresh()
     }
 
@@ -204,10 +330,15 @@ final class ClipboardService: ObservableObject {
     func stop() {
         settingsTask?.cancel()
         accessTask?.cancel()
-        pruneTask?.cancel()
+        maintenance.stop()
         reconcileTask?.cancel()
         let monitor = monitor
-        Task { await monitor.stop() }
+        let store = store
+        // 盡力而為：結束前把還沒寫成功的索引再試一次（App 即將結束，不保證來得及完成）。
+        Task {
+            await monitor.stop()
+            await store.flushIfNeeded()
+        }
     }
 
     // MARK: 使用者操作
@@ -321,12 +452,43 @@ final class ClipboardService: ObservableObject {
 
     /// 寫回剪貼簿後，若使用者開啟了自動貼上且已授權，短延遲後送出 ⌘V（延遲是為了讓瀏海面板先收起、
     /// 把鍵盤焦點還給原本的 App）。沒授權時什麼都不做，不會彈任何提示。
+    ///
+    /// 送出前一刻（延遲之後）才做最後判斷（Core 的 `AutoPasteGate`，有測試）：
+    /// - 系統啟用了安全輸入（`IsSecureEventInputEnabled()`，焦點在密碼欄等）→ 不貼，內容留在剪貼簿，顯示短暫提示；
+    /// - 最前景是 DavidNook 自己 → 不貼（沒有別的 App 可貼）。
     func performAutoPasteIfEnabled() {
-        guard Defaults[.clipboardAutoPaste], CGPreflightPostEventAccess() else { return }
-        Task {
-            try? await Task.sleep(for: .milliseconds(180))
-            Self.postCommandV()
+        let environment = AutoPasteEnvironment(
+            isEnabled: { Defaults[.clipboardAutoPaste] },
+            hasEventPermission: { CGPreflightPostEventAccess() },
+            isFrontmostSelf: { Self.isFrontmostApplicationSelf() },
+            isSecureEventInputEnabled: { IsSecureEventInputEnabled() }
+        )
+        Task { [weak self] in
+            let outcome = await AutoPasteCoordinator.run(
+                environment: environment,
+                sleep: { seconds in try? await Task.sleep(for: .seconds(seconds)) },
+                send: { Self.postCommandV() }
+            )
+            if case .skipped(let reason) = outcome, AutoPasteDecision.skip(reason).shouldNotifyUser {
+                self?.show(.autoPasteSkippedSecureInput)
+            }
         }
+    }
+
+    /// 索引寫入連續失敗／恢復：失敗時只提示一次（直到恢復後再次失敗才會再提示）。訊息不含任何剪貼簿內容。
+    private func storageWriteStateChanged(failing: Bool) {
+        guard failing != storageWriteFailing else { return }
+        storageWriteFailing = failing
+        if failing { show(.storageWriteFailed) }
+    }
+
+    /// 顯示一則短暫提示。
+    private func show(_ notice: ClipboardNotice) {
+        ClipboardToastPresenter.shared.show(notice.message)
+    }
+
+    private static func isFrontmostApplicationSelf() -> Bool {
+        NSWorkspace.shared.frontmostApplication?.processIdentifier == NSRunningApplication.current.processIdentifier
     }
 
     private static func postCommandV() {
@@ -352,23 +514,17 @@ final class ClipboardService: ObservableObject {
     }
 
     private func reconcile() async {
-        let enabled = Defaults[.clipboardEnabled]
-        let effectivePaused = Self.effectivePaused()
+        let inputs = Self.recordingInputs(access: access)
+        let effectivePaused = ClipboardRecordingPlanner.effectivePaused(inputs)
         if isPaused != effectivePaused { isPaused = effectivePaused }
 
-        // 先套用暫停，再啟動 monitor：暫停中 monitor 只消耗 changeCount，不讀內容。
-        if effectivePaused { await store.pause() } else { await store.resume() }
+        // 暫停／恢復／啟停 monitor 的決策與順序在 Core（ClipboardRecordingPlanner，有測試）：
+        // 暫停中 monitor 只消耗 changeCount，不讀內容；任何恢復路徑都會先 syncBaseline，
+        // 所以暫停期間複製的內容不會在恢復後被補記。功能關閉，或系統設定需要使用者先處理（詢問／拒絕）時完全不讀。
+        await ClipboardRecordingPlanner.apply(inputs, store: store, monitor: monitor)
         await store.setMaxItems(Defaults[.clipboardMaxItems])
         await store.setRetention(Self.retention(days: Defaults[.clipboardRetentionDays]))
         await store.prune()
-
-        // 功能關閉，或系統設定需要使用者先處理（詢問／拒絕）時完全不讀；
-        // 其餘情況輪詢 changeCount，只有變動時 Core 才讀內容。
-        if enabled && !access.needsPermission {
-            await monitor.start()
-        } else {
-            await monitor.stop()
-        }
         scheduleRefresh()
     }
 
@@ -385,8 +541,12 @@ final class ClipboardService: ObservableObject {
         }
     }
 
-    private static func effectivePaused() -> Bool {
-        !Defaults[.clipboardEnabled] || Defaults[.clipboardPaused]
+    private static func recordingInputs(access: ClipboardAccess) -> ClipboardRecordingInputs {
+        ClipboardRecordingInputs(
+            enabled: Defaults[.clipboardEnabled],
+            userPaused: Defaults[.clipboardPaused],
+            access: access.coreState
+        )
     }
 
     /// 保留天數 → 秒；0（或負值）= 永久。
