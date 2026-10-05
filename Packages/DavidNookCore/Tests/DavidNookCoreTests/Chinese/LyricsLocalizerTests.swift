@@ -470,6 +470,61 @@ final class LyricsLocalizerTests: XCTestCase {
         XCTAssertEqual(result.lines.last, "這個軟件很好用")
     }
 
+    // MARK: - 「里」子句尾啟發式（兩條路徑的最後一步；樣本全為自編句子）
+
+    func testClauseFinalLiIsFixedOnTheNativeTraditionalPath() throws {
+        // 「在我心里」只有通用字（中性行）、「場景里」「秋涼里」有繁體專有字；三行都是殘留的簡體「里」。
+        let extra = ["在我心里", "場景里，", "秋涼里"]
+        let result = try localize(traditionalDocument(adding: extra))
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(Array(result.lines.suffix(3)), ["在我心裡", "場景裡，", "秋涼裡"])
+    }
+
+    func testClauseFinalLiKeepsCorrectTraditionalWords() throws {
+        let extra = ["相隔千里", "跑了十公里", "回到故里", "鄰里", "萬里無雲", "里程碑", "十里桃花"]
+        let doc = traditionalDocument(adding: extra)
+        let result = try localize(doc)
+        XCTAssertEqual(result.lines, doc)
+    }
+
+    func testClauseFinalLiIsFixedOnTheSimplifiedPathAsTheLastStep() throws {
+        // OpenCC 不轉「书本里」「电影里」的「里」；子句尾啟發式補上。
+        let result = try localize(["我们躲在书本里", "你留恋电影里", "你在我心里，", "千里之外万里无云", "公里和英里", "邻里与故里"])
+        XCTAssertEqual(result.script, .simplified)
+        XCTAssertEqual(result.lines, ["我們躲在書本裡", "你留戀電影裡", "你在我心裡，", "千里之外萬里無雲", "公里和英里", "鄰里與故里"])
+    }
+
+    func testClauseFinalLiAlsoAppliesToNeutralLinesInsideAMixedDocument() throws {
+        var doc = Array(repeating: "我们爱红色的花", count: 10)
+        doc += Array(repeating: "我們一起走過這條安靜的街", count: 10)
+        doc += ["在我心里", "千里"]
+        let result = try localize(doc)
+        XCTAssertEqual(result.script, .mixed)
+        XCTAssertEqual(Array(result.lines.suffix(2)), ["在我心裡", "千里"])
+    }
+
+    func testClauseFinalLiIsNotAppliedToNeutralDocumentsOrJapaneseKoreanLines() throws {
+        // 沒有任何簡繁證據的文件（也可能是日文／其他語言）：不動。
+        let neutral = ["在我心里", "家里"]
+        XCTAssertEqual(try localize(neutral).lines, neutral)
+        // 日韓行（即使夾在華語歌詞裡）不動。
+        let extra = ["心里で会おう"]
+        let result = try localize(traditionalDocument(adding: extra))
+        XCTAssertEqual(result.lines.last, "心里で会おう")
+    }
+
+    func testClauseFinalLiRuleDoesNotBreakIdempotence() throws {
+        let documents = [
+            traditionalDocument(adding: ["在我心里", "場景里", "千里"]),
+            ["我们躲在书本里", "家里，千里"],
+        ]
+        for document in documents {
+            let once = try localize(document)
+            let twice = try localize(once.lines)
+            XCTAssertEqual(twice.lines, once.lines)
+        }
+    }
+
     // MARK: - shared 實例
 
     func testSharedInstanceWorks() throws {
