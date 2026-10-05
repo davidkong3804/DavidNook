@@ -46,7 +46,8 @@ final class ClauseFinalLiRuleTests: XCTestCase {
     func testEveryClauseInALineIsHandledIndependently() {
         assertRule([
             ("家里，千里，心里", "家裡，千里，心裡"),
-            ("在家里想著萬里之外，在心里", "在家裡想著萬里之外，在心裡"),
+            ("在家里，想著萬里之外，在心里", "在家裡，想著萬里之外，在心裡"),
+            ("在家里想著萬里之外，在心里", "在家里想著萬里之外，在心裡"),   // 「家里想」不是子句尾
         ])
     }
 

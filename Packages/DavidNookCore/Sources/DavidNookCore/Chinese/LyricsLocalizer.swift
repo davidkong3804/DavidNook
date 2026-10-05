@@ -77,14 +77,17 @@ public final class LyricsLocalizer: @unchecked Sendable {
         case .simplified:
             let converter = try converterProvider(simplifiedMode)
             return LocalizedLyrics(
-                lines: lines.map { $0.isEmpty || detector.isJapaneseOrKorean($0) ? $0 : converter.convert($0) },
+                lines: lines.map { $0.isEmpty || detector.isJapaneseOrKorean($0) ? $0 : finish(converter.convert($0)) },
                 script: .simplified, lineScripts: nil, appliedMode: simplifiedMode
             )
 
         case .traditional:
             let repairer = try TraditionalLineRepairer(detector: detector, converterProvider: converterProvider)
             return LocalizedLyrics(
-                lines: try lines.map { try repairer.convert($0) },
+                lines: try lines.map { line in
+                    guard !line.isEmpty, !detector.isJapaneseOrKorean(line) else { return line }
+                    return finish(try repairer.convert(line))
+                },
                 script: .traditional, lineScripts: nil, appliedMode: .variantsOnly
             )
 
@@ -97,19 +100,25 @@ public final class LyricsLocalizer: @unchecked Sendable {
             for (line, lineScript) in zip(lines, lineScripts) {
                 switch lineScript {
                 case .neutral:
-                    converted.append(line)
+                    // 沒有專有字的行：文件已確定是華語，只套用「里」子句尾規則（日韓行不動）。
+                    converted.append(line.isEmpty || detector.isJapaneseOrKorean(line) ? line : finish(line))
                 case .simplified, .mixed:
                     if simplifiedConverter == nil { simplifiedConverter = try converterProvider(simplifiedMode) }
-                    converted.append(simplifiedConverter!.convert(line))
+                    converted.append(finish(simplifiedConverter!.convert(line)))
                 case .traditional:
                     if repairer == nil {
                         repairer = try TraditionalLineRepairer(detector: detector, converterProvider: converterProvider)
                     }
-                    converted.append(try repairer!.convert(line))
+                    converted.append(finish(try repairer!.convert(line)))
                 }
             }
             return LocalizedLyrics(lines: converted, script: .mixed, lineScripts: lineScripts, appliedMode: nil)
         }
+    }
+
+    /// 轉換的最後一步：「里」子句尾啟發式（見 `ClauseFinalLiRule`）。
+    private func finish(_ line: String) -> String {
+        ClauseFinalLiRule.apply(to: line)
     }
 }
 
