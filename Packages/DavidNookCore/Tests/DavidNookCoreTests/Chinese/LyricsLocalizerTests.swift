@@ -364,6 +364,31 @@ final class LyricsLocalizerTests: XCTestCase {
         XCTAssertEqual(result.lines[6], "裏切りの声が聞こえる", "日文行裡的「裏」不可被改成「裡」")
     }
 
+    // MARK: - 粵語口語字（嘅咗喺嘢啲唔冇哋佢嚟）不被破壞（特徵化測試；自編句子）
+
+    func testCantoneseColloquialCharactersSurviveNativeTraditionalPath() throws {
+        let lines = ["我喺屋企食咗飯嚟睇電影", "佢嘅嘢好啲，我哋唔驚", "冇咁易搞掂，真係好累"]
+        let result = try localize(lines)
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(result.appliedMode, .variantsOnly)
+        XCTAssertEqual(result.lines, lines, "t2tw 不得動粵語口語字")
+    }
+
+    func testCantoneseColloquialCharactersSurviveSimplifiedSourcePath() throws {
+        // 簡體來源的粵語歌詞（口語字不是簡體專有字，原樣保留；其餘照常簡轉繁）。
+        let result = try localize(["我喺屋企食咗饭来睇电影", "佢嘅嘢好啲，我哋唔惊", "冇咁易搞掂，真好累"])
+        XCTAssertEqual(result.script, .simplified)
+        XCTAssertEqual(result.lines, ["我喺屋企食咗飯來睇電影", "佢嘅嘢好啲，我哋唔驚", "冇咁易搞掂，真好累"])
+    }
+
+    func testHongKongWrittenVariantsAreNormalizedToTaiwanFormsOnNativeTraditional() throws {
+        // 如實記錄（真實資料：粵語歌詞的 着／裏／污 被 t2tw 改成 著／裡／汙；這是使用者待決的風格取捨）。
+        let lines = ["跟着我走進裏面", "不要污染我們的夢", "我們一起唱歌"]
+        let result = try localize(lines)
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(result.lines, ["跟著我走進裡面", "不要汙染我們的夢", "我們一起唱歌"])
+    }
+
     // MARK: - shared 實例
 
     func testSharedInstanceWorks() throws {
