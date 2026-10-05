@@ -881,12 +881,12 @@
         }
       }
     },
-    "DavidNook turns the notch into a small control center. Everything stays on this Mac." : {
+    "DavidNook turns the notch into a small control center. Everything stays on this Mac; the only network connection is lrclib.net, for lyrics." : {
       "localizations" : {
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "DavidNook 讓瀏海變成小型控制中心，所有資料都只留在這台 Mac。"
+            "value" : "DavidNook 讓瀏海變成小型控制中心。資料都只留在這台 Mac，唯一的對外連線是查詢歌詞用的 lrclib.net。"
           }
         }
       }

@@ -73,3 +73,17 @@ M1 瀏海殼（匯入上游、裁剪、改名、多螢幕）→ M2 Now Playing�
 - **key 慣例**：key 為英文原文（沿用上游），`en` 值省略時即 key 本身；格式類字串用 `Text(verbatim:)`，不進 xcstrings。零散的 AppKit／純字串位置（視窗標題、分頁標籤、Music 備援占位文字）改為 `String(localized:)`。
 - **檢查**：`Tools/check_localization.py`（Python 3 標準庫）掃描原始碼中的在地化字面字串並比對 xcstrings，列出「用到但缺 zh-Hant」「孤兒 key」「非 en／zh-Hant 語言」「AppKit 直接字面字串」；加 `--stringsdata <DerivedData>` 可再與編譯器抽出的 `.stringsdata` 交叉比對（規則缺口會列出）。
 - **離屏快照**：`ImageRenderer` 畫不出 AppKit 支撐的控制項（Form／Toggle／Picker 變佔位圖示），所以只有 Debug 建置內含 `SnapshotHarness`（`boringNotch/components/Settings/SnapshotHarness.swift`）：`-davidnookSnapshot YES -clipboardPaused YES -AppleLanguages (zh-Hant)` 啟動後以 `NSHostingView.cacheDisplay` 渲染真實的設定分頁，PNG 寫在沙盒容器暫存目錄後結束（在 `ClipboardService.start()` 之前，不會監看剪貼簿）。Release 不含此程式。
+
+### 設定／About／onboarding（步驟 2）
+- **onboarding 只說明、不觸發權限**：原本第二步「選擇音樂來源」會呼叫 `MusicManager.selectMediaController`，改為 `OnboardingOverviewView`（功能、權限與原因、唯一對外連線 lrclib.net）。這一頁不呼叫 AppleScript、剪貼簿、`CGRequestPostEventAccess`；按「繼續」只設 `firstLaunch = false` 與 `didChooseMediaController = true`（後者讓之後的備援提示可以顯示）。
+- **（M4 發現）「音樂」自動化不只是備援**：`NowPlayingController` 在播放來源是「音樂」App 時，仍會以 AppleScript 讀取喜好項目（`fetchFavoriteStateIfSupported`）、設定音量與喜好；所以權限說明與 `NSAppleEventsUsageDescription` 寫成「備援，以及音樂 App 正在播放時的喜好項目與音量」，不再宣稱「僅備援」。
+- **（M4 修正）啟動時不再預先啟用「音樂」備援**：`MusicManager.init` 原本在可用性檢查前先 `activateFallback()`，`AppleMusicController.init` 在「音樂」App 正在執行時就會送 Apple 事件而跳出自動化授權（發生在使用者看到說明之前）。現在等可用性檢查結果：可用就啟用 Now Playing，不可用才備援（原失敗分支不變）。實測啟動後 adapter 的 perl 子行程存在（Now Playing 路徑啟用），8 秒存活。**未驗證**：adapter 不可用時的備援切換（需要刻意弄壞 adapter）、真實 Apple Music 播放。
+- **剪貼簿的系統提示仍在第一次讀取時出現**（`ClipboardService.start()` 啟動即依設定監看，預設開）：這是 M3 的設計；onboarding 文字如實說明「複製東西之後」才會問。若要更保守，可改成預設不記錄、由使用者在設定開啟後才開始（未做，需決定）。
+- **About**：版本、核心元件版本、GPL-3.0 且無任何擔保、boring.notch 衍生作品、與 NotchNook 無關、原始碼連結；GPL-3.0 全文與第三方授權（`THIRD_PARTY_NOTICES.md`＋`LICENSES/*.txt`）隨 App 內附並於 App 內顯示（`AboutView.swift` 的 `LegalDocument`）。
+- 設定文案整理：精簡模式說明不再提行事曆（並提醒沒有分頁列＝剪貼簿不可達）；「正在播放」來源說明改寫；「Colored spectrogram」其實是裝飾用動畫條（不是音訊頻譜），改名「彩色播放動態條」；移除與分段控制重複的強調色說明；快速鍵分頁順序與側邊欄一致；移除無用的「Upgrade to Pro」徽章函式。
+
+### 圖示、建置、授權（步驟 3、4、6）
+- 圖示：`Tools/make_icon.swift` 純 CoreGraphics（深色圓角方形、頂端黑色瀏海、五條歌詞行、目前一行暖色漸層加音符；<64 px 用簡化版）。menu bar 圖示是 SF Symbol `rectangle.topthird.inset.filled`（單色 template），不是上游 logo，維持不變。
+- `Tools/build_release.sh`／`Tools/install.sh`：見 README。`build_release.sh` 建置後檢查 Hardened Runtime 仍開啟與主程式未連結 adapter；`install.sh` 不用 sudo、不改登入項目。本機沒有 shellcheck，以 `bash -n` 檢查。產物架構以 `lipo -archs` 為準：`arm64`（`ONLY_ACTIVE_ARCH = YES`；Intel 未驗證）。
+- 授權稽核（`THIRD_PARTY_NOTICES.md`）：新發現先前漏列的靜態連入元件 marisa-trie 0.2.6（BSD-2-Clause 或 LGPL-2.1+，選 BSD-2-Clause）與 darts-clone 0.32（BSD-2-Clause；隨附的 `darts.h` 沒有授權標頭，授權依其上游 COPYING.md）。OpenCC 目錄沒有 NOTICE 檔。swift-syntax 只在建置期。上游的 `THIRD_PARTY_LICENSES` 已併入 `LICENSES/` 並移除。
+- **未驗證／需決定**：NotchDrop 是否仍有殘存程式碼（未逐檔比對上游）；OpenCC 字典資料是否有逐檔授權例外；README 的 Gatekeeper 說明只寫「依系統提示」（macOS 27 的實際按鈕名稱未查證）。

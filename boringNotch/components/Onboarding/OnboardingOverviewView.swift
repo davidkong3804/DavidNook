@@ -21,7 +21,7 @@ struct OnboardingOverviewView: View {
                         Text("How DavidNook works")
                             .font(.title)
                             .fontWeight(.bold)
-                        Text("DavidNook turns the notch into a small control center. Everything stays on this Mac.")
+                        Text("DavidNook turns the notch into a small control center. Everything stays on this Mac; the only network connection is lrclib.net, for lyrics.")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }
