@@ -49,8 +49,8 @@ public final class LyricsChineseConverter: @unchecked Sendable {
             converter = try ChineseConverter(options: [.twStandard])
             self.overrides = nil
         case .traditionalToSimplified:
-            // 紅燈佔位（尚未實作繁→簡）：先讓測試可編譯但斷言失敗。
-            converter = try ChineseConverter(options: [.twStandard])
+            // tw2s：先把台灣字形還原（裡→裏、著→著 等），再繁→簡；不含慣用詞（twIdiom）。
+            converter = try ChineseConverter(options: [.simplify, .twStandard])
             self.overrides = nil
         }
     }
