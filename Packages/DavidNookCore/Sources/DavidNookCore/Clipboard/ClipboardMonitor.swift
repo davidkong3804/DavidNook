@@ -96,6 +96,9 @@ public actor ClipboardMonitor {
         }
     }
 
+    /// 把基準 changeCount 對齊到當下（不讀內容）。
+    public func syncBaseline() {}
+
     /// 停止輪詢。
     public func stop() {
         token?.cancel()
