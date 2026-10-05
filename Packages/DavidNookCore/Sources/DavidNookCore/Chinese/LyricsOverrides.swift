@@ -78,6 +78,9 @@ public struct LyricsOverrides: Sendable {
 
     public var isEmpty: Bool { entries.isEmpty }
 
+    /// （TDD 紅燈階段的空殼：尚未實作，原樣回傳。）
+    func restrictedToSimplifiedKeys(isSimplified: (Unicode.Scalar) -> Bool) -> LyricsOverrides { self }
+
     // MARK: - 內建覆寫表
 
     /// 內建覆寫表（`Resources/lyrics_overrides.txt`），只載入一次。

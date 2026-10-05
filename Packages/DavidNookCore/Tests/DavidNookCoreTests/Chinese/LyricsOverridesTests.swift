@@ -128,6 +128,44 @@ final class LyricsOverridesTests: XCTestCase {
         }
     }
 
+    func testBundledTableContainsFuEntries() {
+        // 「复」：重复／反复／复杂／复制／复习（一般歌詞語境都成立）；原生繁體路徑殘留的「复」靠它們修。
+        let table = Dictionary(
+            LyricsOverrides.bundled.entries.map { ($0.key, $0.value) },
+            uniquingKeysWith: { _, last in last }
+        )
+        let expected: [String: String] = [
+            "重复": "重複", "反复": "反覆", "复杂": "複雜", "复制": "複製", "复习": "複習",
+        ]
+        for (key, value) in expected {
+            XCTAssertEqual(table[key], value, "覆寫表缺少或錯誤：\(key)")
+        }
+    }
+
+    func testBundledTableDoesNotContainAmbiguousFuWords() {
+        // 「回复」（回覆／回復）與「恢复」（恢復）歧義大，刻意不放。
+        let keys = Set(LyricsOverrides.bundled.entries.map(\.key))
+        for key in ["回复", "恢复", "复", "复原", "答复"] {
+            XCTAssertFalse(keys.contains(key), "不該有歧義條目：\(key)")
+        }
+    }
+
+    // MARK: - 原生繁體路徑用的子集合
+
+    func testRestrictedSubsetKeepsOnlyEntriesWhoseKeyContainsASimplifiedForm() {
+        let overrides = LyricsOverrides(parsing: "重复=重複\n海里=海裡\n托=托\n台上=台上\n泪干=淚乾\n谷堆=穀堆\n复习=複習")
+        let subset = overrides.restrictedToSimplifiedKeys { "复泪".unicodeScalars.contains($0) }
+        XCTAssertEqual(Set(subset.entries.map(\.key)), ["重复", "泪干", "复习"])
+        XCTAssertEqual(subset.apply(to: "重复海里谷堆泪干") { $0 }, "重複海里谷堆淚乾")
+    }
+
+    func testRestrictedSubsetDropsIdentityEntriesEvenWhenTheKeyHasASimplifiedForm() {
+        // 保護條目（值＝鍵）在原生繁體路徑沒有意義（t2tw 本來就不會動它們）。
+        let overrides = LyricsOverrides(parsing: "复=复\n重复=重複")
+        let subset = overrides.restrictedToSimplifiedKeys { $0 == "复" }
+        XCTAssertEqual(subset.entries.map(\.key), ["重复"])
+    }
+
     func testBundledValuesAreTraditional() {
         // 覆寫輸出必須是繁體：不含任何簡體專有字。
         let detector = ChineseScriptDetector()

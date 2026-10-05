@@ -525,6 +525,63 @@ final class LyricsLocalizerTests: XCTestCase {
         }
     }
 
+    // MARK: - 「复」殘留（原生繁體路徑套用覆寫表中「鍵含簡體字形」的條目；樣本全為自編句子）
+
+    func testTraditionalDocumentFixesResidualFuWords() throws {
+        // 「复」不在偵測器的簡體專有字集合內（Big5 收錄），所以整行都沒有簡體證據，要靠覆寫表修。
+        let extra = ["重复的夢", "我們反复唱著這首歌", "复杂的心情", "請复制這份歌詞", "复习功課"]
+        let result = try localize(traditionalDocument(adding: extra))
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(
+            Array(result.lines.suffix(5)),
+            ["重複的夢", "我們反覆唱著這首歌", "複雜的心情", "請複製這份歌詞", "複習功課"]
+        )
+    }
+
+    func testResidualFuWordsAreFixedInLinesThatAlsoHaveSimplifiedCharacters() throws {
+        // 同一行還有簡體專有字（们、红）：既要修「复」詞，也要修簡體字。
+        let extra = ["我们重复唱著這首歌", "重复了红色的夢", "红色的夢不再复杂"]
+        let result = try localize(traditionalDocument(adding: extra))
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(Array(result.lines.suffix(3)), ["我們重複唱著這首歌", "重複了紅色的夢", "紅色的夢不再複雜"])
+    }
+
+    func testAmbiguousFuWordsAreLeftAlone() throws {
+        // 回复／恢复歧義大（回覆／回復、恢復），不處理。
+        let extra = ["你回复了我的信", "慢慢恢复平靜"]
+        let result = try localize(traditionalDocument(adding: extra))
+        XCTAssertEqual(Array(result.lines.suffix(2)), extra)
+    }
+
+    func testNativeTraditionalPathDoesNotApplyEntriesWhoseKeyHasNoSimplifiedForm() throws {
+        // 鍵由正確繁體也會用的字組成的條目（谷堆、后街、想象、海里…）不得套用在原生繁體文字上：
+        // 「山谷堆滿了雪」不是穀堆、「皇后街」不是皇後街。
+        let extra = ["山谷堆滿了雪", "皇后街的燈", "我想象不到", "委托你的人"]
+        let result = try localize(traditionalDocument(adding: extra))
+        XCTAssertEqual(Array(result.lines.suffix(4)), extra)
+    }
+
+    func testResidualFuWordsInNeutralLinesOfAMixedDocument() throws {
+        var doc = Array(repeating: "我们爱红色的花", count: 10)
+        doc += Array(repeating: "我們一起走過這條安靜的街", count: 10)
+        doc += ["重复", "反复唱歌"]
+        let result = try localize(doc)
+        XCTAssertEqual(result.script, .mixed)
+        XCTAssertEqual(Array(result.lines.suffix(2)), ["重複", "反覆唱歌"])
+    }
+
+    func testResidualFuWordsAreNotTouchedInNeutralDocuments() throws {
+        let neutral = ["重复", "反复唱歌"]
+        XCTAssertEqual(try localize(neutral).lines, neutral)
+    }
+
+    func testResidualFuRepairKeepsIdempotence() throws {
+        let doc = traditionalDocument(adding: ["重复的夢", "我们重复唱著這首歌", "复杂的心情"])
+        let once = try localize(doc)
+        let twice = try localize(once.lines)
+        XCTAssertEqual(twice.lines, once.lines)
+    }
+
     // MARK: - 「里→裡」詞級規則（三條路徑的最終輸出；樣本全為自編句子）
 
     func testWordLevelLiIsFixedOnTheNativeTraditionalPath() throws {
