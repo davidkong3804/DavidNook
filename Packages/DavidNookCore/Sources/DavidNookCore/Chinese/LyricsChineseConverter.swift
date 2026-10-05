@@ -16,6 +16,11 @@ public enum LyricsConversionMode: String, Sendable, CaseIterable {
     /// 不改「台灣」「鄰里」「裡面」；會把 着→著、裏→裡、爲→為 等變體統一成台灣字形。
     /// 不套用覆寫表（表內的鍵是簡體詞）。
     case variantsOnly
+
+    /// 繁→簡（t2s，含台灣字形反查，等同 OpenCC 的 tw2s，**不含**慣用詞）。
+    /// 只用於產生 LRCLIB 的查詢變體（繁體歌名／歌手名 → 簡體寫法）；**不可用於顯示**，也不套用覆寫表
+    /// （覆寫表的鍵是簡體詞、值是繁體詞，方向相反）。
+    case traditionalToSimplified
 }
 
 /// 包裝 SwiftyOpenCC 的歌詞轉換器：先套覆寫表，再交給 OpenCC。
@@ -41,6 +46,10 @@ public final class LyricsChineseConverter: @unchecked Sendable {
             converter = try ChineseConverter(options: [.traditionalize, .twStandard, .twIdiom])
             self.overrides = overrides
         case .variantsOnly:
+            converter = try ChineseConverter(options: [.twStandard])
+            self.overrides = nil
+        case .traditionalToSimplified:
+            // 紅燈佔位（尚未實作繁→簡）：先讓測試可編譯但斷言失敗。
             converter = try ChineseConverter(options: [.twStandard])
             self.overrides = nil
         }

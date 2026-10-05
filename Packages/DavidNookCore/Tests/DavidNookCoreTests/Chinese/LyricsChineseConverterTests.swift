@@ -276,6 +276,59 @@ final class LyricsChineseConverterTests: XCTestCase {
         XCTAssertEqual(converter.convert("发如雪"), "发如雪")
     }
 
+    // MARK: - .traditionalToSimplified（t2s：僅供 LRCLIB 查詢變體，不用於顯示）
+
+    func testTraditionalToSimplifiedGoldenSamples() throws {
+        try assertConverts(.traditionalToSimplified, [
+            ("周杰倫", "周杰伦"),
+            ("詞：周杰倫", "词：周杰伦"),
+            ("夜行的燈", "夜行的灯"),
+            ("後來", "后来"),
+            ("頭髮", "头发"),
+            ("發現", "发现"),
+            ("為什麼", "为什么"),
+            ("編曲", "编曲"),
+            ("測試句一", "测试句一"),
+        ])
+    }
+
+    func testTraditionalToSimplifiedHandlesTaiwanVariantForms() throws {
+        // 台灣字形（裡、著、臺）也要能還原成簡體寫法（twStandard 反查）。
+        try assertConverts(.traditionalToSimplified, [
+            ("裡面", "里面"),
+            ("跟著我", "跟着我"),
+            ("臺灣", "台湾"),
+        ])
+    }
+
+    func testTraditionalToSimplifiedLeavesSimplifiedAndOtherTextAlone() throws {
+        try assertConverts(.traditionalToSimplified, [
+            ("周杰伦", "周杰伦"),
+            ("夜行的灯", "夜行的灯"),
+            ("Hello, world! 123 ~ ♪", "Hello, world! 123 ~ ♪"),
+            ("", ""),
+        ])
+    }
+
+    func testTraditionalToSimplifiedDoesNotApplyTaiwanIdioms() throws {
+        // 不含慣用詞層：軟體（台灣用語）只換字形，不會被改成「软件」。
+        try assertConverts(.traditionalToSimplified, [("軟體", "软体")])
+    }
+
+    func testTraditionalToSimplifiedDoesNotApplyOverrides() throws {
+        // 覆寫表的鍵是簡體詞；繁→簡方向不套用，髮如雪 只做字形轉換。
+        try assertConverts(.traditionalToSimplified, [("髮如雪", "发如雪")])
+    }
+
+    func testTraditionalToSimplifiedRoundTripKeepsQueryUsable() throws {
+        // 作為查詢變體：簡→繁→簡 對自編短句應回到原樣。
+        let s2t = try LyricsChineseConverter.cached(.conservative)
+        let t2s = try LyricsChineseConverter.cached(.traditionalToSimplified)
+        for original in ["测试句一", "夜行的灯", "我们的故事"] {
+            XCTAssertEqual(t2s.convert(s2t.convert(original)), original)
+        }
+    }
+
     // MARK: - 快取與一般行為
 
     func testConvertersAreCachedPerMode() throws {
