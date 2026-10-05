@@ -139,7 +139,8 @@ final class SongAnalyzer {
         guard !candidate.instrumental, let synced = candidate.syncedLyrics,
               !synced.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
         let document = LRCParser.parse(synced)
-        let stripped = picker.stripper.strip(document.lines, title: query.title, artist: query.artist)
+        let collapsed = LyricsTranslationCollapser.collapse(document.lines)
+        let stripped = picker.stripper.strip(collapsed.lines, title: query.title, artist: query.artist)
         let spoken = stripped.lines.filter { !$0.isBlank }
         guard !spoken.isEmpty else { return nil }
         let script = picker.scriptClassifier(spoken.map(\.text).joined(separator: "\n"))
@@ -245,7 +246,9 @@ final class SongAnalyzer {
 
             if let raw, let synced = raw.syncedLyrics {
                 let document = LRCParser.parse(synced)
-                let stripped = picker.stripper.strip(document.lines, title: query.title, artist: query.artist)
+                let stripped = picker.stripper.strip(
+                    LyricsTranslationCollapser.collapse(document.lines).lines, title: query.title, artist: query.artist
+                )
                 let firstKept = Array(stripped.lines.filter { !$0.isBlank }.prefix(5)).map(\.text)
                 let leak = firstKept.contains { Self.looksLikeCredit($0) }
                 report.header = HeaderInfo(dropped: stripped.dropped.map(\.text), firstKept: firstKept, leakSuspect: leak)

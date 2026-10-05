@@ -8,6 +8,9 @@ import Foundation
 /// - 目標長度已知時：候選 `duration` 缺少，或與目標相差超過 `durationTolerance`（預設 2 秒）。
 ///   目標長度未知（≤ 0、NaN）時不以長度過濾、也不以長度排序。
 ///
+/// ## 清理
+/// 雙語檔（逐行附翻譯、共用時間戳）先以 `LyricsTranslationCollapser` 收合，再剝檔頭。
+///
 /// ## 排序（由先到後，前一項相同才看下一項）
 /// 1. 長度差，以**整秒（四捨五入）**比較，避免 0.3 秒與 0.4 秒這種無意義差異壓過後面的準則。
 /// 2. 原生繁體優先：`traditional`、`neutral` 同級最優；`simplified`、`mixed`（需要轉換者）次之。
@@ -67,7 +70,9 @@ public struct LyricsCandidatePicker: Sendable {
             }
 
             let document = LRCParser.parse(synced)
-            let lines = stripper.strip(document.lines, title: query.title, artist: query.artist).lines
+            // 雙語檔（原文＋翻譯共用時間戳）先收合成只剩原文，再剝檔頭、再做簡繁分類。
+            let collapsed = LyricsTranslationCollapser.collapse(document.lines).lines
+            let lines = stripper.strip(collapsed, title: query.title, artist: query.artist).lines
             let spoken = lines.filter { !$0.isBlank }
             guard let first = spoken.first else { continue }
 
