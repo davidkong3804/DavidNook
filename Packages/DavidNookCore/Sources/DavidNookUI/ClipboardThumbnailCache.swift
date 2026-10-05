@@ -113,3 +113,10 @@ public final class ClipboardThumbnailCache: @unchecked Sendable {
         Int(image.size.width * 2) * Int(image.size.height * 2) * 4
     }
 }
+
+// 隱私：快取持有由剪貼簿圖片產生的縮圖與檔案路徑；字串化（print／內插／describing／reflecting／dump）一律只輸出 `<redacted>`。
+extension ClipboardThumbnailCache: CustomStringConvertible, CustomDebugStringConvertible, CustomReflectable {
+    public var description: String { "ClipboardThumbnailCache(<redacted>)" }
+    public var debugDescription: String { description }
+    public var customMirror: Mirror { Mirror(self, children: ["redacted": description], displayStyle: .class) }
+}

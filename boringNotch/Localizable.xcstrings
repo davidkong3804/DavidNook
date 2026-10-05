@@ -3619,6 +3619,40 @@
           }
         }
       }
+    },
+    "Copied; focus is in a secure input field, so it was not pasted automatically" : {
+      "comment" : "Brief notice after clicking a clipboard item with auto-paste on, when the focused field is a secure (password) field.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied; focus is in a secure input field, so it was not pasted automatically"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已複製；目前焦點在安全輸入欄位，未自動貼上"
+          }
+        }
+      }
+    },
+    "Can't write clipboard history. Check available disk space." : {
+      "comment" : "Brief notice shown once when the clipboard history index repeatedly fails to save (disk full or read-only).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't write clipboard history. Check available disk space."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法寫入剪貼簿歷史，請檢查磁碟空間"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

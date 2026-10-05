@@ -10,6 +10,8 @@ public enum ClipboardPersistenceOperation: String, Sendable, Equatable {
     case deleteImage
     /// 清除全部。
     case deleteAll
+    /// 刪除損毀索引的隔離檔。
+    case deleteQuarantine
 }
 
 /// 剪貼簿子系統的 log 事件。
@@ -44,6 +46,10 @@ public enum ClipboardLogEvent: Equatable, Sendable {
     case indexCorrupted
     /// 某種持久化操作失敗。
     case persistenceFailed(operation: ClipboardPersistenceOperation)
+    /// 索引連續寫入失敗（每段失敗期間只報一次）：磁碟可能已滿或無法寫入，UI 應提示使用者。
+    case indexWriteFailing
+    /// 索引寫入失敗後恢復正常。
+    case indexWriteRecovered
     /// monitor 讀到快照但決定略過（只記原因）。
     case snapshotSkipped(reason: ClipboardSkipReason)
     /// monitor 偵測到自己寫回的內容。

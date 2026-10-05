@@ -38,6 +38,11 @@ func directoryEntries(_ url: URL) -> [String] {
     ((try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? []).sorted()
 }
 
+/// 該路徑是否被標為「不納入備份」（Time Machine 等；`URLResourceValues.isExcludedFromBackup`）。
+func isExcludedFromBackup(_ url: URL) throws -> Bool {
+    try url.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup ?? false
+}
+
 /// 1x1 PNG（最小的合法 PNG，用於圖片案例）。
 let tinyPNG: Data = Data(base64Encoded:
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")!
@@ -219,4 +224,48 @@ final class FailingImagePersistence: ClipboardPersistence, @unchecked Sendable {
     func deleteImage(fileName: String) throws { try inner.deleteImage(fileName: fileName) }
     func imageFileNames() -> [String] { inner.imageFileNames() }
     func deleteAll() throws { try inner.deleteAll() }
+}
+
+// MARK: - 索引寫入可被切換成失敗的 persistence（F3：失敗後的 dirty／重試）
+
+final class FlakyIndexPersistence: ClipboardPersistence, @unchecked Sendable {
+    struct Failure: Error {}
+    private let lock = NSLock()
+    private var failSave = false
+    private var failDelete = false
+    private var attempts = 0
+    let inner = InMemoryClipboardPersistence()
+
+    /// 為 true 時 `saveItems` 一律拋錯（磁碟已滿、唯讀等）。
+    var failSaveItems: Bool {
+        get { lock.withLock { failSave } }
+        set { lock.withLock { failSave = newValue } }
+    }
+    /// 為 true 時 `deleteAll` 一律拋錯。
+    var failDeleteAll: Bool {
+        get { lock.withLock { failDelete } }
+        set { lock.withLock { failDelete = newValue } }
+    }
+    var saveAttempts: Int { lock.withLock { attempts } }
+    /// 磁碟上（記憶體模擬）實際保存的條目——重啟後會被載入的就是它。
+    var persistedItems: [ClipboardItem] { inner.loadItems() }
+
+    func loadItems() -> [ClipboardItem] { inner.loadItems() }
+    func saveItems(_ items: [ClipboardItem]) throws {
+        let shouldFail: Bool = lock.withLock {
+            attempts += 1
+            return failSave
+        }
+        if shouldFail { throw Failure() }
+        try inner.saveItems(items)
+    }
+    func saveImage(_ data: Data, fileName: String) throws { try inner.saveImage(data, fileName: fileName) }
+    func loadImage(fileName: String) -> Data? { inner.loadImage(fileName: fileName) }
+    func imageExists(fileName: String) -> Bool { inner.imageExists(fileName: fileName) }
+    func deleteImage(fileName: String) throws { try inner.deleteImage(fileName: fileName) }
+    func imageFileNames() -> [String] { inner.imageFileNames() }
+    func deleteAll() throws {
+        if lock.withLock({ failDelete }) { throw Failure() }
+        try inner.deleteAll()
+    }
 }

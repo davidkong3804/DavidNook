@@ -26,14 +26,18 @@ public final class FileLyricsCacheStore: LyricsCacheStore, @unchecked Sendable {
     /// 存放目錄。
     public let directory: URL
     private let lock = NSLock()
+    /// 測試用掛鉤：暫存檔剛以 `open(O_CREAT)` 建立、尚未 `fchmod`、尚未寫入任何位元組時呼叫，參數為該檔案的 fd。正式 App 不設定。
+    var onTempFileCreated: ((Int32) -> Void)?
 
-    /// 建立快取並確保目錄存在且權限為 0700。
-    /// - Throws: 目錄無法建立或無法設定權限。
+    /// 建立快取並確保目錄存在、權限為 0700，且已排除備份。
+    /// - Throws: 目錄無法建立、無法設定權限或無法排除備份。
     public init(directory: URL) throws {
         self.directory = directory
         let fm = FileManager.default
         try fm.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
+        // 快取內容反映聽歌紀錄：新建與既有目錄都標為「排除備份」，「清除快取」才不會漏掉備份快照裡的舊副本。
+        try BackupExclusion.exclude(directory)
     }
 
     // MARK: - LyricsCacheStore
@@ -138,6 +142,7 @@ public final class FileLyricsCacheStore: LyricsCacheStore, @unchecked Sendable {
         let temp = directory.appendingPathComponent(destination.lastPathComponent + Self.tempMarker + UUID().uuidString)
         let fd = open(temp.path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0o600)
         guard fd >= 0 else { throw CocoaError(.fileWriteUnknown) }
+        onTempFileCreated?(fd)
         var succeeded = fchmod(fd, 0o600) == 0
         if succeeded {
             succeeded = data.withUnsafeBytes { (buffer: UnsafeRawBufferPointer) -> Bool in

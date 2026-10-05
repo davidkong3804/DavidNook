@@ -31,6 +31,17 @@ public protocol ClipboardPersistence: Sendable {
     func imageFileNames() -> [String]
     /// 刪除本 app 產生的全部檔案（索引、圖片、損毀備份、暫存檔）。
     func deleteAll() throws
+    /// 刪除已超過 `maxAge` 的損毀索引隔離檔（`index.json.corrupt`，內含完整明文）。沒有隔離檔的實作可忽略。
+    func pruneQuarantine(now: Date, maxAge: TimeInterval)
+    /// 立刻刪除損毀索引隔離檔（「清除未釘選」「清除全部」都要呼叫）。沒有隔離檔的實作可忽略。
+    func deleteQuarantine() throws
+}
+
+public extension ClipboardPersistence {
+    /// 預設：沒有隔離檔，什麼都不做。
+    func pruneQuarantine(now: Date, maxAge: TimeInterval) {}
+    /// 預設：沒有隔離檔，什麼都不做。
+    func deleteQuarantine() throws {}
 }
 
 /// 記憶體版持久化（測試、SwiftUI 預覽用；不碰磁碟）。

@@ -48,6 +48,36 @@ final class FileLyricsCacheStoreTests: XCTestCase {
         XCTAssertEqual(try posixPermissions(of: directory), 0o700)
     }
 
+    func testTempFilesAreCreatedWithMode0600EvenUnderUmask0BeforeAnyByteIsWritten() throws {
+        let previous = umask(0)
+        defer { umask(previous) }
+        let (store, _) = try makeStore()
+        var observations: [(mode: Int, size: Int64)] = []
+        store.onTempFileCreated = { fd in
+            var info = stat()
+            XCTAssertEqual(fstat(fd, &info), 0)
+            observations.append((Int(info.st_mode & 0o777), Int64(info.st_size)))
+        }
+        store.store(LyricsCacheEntry(lyrics: makeLyrics(), storedAt: ManualClock.reference), for: key)
+        XCTAssertEqual(observations.count, 1)
+        XCTAssertEqual(observations.first?.mode, 0o600, "建立當下就必須是 0600")
+        XCTAssertEqual(observations.first?.size, 0, "檢查時間點必須在寫入任何位元組之前")
+    }
+
+    func testNewDirectoryIsExcludedFromBackup() throws {
+        let (_, directory) = try makeStore()
+        XCTAssertTrue(try isExcludedFromBackup(directory), "歌詞快取（聽歌紀錄）不得進 Time Machine 備份")
+    }
+
+    func testExistingDirectoryThatWasNotExcludedGetsBackfilledOnInit() throws {
+        let root = try makeTempDirectory(for: self)
+        let directory = root.appendingPathComponent("Lyrics")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        XCTAssertFalse(try isExcludedFromBackup(directory), "前置條件：舊版建立的目錄尚未排除備份")
+        _ = try FileLyricsCacheStore(directory: directory)
+        XCTAssertTrue(try isExcludedFromBackup(directory))
+    }
+
     func testCacheFilesAreMode0600AndLeaveNoTempFiles() throws {
         let (store, directory) = try makeStore()
         store.store(LyricsCacheEntry(lyrics: makeLyrics(), storedAt: ManualClock.reference), for: key)

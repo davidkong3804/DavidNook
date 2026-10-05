@@ -145,6 +145,46 @@ final class ClipboardMonitorTests: XCTestCase {
         XCTAssertEqual(items.compactMap(\.text), ["after resume"])
     }
 
+    func testSyncBaselineBeforeResumeStopsCopyMadeWhilePausedFromBeingBackfilled() async {
+        let rig = makeRig()
+        await rig.monitor.start()
+        await rig.store.pause()
+        rig.pasteboard.copy([PBType.utf8Text: utf8("copied while paused")])   // 還沒輪詢到
+        await rig.monitor.syncBaseline()
+        await rig.store.resume()
+        await rig.monitor.pollOnce(now: t(1))
+        let items = await rig.store.items
+        XCTAssertTrue(items.isEmpty, "恢復前先對齊基準：暫停期間複製的內容不得在恢復後被補記")
+        XCTAssertEqual(rig.pasteboard.snapshotCallCount, 0)
+    }
+
+    func testResumeWithoutSyncBaselineWouldBackfillWhichIsWhyTheSyncExists() async {
+        let rig = makeRig()
+        await rig.monitor.start()
+        await rig.store.pause()
+        rig.pasteboard.copy([PBType.utf8Text: utf8("copied while paused")])
+        await rig.store.resume()
+        await rig.monitor.pollOnce(now: t(1))
+        let order = await texts(rig.store)
+        XCTAssertEqual(order, ["copied while paused"], "對照組：沒有 syncBaseline 就會補記（這是 F2 的原始缺陷）")
+    }
+
+    func testSyncBaselineNeverReadsContentAndLaterCopiesAreStillRecorded() async {
+        let rig = makeRig()
+        await rig.monitor.start()
+        rig.pasteboard.copy([PBType.utf8Text: utf8("before")])
+        await rig.monitor.syncBaseline()
+        XCTAssertEqual(rig.pasteboard.snapshotCallCount, 0)
+        XCTAssertTrue(rig.pasteboard.dataReadTypes.isEmpty)
+        await rig.monitor.pollOnce(now: t(1))
+        var items = await rig.store.items
+        XCTAssertTrue(items.isEmpty)
+        rig.pasteboard.copy([PBType.utf8Text: utf8("after")])
+        await rig.monitor.pollOnce(now: t(2))
+        items = await rig.store.items
+        XCTAssertEqual(items.compactMap(\.text), ["after"])
+    }
+
     func testUnsupportedContentIsSkippedWithoutError() async {
         let rig = makeRig()
         await rig.monitor.start()

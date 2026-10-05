@@ -127,34 +127,74 @@ final class ClipboardLoggingTests: XCTestCase {
         spy.assertNoneContain(allSecrets)
     }
 
-    /// 靜態把關：Clipboard 原始碼不得出現 print / NSLog / os_log / Logger 等直接輸出。
-    func testClipboardSourcesContainNoPrintOrSystemLoggingCalls() throws {
+    /// 靜態把關：所有 Clipboard 相關原始碼（Core、UI 套件、App 端）不得出現任何直接輸出。
+    func testClipboardRelatedSourcesContainNoDirectOutputCalls() throws {
         let packageRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()   // Clipboard
             .deletingLastPathComponent()   // DavidNookCoreTests
             .deletingLastPathComponent()   // Tests
             .deletingLastPathComponent()   // package root
-        let sources = packageRoot.appendingPathComponent("Sources/DavidNookCore/Clipboard", isDirectory: true)
-        guard let enumerator = FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil) else {
-            return XCTFail("找不到 \(sources.path)")
-        }
-        // 前面不能緊接識別字字元，避免誤判 NoOpClipboardLogger() 這類名稱
-        let call = try NSRegularExpression(pattern: "(?<![A-Za-z0-9_])(print|debugPrint|NSLog|os_log|Logger|dump|fputs)\\(")
-        let imp = try NSRegularExpression(pattern: "^\\s*import\\s+(os|OSLog)\\b")
-        var scanned = 0
-        for case let url as URL in enumerator where url.pathExtension == "swift" {
-            scanned += 1
+        let repoRoot = packageRoot.deletingLastPathComponent().deletingLastPathComponent()
+
+        let core = try swiftFiles(under: packageRoot.appendingPathComponent("Sources/DavidNookCore/Clipboard"))
+        let ui = try swiftFiles(under: packageRoot.appendingPathComponent("Sources/DavidNookUI")).filter { $0.lastPathComponent.hasPrefix("Clipboard") }
+        let app = try swiftFiles(under: repoRoot.appendingPathComponent("boringNotch")).filter { $0.lastPathComponent.hasPrefix("Clipboard") }
+        XCTAssertGreaterThanOrEqual(core.count, 8, "Core Clipboard 掃描到的檔案數太少，檢查路徑")
+        XCTAssertGreaterThanOrEqual(ui.count, 5, "DavidNookUI Clipboard* 掃描到的檔案數太少，檢查路徑")
+        XCTAssertGreaterThanOrEqual(app.count, 3, "App 端 Clipboard* 掃描到的檔案數太少（ClipboardService／TabView／SettingsView），檢查路徑")
+
+        for url in core + ui + app {
             let text = try String(contentsOf: url, encoding: .utf8)
-            for (index, line) in text.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
-                let content = String(line)
-                if content.trimmingCharacters(in: .whitespaces).hasPrefix("//") { continue }
-                let range = NSRange(content.startIndex..., in: content)
-                if call.firstMatch(in: content, range: range) != nil || imp.firstMatch(in: content, range: range) != nil {
-                    XCTFail("\(url.lastPathComponent):\(index + 1) 含有直接輸出／系統 log 呼叫：\(content)")
-                }
+            for violation in ClipboardSourceLogScan.violations(in: text) {
+                XCTFail("\(url.lastPathComponent):\(violation.line) 含有直接輸出／系統 log 呼叫：\(violation.content)")
             }
         }
-        XCTAssertGreaterThanOrEqual(scanned, 8, "掃描到的檔案數太少，檢查路徑是否正確")
+    }
+
+    private func swiftFiles(under directory: URL) throws -> [URL] {
+        guard let enumerator = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: nil) else {
+            throw CocoaError(.fileNoSuchFile, userInfo: [NSFilePathErrorKey: directory.path])
+        }
+        return enumerator.compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }
+    }
+
+    /// 掃描器本身也要被測：每一種禁止的寫法都必須被抓到，合法寫法不可誤判。
+    func testLogScannerFlagsEveryForbiddenOutputFormAndOnlyThose() {
+        let forbidden = [
+            #"print("x")"#,
+            #"debugPrint(item)"#,
+            #"Swift.print(item)"#,
+            #"dump(item)"#,
+            #"NSLog("%@", text)"#,
+            #"os_log("x")"#,
+            #"let logger = Logger(subsystem: "s", category: "c")"#,
+            #"Logger(subsystem: "s", category: "c").info("\(secret)")"#,
+            #"fputs("x", stderr)"#,
+            #"fprintf(stderr, "x")"#,
+            #"FileHandle.standardError.write(Data())"#,
+            #"try? FileHandle.standardError.write(contentsOf: data)"#,
+            #"FileHandle.standardOutput.write(data)"#,
+            #"text.write(to: &FileHandle.standardError)"#,
+            #"data.write(to: FileHandle.standardError)"#,
+            "import os",
+            "import OSLog",
+        ]
+        for line in forbidden {
+            XCTAssertFalse(ClipboardSourceLogScan.violations(in: line).isEmpty, "漏抓：\(line)")
+        }
+        let allowed = [
+            "let logger: ClipboardLogging = NoOpClipboardLogger()",
+            "logger.log(.itemAdded(kind: .text))",
+            "// print(\"commented out\")",
+            "/// 不會 print 任何內容",
+            "let blueprint = makeBlueprint()",
+            "let handle = FileHandle(forReadingAtPath: path)",
+            "try data.write(to: url)",
+            "import Foundation",
+        ]
+        for line in allowed {
+            XCTAssertTrue(ClipboardSourceLogScan.violations(in: line).isEmpty, "誤判：\(line)")
+        }
     }
 
     func testDefaultLoggerIsANoOp() async {
@@ -166,5 +206,30 @@ final class ClipboardLoggingTests: XCTestCase {
         _ = await store.add(ClipboardCapture(text: "x"), now: t(1))
         let count = await store.items.count
         XCTAssertEqual(count, 1)
+    }
+}
+
+/// 靜態掃描：找出直接輸出到 console／檔案／系統 log 的寫法。
+enum ClipboardSourceLogScan {
+    /// 前面不能緊接識別字字元，避免誤判 NoOpClipboardLogger() 這類名稱。
+    /// print／debugPrint／dump、NSLog／os_log／`Logger(`（不論有沒有內插一律禁止）、fputs／fprintf。
+    private static let call = try! NSRegularExpression(pattern: "(?<![A-Za-z0-9_])(print|debugPrint|NSLog|os_log|Logger|dump|fputs|fprintf|vfprintf)\\(")
+    /// `FileHandle.standardError`／`standardOutput`，以及 C 的 `stderr`／`stdout`。
+    private static let handles = try! NSRegularExpression(pattern: "(?<![A-Za-z0-9_])(FileHandle\\s*\\.\\s*(standardError|standardOutput)|stderr|stdout)(?![A-Za-z0-9_])")
+    /// `x.write(to: FileHandle…)`／`x.write(to: &FileHandle…)`。
+    private static let writeToHandle = try! NSRegularExpression(pattern: "\\.write\\(to:\\s*&?\\s*FileHandle\\b")
+    private static let imp = try! NSRegularExpression(pattern: "^\\s*import\\s+(os|OSLog)\\b")
+
+    static func violations(in text: String) -> [(line: Int, content: String)] {
+        var result: [(Int, String)] = []
+        for (index, raw) in text.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
+            let content = String(raw)
+            if content.trimmingCharacters(in: .whitespaces).hasPrefix("//") { continue }
+            let range = NSRange(content.startIndex..., in: content)
+            if [call, handles, writeToHandle, imp].contains(where: { $0.firstMatch(in: content, range: range) != nil }) {
+                result.append((index + 1, content))
+            }
+        }
+        return result
     }
 }

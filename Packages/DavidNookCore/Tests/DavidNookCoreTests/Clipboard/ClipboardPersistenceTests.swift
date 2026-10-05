@@ -33,6 +33,66 @@ final class FileClipboardPersistenceTests: XCTestCase {
         XCTAssertEqual(try posixPermissions(of: directory), 0o700)
     }
 
+    // MARK: 建立瞬間的權限（F7b）
+
+    /// 在 umask(0)（最寬鬆）下寫入；暫存檔剛建立、還沒寫任何位元組時，以 fstat 檢查權限就必須已經是 0600。
+    func testTempFilesAreCreatedWithMode0600EvenUnderUmask0BeforeAnyByteIsWritten() throws {
+        let previous = umask(0)
+        defer { umask(previous) }
+        let (persistence, directory) = try makePersistence()
+
+        var observations: [(mode: Int, size: Int64)] = []
+        persistence.onTempFileCreated = { fd in
+            var info = stat()
+            XCTAssertEqual(fstat(fd, &info), 0)
+            observations.append((Int(info.st_mode & 0o777), Int64(info.st_size)))
+        }
+        let image = ClipboardItem(imageData: tinyPNG)
+        try persistence.saveImage(tinyPNG, fileName: try XCTUnwrap(image.imageFileName))
+        try persistence.saveItems([image, ClipboardItem(text: "x")])
+
+        XCTAssertEqual(observations.count, 2, "圖片檔與索引檔各建立一次暫存檔")
+        for observation in observations {
+            XCTAssertEqual(observation.mode, 0o600, "建立當下就必須是 0600，不可先以 umask 決定的寬鬆權限存在")
+            XCTAssertEqual(observation.size, 0, "檢查時間點必須在寫入任何位元組之前")
+        }
+        XCTAssertEqual(try posixPermissions(of: directory), 0o700)
+    }
+
+    func testFinalFilesAreMode0600EvenUnderUmask0() throws {
+        let previous = umask(0)
+        defer { umask(previous) }
+        let (persistence, directory) = try makePersistence()
+        let image = ClipboardItem(imageData: tinyPNG)
+        try persistence.saveImage(tinyPNG, fileName: try XCTUnwrap(image.imageFileName))
+        try persistence.saveItems([image])
+        XCTAssertEqual(try posixPermissions(of: indexURL(directory)), 0o600)
+        XCTAssertEqual(try posixPermissions(of: directory.appendingPathComponent(try XCTUnwrap(image.imageFileName))), 0o600)
+    }
+
+    // MARK: 排除備份（F1）
+
+    func testNewDirectoryIsExcludedFromBackup() throws {
+        let (_, directory) = try makePersistence()
+        XCTAssertTrue(try isExcludedFromBackup(directory), "明文剪貼簿歷史不得進 Time Machine 備份")
+    }
+
+    func testExistingDirectoryThatWasNotExcludedGetsBackfilledOnInit() throws {
+        let root = try makeTempDirectory(for: self)
+        let directory = root.appendingPathComponent("Clipboard")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        XCTAssertFalse(try isExcludedFromBackup(directory), "前置條件：舊版建立的目錄尚未排除備份")
+        _ = try FileClipboardPersistence(directory: directory)
+        XCTAssertTrue(try isExcludedFromBackup(directory), "載入時發現目錄已存在，也要補設排除備份")
+    }
+
+    func testExclusionSurvivesSavesAndClearAll() throws {
+        let (persistence, directory) = try makePersistence()
+        try persistence.saveItems([ClipboardItem(text: "x")])
+        try persistence.deleteAll()
+        XCTAssertTrue(try isExcludedFromBackup(directory))
+    }
+
     func testIndexAndImageFilesAreMode0600() throws {
         let (persistence, directory) = try makePersistence()
         let image = ClipboardItem(imageData: tinyPNG)
