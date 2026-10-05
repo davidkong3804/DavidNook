@@ -94,7 +94,7 @@ public actor ClipboardStore {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let ordered = items
         guard !trimmed.isEmpty else { return ordered }
-        return ordered.filter { Self.matches($0, query: trimmed) }
+        return ordered.filter { $0.matches(searchQuery: trimmed) }
     }
 
     // MARK: 寫入
@@ -294,16 +294,5 @@ public actor ClipboardStore {
         let unpinned = sortedByLastUsed(items.filter { !$0.isPinned })
         guard unpinned.count > maxItems else { return [] }
         return Set(unpinned.dropFirst(maxItems).map(\.id))
-    }
-
-    private static func matches(_ item: ClipboardItem, query: String) -> Bool {
-        switch item.kind {
-        case .text:
-            return item.text?.range(of: query, options: .caseInsensitive) != nil
-        case .files:
-            return item.filePaths?.contains { $0.range(of: query, options: .caseInsensitive) != nil } ?? false
-        case .image:
-            return item.sourceAppBundleID?.range(of: query, options: .caseInsensitive) != nil
-        }
     }
 }
