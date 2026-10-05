@@ -69,6 +69,7 @@
 		DA71D0C0DE000000000A0003 /* DavidNookCore in Frameworks */ = {isa = PBXBuildFile; productRef = DA71D0C0DE000000000A0002 /* DavidNookCore */; };
 		DA71D0C0DE000000000A0005 /* DavidNookUI in Frameworks */ = {isa = PBXBuildFile; productRef = DA71D0C0DE000000000A0004 /* DavidNookUI */; };
 		DA71D0C0DE00000000C10002 /* ClipboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000C10001 /* ClipboardService.swift */; };
+		DA71D0C0DE00000000C20002 /* ClipboardTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000C20001 /* ClipboardTabView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -155,6 +156,7 @@
 		B1A78C812C8BA08100BD51B0 /* FullscreenMediaDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenMediaDetection.swift; sourceTree = "<group>"; };
 		EAB1C3E8B149445A9E57C6AF /* NotchWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWindowManager.swift; sourceTree = "<group>"; };
 		DA71D0C0DE00000000C10001 /* ClipboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardService.swift; sourceTree = "<group>"; };
+		DA71D0C0DE00000000C20001 /* ClipboardTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardTabView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -396,6 +398,7 @@
 		B186542F2C6F455E000B926A /* Notch */ = {
 			isa = PBXGroup;
 			children = (
+				DA71D0C0DE00000000C20001 /* ClipboardTabView.swift */,
 				AA06CHV22E7A0001 /* CompactHomeView.swift */,
 				AA04LAS22E7A0001 /* LiveActivityStack.swift */,
 				1194E8862EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift */,
@@ -549,6 +552,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DA71D0C0DE00000000C20002 /* ClipboardTabView.swift in Sources */,
 				DA71D0C0DE00000000C10002 /* ClipboardService.swift in Sources */,
 				5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */,
 				147163982C5D35B70068B555 /* MusicVisualizer.swift in Sources */,

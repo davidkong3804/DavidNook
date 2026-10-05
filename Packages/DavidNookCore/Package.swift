@@ -22,8 +22,9 @@ let package = Package(
             name: "DavidNookCoreTests",
             dependencies: ["DavidNookCore"]
         ),
-        // SwiftUI 元件（歌詞面板、偏移控制）：資料驅動，不含網路或播放邏輯。
-        .target(name: "DavidNookUI"),
+        // SwiftUI 元件（歌詞面板、偏移控制、剪貼簿面板）：資料驅動，不含網路、播放、儲存或監看邏輯。
+        // 依賴 Core 只為了 ClipboardItem／ClipboardPanelModel 這些資料型別。
+        .target(name: "DavidNookUI", dependencies: ["DavidNookCore"]),
         .testTarget(
             name: "DavidNookUITests",
             dependencies: ["DavidNookUI"]

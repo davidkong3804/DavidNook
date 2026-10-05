@@ -19346,6 +19346,12 @@
             "state" : "translated",
             "value" : "打開系統設定"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟系統設定"
+          }
         }
       }
     },
@@ -30478,6 +30484,375 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "開啟歌詞時，會將曲名、歌手與長度送至 lrclib.net 查詢"
+          }
+        }
+      }
+    },
+    "Clipboard" : {
+      "comment" : "Notch tab and settings tab: clipboard history.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipboard"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剪貼簿"
+          }
+        }
+      }
+    },
+    "Search clipboard" : {
+      "comment" : "Clipboard panel: placeholder of the search field.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search clipboard"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜尋剪貼簿"
+          }
+        }
+      }
+    },
+    "All" : {
+      "comment" : "Clipboard panel: filter chip showing every kind of item.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部"
+          }
+        }
+      }
+    },
+    "Text" : {
+      "comment" : "Clipboard panel: filter chip for text items.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文字"
+          }
+        }
+      }
+    },
+    "Images" : {
+      "comment" : "Clipboard panel: filter chip for image items.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Images"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圖片"
+          }
+        }
+      }
+    },
+    "Files" : {
+      "comment" : "Clipboard panel: filter chip for file items.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Files"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檔案"
+          }
+        }
+      }
+    },
+    "Pause recording" : {
+      "comment" : "Clipboard panel: tooltip of the pause button.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause recording"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫停記錄"
+          }
+        }
+      }
+    },
+    "Resume recording" : {
+      "comment" : "Clipboard panel: tooltip of the resume button.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume recording"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢復記錄"
+          }
+        }
+      }
+    },
+    "Pin" : {
+      "comment" : "Clipboard panel: pin an item so it is never evicted.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pin"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "釘選"
+          }
+        }
+      }
+    },
+    "Unpin" : {
+      "comment" : "Clipboard panel: remove the pin from an item.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpin"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消釘選"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "comment" : "Clipboard panel: delete one item from the history.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除"
+          }
+        }
+      }
+    },
+    "Image" : {
+      "comment" : "Clipboard panel: label of an image row.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圖片"
+          }
+        }
+      }
+    },
+    "%lld items" : {
+      "comment" : "Clipboard panel: number of files in a file row. Placeholder is the count.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld items"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 個項目"
+          }
+        }
+      }
+    },
+    "Clipboard is empty" : {
+      "comment" : "Clipboard panel: empty state when there is no history.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipboard is empty"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剪貼簿是空的"
+          }
+        }
+      }
+    },
+    "Text, images and files you copy will show up here" : {
+      "comment" : "Clipboard panel: hint under the empty state.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text, images and files you copy will show up here"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "複製文字、圖片或檔案後會出現在這裡"
+          }
+        }
+      }
+    },
+    "No matching items" : {
+      "comment" : "Clipboard panel: nothing matches the search or filter.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No matching items"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到符合的項目"
+          }
+        }
+      }
+    },
+    "Recording paused" : {
+      "comment" : "Clipboard panel: banner shown while recording is paused.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording paused"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已暫停記錄"
+          }
+        }
+      }
+    },
+    "Anything you copy while paused is not recorded afterwards" : {
+      "comment" : "Clipboard panel: hint under the paused state.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anything you copy while paused is not recorded afterwards"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫停期間複製的內容不會被補記"
+          }
+        }
+      }
+    },
+    "Resume" : {
+      "comment" : "Clipboard panel: button that resumes recording.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢復"
+          }
+        }
+      }
+    },
+    "Paste permission needed" : {
+      "comment" : "Clipboard panel: banner shown when macOS requires the user to allow pasting from other apps.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste permission needed"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要允許貼上權限"
+          }
+        }
+      }
+    },
+    "In System Settings → Privacy & Security → Paste from Other Apps, set DavidNook to Allow" : {
+      "comment" : "Clipboard panel: instructions under the permission banner.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In System Settings → Privacy & Security → Paste from Other Apps, set DavidNook to Allow"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請在「系統設定 → 隱私權與安全性 → 從其他App貼上」把 DavidNook 設為「允許」"
           }
         }
       }

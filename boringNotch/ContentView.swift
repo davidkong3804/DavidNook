@@ -429,6 +429,8 @@ struct ContentView: View {
                                 horizontalMediaGestureFeedback: horizontalMediaGestureFeedback,
                                 isHoveringMusicArea: $isHoveringMusicArea
                             )
+                        case .clipboard:
+                            ClipboardTabView()
                         }
                     }
                 }

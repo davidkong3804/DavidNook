@@ -161,6 +161,9 @@ class BoringNotchSkyLightWindow: NSPanel {
             guard wantsKeyForTextInput != oldValue else { return }
             if wantsKeyForTextInput {
                 makeKey()
+            } else if isKeyWindow {
+                // 還原：不再需要輸入時主動放掉 key，鍵盤焦點才會回到原本的 App（貼回後的 ⌘V 才會送到對的地方）。
+                resignKey()
             }
         }
     }
