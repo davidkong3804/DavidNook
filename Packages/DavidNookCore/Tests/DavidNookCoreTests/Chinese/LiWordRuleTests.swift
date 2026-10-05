@@ -67,7 +67,7 @@ final class LiWordRuleTests: XCTestCase {
     }
 
     func testUnitsKeepLi() {
-        assertKept(["公里", "英里", "跑了五公里", "時速六十英里", "公里外的海", "英里外的家"])
+        assertKept(["公里", "英里", "跑了五公里", "時速六十英里", "公里外的海", "英里外的家", "相距三華里", "相距三华里", "占地二十方里"])
     }
 
     func testNeighborhoodAndHometownWordsKeepLi() {
