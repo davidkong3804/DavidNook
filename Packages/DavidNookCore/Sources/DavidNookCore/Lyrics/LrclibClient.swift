@@ -3,11 +3,33 @@ import Foundation
 /// 可注入的睡眠函式（單位：秒）。測試以記錄器取代，不會真的等待。
 public typealias Sleeper = @Sendable (TimeInterval) async throws -> Void
 
+/// 一次抓取的結果：歌詞（nil＝確定找不到）與「是否為退而求其次的結果」。
+public struct LyricsFetchOutcome: Equatable, Sendable {
+    public var lyrics: PickedLyrics?
+    /// true＝`/api/search` 失敗，只好採用 `/api/get` 的單筆結果（沒有經過多版本共識排序）。
+    /// 倉庫不會把這種結果寫進快取，下次播放會重新嘗試取得共識版本。
+    public var isDegraded: Bool
+
+    public init(lyrics: PickedLyrics?, isDegraded: Bool = false) {
+        self.lyrics = lyrics
+        self.isDegraded = isDegraded
+    }
+}
+
 /// 抓取歌詞的抽象：`LrclibClient` 實作它，`LyricsRepository` 依賴它。
 public protocol LyricsFetching: Sendable {
     /// - Returns: 挑選後的歌詞；**nil 代表確定找不到**（與網路錯誤明確區分）。
     /// - Throws: 網路或伺服器錯誤（`LrclibError`）、或 `CancellationError`；這些都不代表「找不到」。
     func lyrics(for query: LyricsQuery) async throws -> PickedLyrics?
+
+    /// 同 `lyrics(for:)`，但附帶「是否為退而求其次的結果」。預設實作回傳非 degraded。
+    func fetch(_ query: LyricsQuery) async throws -> LyricsFetchOutcome
+}
+
+extension LyricsFetching {
+    public func fetch(_ query: LyricsQuery) async throws -> LyricsFetchOutcome {
+        LyricsFetchOutcome(lyrics: try await lyrics(for: query))
+    }
 }
 
 /// LRCLIB 用戶端錯誤。都不代表「找不到歌詞」（找不到是回傳 nil）。

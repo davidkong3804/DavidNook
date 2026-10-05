@@ -87,6 +87,7 @@ final class LyricsPipelineTests: XCTestCase {
         let t = StubTransport(steps: [
             .notFound,                                                                    // 原樣（繁體）
             .ok(record(id: 7, track: "夜行的灯", artist: "阿虚", lrc: simplifiedLRC)),     // 簡體變體命中
+            .ok("[]"),                                                                    // search（用命中的簡體寫法）
         ])
         let picked = try await makeRepo(t).lyrics(for: LyricsQuery(title: "夜行的燈", artist: "阿虛", duration: 223.4))
 
@@ -96,6 +97,8 @@ final class LyricsPipelineTests: XCTestCase {
         XCTAssertEqual(queryDict(t.requests[0])["track_name"], "夜行的燈", "原樣固定最先，且用播放器原值")
         XCTAssertEqual(queryDict(t.requests[1])["track_name"], "夜行的灯")
         XCTAssertEqual(queryDict(t.requests[1])["artist_name"], "阿虚")
+        XCTAssertEqual(t.requests.last?.url?.path, "/api/search")
+        XCTAssertEqual(t.requests.last.map(queryDict)?["track_name"], "夜行的灯", "search 用 get 命中的那種寫法")
 
         // 檔頭（歌名 - 歌手、詞、曲）被剝掉，第一句是真正的歌詞。
         XCTAssertEqual(result.lines.first?.text, "测试句一，我们在夜里行走")
@@ -112,6 +115,7 @@ final class LyricsPipelineTests: XCTestCase {
         let t = StubTransport(steps: [
             .notFound,
             .ok(record(id: 8, track: "夜行的燈", artist: "阿虛", lrc: traditionalLRC)),
+            .ok("[]"),
         ])
         let picked = try await makeRepo(t).lyrics(for: LyricsQuery(title: "夜行的灯", artist: "阿虚", duration: 223))
 
@@ -130,19 +134,20 @@ final class LyricsPipelineTests: XCTestCase {
         // 播放器歌名是繁體，歌詞檔的檔頭行是簡體：仍要剝掉。
         let t = StubTransport(steps: [
             .ok(record(id: 9, track: "夜行的燈", artist: "阿虛", lrc: simplifiedLRC)),
+            .ok("[]"),
         ])
         let picked = try await makeRepo(t).lyrics(for: LyricsQuery(title: "夜行的燈", artist: "阿虛", duration: 223))
         XCTAssertEqual(try XCTUnwrap(picked).lines.first?.text, "测试句一，我们在夜里行走")
-        XCTAssertEqual(t.requests.count, 1, "原樣就命中，不需要變體請求")
+        XCTAssertEqual(t.requests.map { $0.url?.path }, ["/api/get", "/api/search"], "原樣就命中，不需要變體請求")
     }
 
     func testEnglishTrackUsesOnlyTheOriginalQueryAndKeepsEnglishLyrics() async throws {
         let lrc = "[00:05.00]first made-up line\n[00:12.00]second made-up line"
-        let t = StubTransport(steps: [.ok(record(id: 3, track: "Night Lamp", artist: "Someone", lrc: lrc, duration: 180))])
+        let t = StubTransport(steps: [.ok(record(id: 3, track: "Night Lamp", artist: "Someone", lrc: lrc, duration: 180)), .ok("[]")])
         let picked = try await makeRepo(t).lyrics(for: LyricsQuery(title: "Night Lamp", artist: "Someone", duration: 180))
 
         let result = try XCTUnwrap(picked)
-        XCTAssertEqual(t.requests.count, 1)
+        XCTAssertEqual(t.requests.map { queryDict($0)["track_name"] }, ["Night Lamp", "Night Lamp"], "英文不送變體：get 與 search 都只用原樣")
         XCTAssertEqual(result.script, .neutral)
         let localized = try LyricsLocalizer.shared.localize(lines: result.lines.map(\.text))
         XCTAssertEqual(localized.lines, ["first made-up line", "second made-up line"])
@@ -160,7 +165,7 @@ final class LyricsPipelineTests: XCTestCase {
 
     func testPlayerValuesAreSentVerbatimInTheFirstRequest() async throws {
         // 歌名／歌手名保持播放器原值：不轉換、不去音標、不改大小寫。
-        let t = StubTransport(steps: [.ok(record(id: 4, track: "Café Noir", artist: "Zoë", lrc: "[00:05.00]a\n[00:09.00]b"))])
+        let t = StubTransport(steps: [.ok(record(id: 4, track: "Café Noir", artist: "Zoë", lrc: "[00:05.00]a\n[00:09.00]b")), .ok("[]")])
         _ = try await makeRepo(t).lyrics(for: LyricsQuery(title: "Café Noir", artist: "Zoë", duration: 223))
         XCTAssertEqual(queryDict(t.requests[0])["track_name"], "Café Noir")
         XCTAssertEqual(queryDict(t.requests[0])["artist_name"], "Zoë")
