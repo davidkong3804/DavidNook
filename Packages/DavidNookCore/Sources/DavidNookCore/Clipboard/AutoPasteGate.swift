@@ -51,6 +51,8 @@ public enum AutoPasteGate {
     public static func decide(_ inputs: AutoPasteInputs) -> AutoPasteDecision {
         guard inputs.isEnabled else { return .skip(.settingDisabled) }
         guard inputs.hasEventPermission else { return .skip(.noEventPermission) }
+        guard !inputs.frontmostIsSelf else { return .skip(.frontmostIsSelf) }
+        guard !inputs.secureEventInputEnabled else { return .skip(.secureInputActive) }
         return .paste
     }
 }

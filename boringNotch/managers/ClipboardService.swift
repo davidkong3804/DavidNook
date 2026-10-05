@@ -18,6 +18,7 @@ import Carbon.HIToolbox
 import DavidNookCore
 import Defaults
 import Foundation
+import SwiftUI
 
 // MARK: - 系統的「從其他 App 貼上」設定
 
@@ -90,6 +91,101 @@ private struct ClipboardChangeLogger: ClipboardLogging {
         default:
             signal.fire()
         }
+    }
+}
+
+// MARK: - 短暫提示（toast）
+
+/// 需要讓使用者知道、但不值得打斷的事件。文案以 `String(localized:)` 提供（zh-Hant 與 en 都在 Localizable.xcstrings）。
+/// 文案本身不含任何剪貼簿內容。
+enum ClipboardNotice: Equatable {
+    /// 自動貼上被擋下：目前焦點在安全輸入欄位（密碼欄等），內容已留在剪貼簿。
+    case autoPasteSkippedSecureInput
+
+    var message: String {
+        switch self {
+        case .autoPasteSkippedSecureInput:
+            return String(
+                localized: "Copied; focus is in a secure input field, so it was not pasted automatically",
+                comment: "Brief notice after clicking a clipboard item with auto-paste on, when the focused field is a secure (password) field."
+            )
+        }
+    }
+}
+
+private struct ClipboardToastView: View {
+    let text: String
+
+    var body: some View {
+        Text(verbatim: text)
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(Color.white)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: 360)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(Capsule().fill(Color.black.opacity(0.88)))
+            .padding(6)
+    }
+}
+
+/// 在滑鼠所在螢幕的上方中央短暫顯示一則提示（不搶焦點、不攔截滑鼠、幾秒後自動消失）。
+@MainActor
+private final class ClipboardToastPresenter {
+    static let shared = ClipboardToastPresenter()
+
+    private var panel: NSPanel?
+    private var hideTask: Task<Void, Never>?
+
+    func show(_ text: String, duration: Duration = .seconds(3)) {
+        hideTask?.cancel()
+        let hosting = NSHostingView(rootView: ClipboardToastView(text: text))
+        let size = hosting.fittingSize
+        let panel = self.panel ?? makePanel()
+        self.panel = panel
+        panel.contentView = hosting
+        panel.setContentSize(size)
+
+        let mouse = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { $0.frame.contains(mouse) } ?? NSScreen.main
+        if let frame = screen?.visibleFrame {
+            panel.setFrameOrigin(NSPoint(x: frame.midX - size.width / 2, y: frame.maxY - size.height - 8))
+        }
+        panel.alphaValue = 1
+        panel.orderFrontRegardless()
+
+        // 給 VoiceOver 使用者同樣的訊息（提示只出現幾秒，視覺上容易錯過）。
+        NSAccessibility.post(
+            element: NSApp as Any,
+            notification: .announcementRequested,
+            userInfo: [.announcement: text, .priority: NSAccessibilityPriorityLevel.high.rawValue]
+        )
+
+        hideTask = Task { [weak panel] in
+            try? await Task.sleep(for: duration)
+            guard !Task.isCancelled else { return }
+            panel?.orderOut(nil)
+        }
+    }
+
+    private func makePanel() -> NSPanel {
+        let panel = NSPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 10, height: 10),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: true
+        )
+        panel.isFloatingPanel = true
+        panel.level = .statusBar
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = true
+        panel.ignoresMouseEvents = true
+        panel.hidesOnDeactivate = false
+        panel.isReleasedWhenClosed = false
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        return panel
     }
 }
 
@@ -324,12 +420,36 @@ final class ClipboardService: ObservableObject {
 
     /// 寫回剪貼簿後，若使用者開啟了自動貼上且已授權，短延遲後送出 ⌘V（延遲是為了讓瀏海面板先收起、
     /// 把鍵盤焦點還給原本的 App）。沒授權時什麼都不做，不會彈任何提示。
+    ///
+    /// 送出前一刻（延遲之後）才做最後判斷（Core 的 `AutoPasteGate`，有測試）：
+    /// - 系統啟用了安全輸入（`IsSecureEventInputEnabled()`，焦點在密碼欄等）→ 不貼，內容留在剪貼簿，顯示短暫提示；
+    /// - 最前景是 DavidNook 自己 → 不貼（沒有別的 App 可貼）。
     func performAutoPasteIfEnabled() {
-        guard Defaults[.clipboardAutoPaste], CGPreflightPostEventAccess() else { return }
-        Task {
-            try? await Task.sleep(for: .milliseconds(180))
-            Self.postCommandV()
+        let environment = AutoPasteEnvironment(
+            isEnabled: { Defaults[.clipboardAutoPaste] },
+            hasEventPermission: { CGPreflightPostEventAccess() },
+            isFrontmostSelf: { Self.isFrontmostApplicationSelf() },
+            isSecureEventInputEnabled: { IsSecureEventInputEnabled() }
+        )
+        Task { [weak self] in
+            let outcome = await AutoPasteCoordinator.run(
+                environment: environment,
+                sleep: { seconds in try? await Task.sleep(for: .seconds(seconds)) },
+                send: { Self.postCommandV() }
+            )
+            if case .skipped(let reason) = outcome, AutoPasteDecision.skip(reason).shouldNotifyUser {
+                self?.show(.autoPasteSkippedSecureInput)
+            }
         }
+    }
+
+    /// 顯示一則短暫提示。
+    private func show(_ notice: ClipboardNotice) {
+        ClipboardToastPresenter.shared.show(notice.message)
+    }
+
+    private static func isFrontmostApplicationSelf() -> Bool {
+        NSWorkspace.shared.frontmostApplication?.processIdentifier == NSRunningApplication.current.processIdentifier
     }
 
     private static func postCommandV() {
