@@ -34,6 +34,9 @@ public struct ChineseScriptDetector: Sendable {
 
     public init() {}
 
+    /// （紅燈階段的占位實作：尚未實作日韓守衛。）
+    public func isJapaneseOrKorean(_ line: String) -> Bool { false }
+
     // MARK: - 統計
 
     /// 統計一段文字中的簡體／繁體專有字出現次數。

@@ -127,6 +127,55 @@ final class ChineseScriptDetectorTests: XCTestCase {
         )
     }
 
+    // MARK: - 日文／韓文守衛（真實資料稽核發現：日文新字體 国・恋・声・会 是簡體專有字，整首被誤轉成「國・戀・聲・會」）
+    // 樣本全為自編句子。
+
+    func testJapaneseLyricsWithKanaAreNeutral() {
+        // 国・恋・声・会・残 在日文是新字體，但同時是 GB2312 有、Big5 沒有的「簡體專有字」；有假名就不是中文。
+        let lines = ["恋する国の声が聞こえる", "残酷な夜に会えたなら", "ありがとう", "ただそれだけ"]
+        XCTAssertEqual(detector.detect(lines.joined(separator: "\n")), .neutral)
+        XCTAssertEqual(detector.detect(lines: lines), .neutral)
+    }
+
+    func testKoreanLyricsWithHanjaAreNeutral() {
+        // 諺文歌詞偶爾夾漢字（戀人）；不是中文。
+        let lines = ["그대는 나의 戀人", "사랑해 영원히"]
+        XCTAssertEqual(detector.detect(lines: lines), .neutral)
+        XCTAssertEqual(detector.detect(lines.joined(separator: "\n")), .neutral)
+    }
+
+    func testJapaneseOrKoreanLineThresholdIsFivePercentOfCJKCharacters() {
+        // 19 個漢字＋1 個假名＝5%（含）→ 日韓行；20 個漢字＋1 個假名＝4.76% → 不是。
+        XCTAssertTrue(detector.isJapaneseOrKorean(String(repeating: "们", count: 19) + "の"))
+        XCTAssertFalse(detector.isJapaneseOrKorean(String(repeating: "们", count: 20) + "の"))
+        XCTAssertTrue(detector.isJapaneseOrKorean("한국어"))
+        XCTAssertTrue(detector.isJapaneseOrKorean("ひらがな"))
+        XCTAssertTrue(detector.isJapaneseOrKorean("カタカナ"))
+        XCTAssertFalse(detector.isJapaneseOrKorean("我们没有说话"))
+        XCTAssertFalse(detector.isJapaneseOrKorean("hello world"))
+        XCTAssertFalse(detector.isJapaneseOrKorean(""))
+    }
+
+    func testChineseDocumentWithOneJapaneseLineIsStillClassifiedByItsChineseLines() {
+        // 簡體華語歌夾一句日文：日文行不計入證據，整首仍是簡體（日文行占比 1/7 < 30%）。
+        var lines = Array(repeating: "我们为什么还没有开始", count: 6)
+        lines.append("恋する国の声が聞こえる")
+        XCTAssertEqual(detector.detect(lines: lines), .simplified)
+        XCTAssertEqual(detector.detect(lines.joined(separator: "\n")), .simplified)
+    }
+
+    func testDocumentWhereMostLinesAreJapaneseIsNeutralEvenWithAChineseLine() {
+        let lines = ["恋する国の声が聞こえる", "残酷な夜に会えたなら", "ありがとう", "我们为什么还没有开始"]
+        XCTAssertEqual(detector.detect(lines: lines), .neutral)
+    }
+
+    func testDetectEachLineTreatsJapaneseAndKoreanLinesAsNeutral() {
+        XCTAssertEqual(
+            detector.detectEachLine(["我愿意为你被放逐天际", "恋する国の声が聞こえる", "사랑해 戀人"]),
+            [.simplified, .neutral, .neutral]
+        )
+    }
+
     // MARK: - 證據計數
 
     func testEvidenceCountsOccurrencesNotUniqueCharacters() {

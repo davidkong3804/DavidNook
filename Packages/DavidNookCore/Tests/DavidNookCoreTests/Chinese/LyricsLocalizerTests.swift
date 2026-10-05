@@ -322,6 +322,48 @@ final class LyricsLocalizerTests: XCTestCase {
         XCTAssertEqual(failures.value, 0)
     }
 
+    // MARK: - 日文／韓文不轉換（真實資料稽核：日文新字體被轉成「國・戀・聲・會」）
+    // 樣本全為自編句子。
+
+    func testJapaneseLyricsAreNeverConverted() throws {
+        let lines = ["恋する国の声が聞こえる", "", "残酷な夜に会えたなら", "ありがとう", "ただそれだけ"]
+        let result = try localize(lines)
+        XCTAssertEqual(result.script, .neutral)
+        XCTAssertNil(result.appliedMode)
+        XCTAssertEqual(result.lines, lines, "日文歌詞不得被簡轉繁（国→國、恋→戀、声→聲、会→會）")
+    }
+
+    func testJapaneseLyricsAreNeverConvertedEvenWithTaiwanIdioms() throws {
+        let lines = ["恋する国の声が聞こえる", "残酷な夜に会えたなら"]
+        XCTAssertEqual(try localize(lines, idioms: true).lines, lines)
+    }
+
+    func testKoreanLyricsWithHanjaAreNeverConverted() throws {
+        let lines = ["그대는 나의 戀人", "사랑해 영원히"]
+        let result = try localize(lines)
+        XCTAssertEqual(result.script, .neutral)
+        XCTAssertEqual(result.lines, lines)
+    }
+
+    func testJapaneseLineInsideSimplifiedChineseDocumentIsKept() throws {
+        // 簡體華語歌夾一句日文：華語行照常轉換，日文行原樣保留。
+        var lines = Array(repeating: "我们为什么还没有开始", count: 6)
+        lines.append("恋する国の声が聞こえる")
+        let result = try localize(lines)
+        XCTAssertEqual(result.script, .simplified)
+        XCTAssertEqual(Array(result.lines.prefix(6)), Array(repeating: "我們為什麼還沒有開始", count: 6))
+        XCTAssertEqual(result.lines[6], "恋する国の声が聞こえる")
+    }
+
+    func testJapaneseLineInsideTraditionalChineseDocumentIsKept() throws {
+        // 繁體華語歌夾一句日文：日文行不做 t2tw（「裏」「着」之類的變體正規化只對華語行）。
+        var lines = Array(repeating: "我們為什麼還沒有開始", count: 6)
+        lines.append("裏切りの声が聞こえる")
+        let result = try localize(lines)
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(result.lines[6], "裏切りの声が聞こえる", "日文行裡的「裏」不可被改成「裡」")
+    }
+
     // MARK: - shared 實例
 
     func testSharedInstanceWorks() throws {
