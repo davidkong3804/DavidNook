@@ -5,6 +5,7 @@
 //  Created by Hugo Persson on 2024-08-25.
 //
 
+import DavidNookUI
 import SwiftUI
 
 struct TabModel: Identifiable {
@@ -28,7 +29,8 @@ struct TabSelectionView: View {
         HStack(spacing: 0) {
             ForEach(tabs) { tab in
                     TabButton(label: tab.label, icon: tab.icon, selected: coordinator.currentView == tab.view) {
-                        withAnimation(.smooth) {
+                        // 形體在兩個分頁尺寸之間以彈簧變形（response 0.38、dampingRatio 0.82），內容交叉淡入。
+                        withAnimation(NotchMotion.current.animation(.tabSwitch)) {
                             coordinator.currentView = tab.view
                         }
                     }

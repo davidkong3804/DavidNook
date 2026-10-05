@@ -30,6 +30,12 @@ struct ContentView: View {
 
     @State private var haptics: Bool = false
 
+    /// Hover 預期動作：游標在觸發區內、尚未達到停留時間時，閉合瀏海輕微鼓起。
+    @State private var isAnticipating = false
+    /// 形體正在變形（展開／收合／切分頁／調整尺寸）。歌詞面板據此降低更新頻率，避免跟變形搶資源。
+    @State private var isMorphing = false
+    @State private var morphTask: Task<Void, Never>?
+
     @Namespace var albumArtNamespace
 
     @Default(.showNotHumanFace) var showNotHumanFace
@@ -39,6 +45,9 @@ struct ContentView: View {
 
     // Use standardized animations from StandardAnimations enum
     private let animationSpring = StandardAnimations.interactive
+
+    /// 所有展開／收合／分頁／hover 動畫的參數都來自 NotchMotion（含速度倍率、減少動態、動畫開關）。
+    private var motion: NotchMotion { NotchMotion.current }
 
     private let extendedHoverPadding: CGFloat = 30
     private let zeroHeightHoverPadding: CGFloat = 10
@@ -255,11 +264,17 @@ struct ContentView: View {
                     )
                     // Removed conditional bottom padding when using custom 0 notch to keep layout stable
                     .opacity((isNotchHeightZero && vm.notchState == .closed) ? 0.01 : 1)
+                    // Hover 預期動作：鼓起的是「畫面」（錨點上緣中央），不改版面，也不改 hover 觸發區，所以不會因鼓起而抖動。
+                    // 這個 animation 最靠近 isAnticipating，所以展開瞬間「復原」用預期彈簧接手速度，與展開彈簧銜接不跳動。
+                    .scaleEffect(isAnticipating ? motion.anticipationScale : 1, anchor: .top)
+                    .animation(motion.animation(.anticipate), value: isAnticipating)
 
                 mainLayout
                     .conditionalModifier(true) { view in
                         return view
-                            .animation(vm.notchState == .open ? StandardAnimations.open : StandardAnimations.close, value: vm.notchState)
+                            .animation(motion.animation(vm.notchState == .open ? .open : .close), value: vm.notchState)
+                            // 設定頁拖動展開寬度／高度滑桿時，形體用分頁切換的彈簧跟著變形。
+                            .animation(motion.animation(.tabSwitch), value: sizing)
                             .animation(.smooth, value: gestureProgress)
                             // Outermost on purpose: it only fires when the
                             // closed-state content changes (the key is stable
@@ -307,6 +322,17 @@ struct ContentView: View {
                     .onChange(of: vm.isPopoverActive) { _, _ in
                         scheduleCloseIfNotHovering(overNotch: vm)
                     }
+                    .onChange(of: vm.notchState) { _, state in
+                        // 真正展開／收合後預期動作就結束了（鼓起的比例隨展開彈簧回到 1）。
+                        isAnticipating = false
+                        beginMorph(for: state == .open ? motion.openSettleTime : motion.closeSettleTime)
+                    }
+                    .onChange(of: coordinator.currentView) { _, _ in
+                        beginMorph(for: motion.settleTime(for: .tabSwitch))
+                    }
+                    .onChange(of: sizing) { _, _ in
+                        beginMorph(for: motion.settleTime(for: .tabSwitch))
+                    }
                     .sensoryFeedback(.alignment, trigger: haptics)
                     .contextMenu {
                         Button("Settings") {
@@ -343,6 +369,7 @@ struct ContentView: View {
         )
         .animation(.smooth, value: gestureProgress)
         .preferredColorScheme(.dark)
+        .environment(\.notchIsMorphing, isMorphing)
         .environmentObject(vm)
     }
 
@@ -380,6 +407,7 @@ struct ContentView: View {
                            BoringHeader()
                                .frame(width: openContentWidth, height: openHeaderHeight)
                                .opacity(gestureProgress != 0 ? 1.0 - min(abs(gestureProgress) * 0.1, 0.3) : 1.0)
+                               .transition(.notchContent(motion))
                        }
                         // New case to enable compact notch on external displays
                         else if !vm.hasNotch {
@@ -457,11 +485,9 @@ struct ContentView: View {
                         )
                     }
                 }
-                .transition(
-                    .scale(scale: 0.8, anchor: .top)
-                    .combined(with: .opacity)
-                    .animation(.smooth(duration: 0.35))
-                )
+                // 內容層：展開時延遲約 0.09 秒才淡入（blur 10→0、scale 0.97→1、下移 4pt→0），
+                // 收合時立刻快速淡出——形體先長出來，內容再浮現。數值全部在 NotchMotion。
+                .transition(.notchContent(motion))
                 .zIndex(1)
                 .allowsHitTesting(vm.notchState == .open)
                 .opacity(gestureProgress != 0 ? 1.0 - min(abs(gestureProgress) * 0.1, 0.3) : 1.0)
@@ -669,10 +695,27 @@ extension ContentView {
     @discardableResult
     private func doOpen() -> Bool {
         var didOpen = false
-        withAnimation(animationSpring) {
+        withAnimation(motion.animation(.open)) {
             didOpen = vm.open()
+            // 預期鼓起與展開同一個 transaction 結束：比例從 1.04 隨彈簧回到 1，與形體展開銜接。
+            isAnticipating = false
         }
         return didOpen
+    }
+
+    /// 標記「形體正在變形」，`settle` 秒後（再多留一點餘裕）解除。連續觸發時以最後一次為準。
+    private func beginMorph(for settle: TimeInterval) {
+        morphTask?.cancel()
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { isMorphing = true }
+        morphTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(settle + 0.1))
+            guard !Task.isCancelled else { return }
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { isMorphing = false }
+        }
     }
 
     // MARK: - Hover Management
@@ -715,6 +758,11 @@ extension ContentView {
                   !coordinator.shouldShowSneakPeek(on: vm.screenUUID),
                   Defaults[.openNotchOnHover] else { return }
 
+            // 預期動作：停留時間幾乎為 0 時直接展開，不先鼓一下。
+            if Defaults[.minimumHoverDuration] > 0.05 {
+                isAnticipating = true
+            }
+
             hoverTask = Task {
                 try? await Task.sleep(for: .seconds(Defaults[.minimumHoverDuration]))
                 guard !Task.isCancelled else { return }
@@ -729,6 +777,9 @@ extension ContentView {
                 }
             }
         } else {
+            // 游標離開：預期鼓起立即回彈復原（收合的延遲只針對「已展開」的瀏海）。
+            isAnticipating = false
+
             hoverTask = Task {
                 try? await Task.sleep(for: .milliseconds(hoverExitDelayMilliseconds))
                 guard !Task.isCancelled else { return }

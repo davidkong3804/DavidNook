@@ -14,6 +14,8 @@ struct LyricsSidePanel: View {
     @ObservedObject private var service = LyricsService.shared
     @ObservedObject private var musicManager = MusicManager.shared
     @State private var isHovering = false
+    /// 瀏海正在變形（展開／收合／切分頁）：降低歌詞時間軸的更新頻率，把算力留給形體動畫。
+    @Environment(\.notchIsMorphing) private var isMorphing
     /// 可見行數：預設 5 行；展開面板高度不足時由 `NotchHomeMetrics` 降為 4 行。
     var visibleLineCount: Int = LyricsPanelMetrics.defaultVisibleLines
 
@@ -57,8 +59,9 @@ struct LyricsSidePanel: View {
         if service.status == .idle {
             Color.clear
         } else {
-            // 10 Hz 重新取目前行；暫停時停止更新。位置來自 PlaybackClock（elapsed + (now − timestamp) × rate）。
-            TimelineView(.animation(minimumInterval: 0.1, paused: !musicManager.isPlaying)) { context in
+            // 10 Hz 重新取目前行（瀏海變形期間降為 2 Hz，約半秒內最多差一行）；暫停時停止更新。
+            // 位置來自 PlaybackClock（elapsed + (now − timestamp) × rate）。
+            TimelineView(.animation(minimumInterval: isMorphing ? 0.5 : 0.1, paused: !musicManager.isPlaying)) { context in
                 let position = musicManager.estimatedPlaybackPosition(at: context.date)
                 LyricsPanelView(
                     lines: LyricsPanelLine.make(from: service.lines),
