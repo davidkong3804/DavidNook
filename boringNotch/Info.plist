@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleAllowMixedLocalizations</key>
-	<true/>
+	<false/>
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>
