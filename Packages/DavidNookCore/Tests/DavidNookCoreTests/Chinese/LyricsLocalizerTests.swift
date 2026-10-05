@@ -389,6 +389,87 @@ final class LyricsLocalizerTests: XCTestCase {
         XCTAssertEqual(result.lines, ["跟著我走進裡面", "不要汙染我們的夢", "我們一起唱歌"])
     }
 
+    // MARK: - 原生繁體歌詞殘留的簡體字（真實資料稽核：上傳者轉換不完整，例如整句繁體卻留著「红」）
+    // 樣本全為自編句子。
+
+    /// 一份「幾乎全是繁體」的底稿：每行都沒有簡體專有字；重複多份讓整份穩定判成 traditional。
+    private let traditionalBase = [
+        "我們一起走過這條安靜的街", "夜晚的風吹開了窗簾", "你說過會永遠陪著我", "後來我們都長大了",
+        "請你記得我的名字", "雨停了以後的天空", "我還在原地等待", "愛是最溫柔的語言",
+        "時間帶走了一切", "夢裡的海藍藍的", "鄰里之間", "台灣的夜晚", "皇后大道上的燈", "公里與千里之外",
+    ]
+
+    private func traditionalDocument(adding extra: [String]) -> [String] {
+        Array(repeating: traditionalBase, count: 8).flatMap { $0 } + extra
+    }
+
+    func testTraditionalDocumentFixesLinesThatContainOnlySimplifiedCharacters() throws {
+        let doc = traditionalDocument(adding: ["红色的花", "我们的红色旅程"])
+        let result = try localize(doc)
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(Array(result.lines.suffix(2)), ["紅色的花", "我們的紅色旅程"])
+        XCTAssertEqual(Array(result.lines.dropLast(2)), Array(doc.dropLast(2)), "其餘的繁體行一個字都不能動")
+    }
+
+    func testTraditionalDocumentFixesOnlyTheSimplifiedCharactersInAMixedLine() throws {
+        // 行內同時有繁體專有字（塵、過、這、條、鄰）：不整行轉換（會把「鄰里」轉壞），只修簡體專有字。
+        let extra = ["红塵醉了歲月", "我们走過這條街", "红塵中的鄰里之間"]
+        let result = try localize(traditionalDocument(adding: extra))
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(Array(result.lines.suffix(3)), ["紅塵醉了歲月", "我們走過這條街", "紅塵中的鄰里之間"])
+    }
+
+    func testCorrectTraditionalLinesAreNeverChangedByTheResidualRepair() throws {
+        let doc = traditionalDocument(adding: [])
+        let result = try localize(doc)
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(result.lines, doc, "鄰里、台灣、皇后、公里、千里都是正確的繁體")
+    }
+
+    func testResidualRepairNeverTouchesJapaneseKoreanOrNeutralLines() throws {
+        let extra = ["红の国で会おう", "사랑해요 国", "Hello world", ""]
+        let result = try localize(traditionalDocument(adding: extra))
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(Array(result.lines.suffix(4)), extra)
+    }
+
+    func testResidualRepairKeepsVariantNormalizationForLinesWithZhe() throws {
+        // 「着」不是簡體專有字：不影響行的判斷；繁體行照舊只做 t2tw（着→著），不會被誤轉成別的字。
+        let extra = ["他跟着你走過這條街", "他跟着红色的燈"]
+        let result = try localize(traditionalDocument(adding: extra))
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(Array(result.lines.suffix(2)), ["他跟著你走過這條街", "他跟著紅色的燈"])
+    }
+
+    func testResidualRepairAlsoAppliesToTraditionalLinesInsideAMixedDocument() throws {
+        // 混合文件：簡體行整行轉換、繁體行 variantsOnly；繁體行（簡體專有字 ≤3%）內殘留的簡體字同樣要修。
+        let longTraditional = "我們這些孩子说過還會回來的話後來都沒有時間聽見風聲開心關門我們這些孩子說過還會回來的話後來都沒有時間聽見風聲開心關門"
+        var doc = Array(repeating: "我们爱红色的花", count: 10)
+        doc += Array(repeating: "我們一起走過這條安靜的街", count: 10)
+        doc.append(longTraditional)
+        let result = try localize(doc)
+        XCTAssertEqual(result.script, .mixed)
+        XCTAssertEqual(result.lineScripts?.last, .traditional)
+        XCTAssertEqual(result.lines.first, "我們愛紅色的花")
+        XCTAssertEqual(result.lines[10], "我們一起走過這條安靜的街")
+        XCTAssertEqual(result.lines.last, longTraditional.replacingOccurrences(of: "说", with: "說"))
+    }
+
+    func testResidualRepairIsIdempotent() throws {
+        let doc = traditionalDocument(adding: ["红色的花", "红塵醉了歲月", "他跟着红色的燈"])
+        let once = try localize(doc)
+        let twice = try localize(once.lines)
+        XCTAssertEqual(twice.lines, once.lines)
+    }
+
+    func testResidualRepairIgnoresTheIdiomsOption() throws {
+        // 原生繁體路徑不受慣用詞選項影響：殘留行一律用 conservative，不會把「軟件」改成「軟體」。
+        let extra = ["这个软件很好用"]
+        let result = try localize(traditionalDocument(adding: extra), idioms: true)
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(result.lines.last, "這個軟件很好用")
+    }
+
     // MARK: - shared 實例
 
     func testSharedInstanceWorks() throws {
