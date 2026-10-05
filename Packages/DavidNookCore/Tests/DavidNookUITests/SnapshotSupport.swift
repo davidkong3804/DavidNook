@@ -80,6 +80,12 @@ struct Pixels {
         data = buffer
     }
 
+    /// 0…1 的 RGB。
+    func rgb(x: Int, y: Int) -> (r: Double, g: Double, b: Double) {
+        let i = (y * width + x) * 4
+        return (Double(data[i]) / 255, Double(data[i + 1]) / 255, Double(data[i + 2]) / 255)
+    }
+
     /// 0…1 的亮度（簡單平均）。
     func luminance(x: Int, y: Int) -> Double {
         let i = (y * width + x) * 4

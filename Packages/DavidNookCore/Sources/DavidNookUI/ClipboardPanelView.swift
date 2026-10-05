@@ -253,18 +253,32 @@ public struct ClipboardPanelView: View {
         }
     }
 
+    /// 列表底部的淡出遮罩：被切到一半的列不會硬邊截斷，也暗示還可以往下捲。
+    private var bottomFade: some View {
+        VStack(spacing: 0) {
+            Rectangle().fill(Color.black)
+            LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom)
+                .frame(height: 14)
+        }
+    }
+
     @ViewBuilder
     private var list: some View {
         if staticRender {
-            VStack(spacing: 2) { rows }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            // 用 Color.clear 當底：它的最小高度是 0，列表再怎麼長也不會把上面的搜尋列擠出面板
+            // （ScrollView 在正式 App 裡同樣沒有最小高度）。
+            Color.clear
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay(alignment: .top) { VStack(spacing: 2) { rows } }
                 .clipped()
+                .mask { bottomFade }
         } else {
             ScrollViewReader { proxy in
                 ScrollView(.vertical) {
                     LazyVStack(spacing: 2) { rows }
                 }
                 .scrollIndicators(.never)
+                .mask { bottomFade }
                 .onChange(of: model.selectedItem?.id) { _, id in
                     if let id { proxy.scrollTo(id) }
                 }
