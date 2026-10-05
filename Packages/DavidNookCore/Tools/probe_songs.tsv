@@ -1,0 +1,52 @@
+# DavidNookProbe 歌單：歌名<TAB>歌手<TAB>長度秒（空白＝未知，工具以 LRCLIB search 結果的長度叢集代入並標記）<TAB>備註（第一個詞為分類：tw 台灣華語／cn 中國大陸華語／hk 粵語／en 英文／jp 日文／kr 韓文／inst 純音樂／special 特殊符號）
+# 備註的 +ab：另外查簡繁變體寫法的 search（與 App 在 search 階段送出的變體相同），取得另一種字體的版本供 A/B 對照。
+# 只含公開事實資訊（歌名、歌手、長度、分類），不含任何歌詞。
+髮如雪	周杰倫		tw +ab
+倔強	五月天		tw +ab
+旅行的意義	陳綺貞		tw +ab
+日不落	蔡依林		tw
+怎麼了	周興哲		tw +ab
+小幸運	田馥甄		tw +ab
+江南	林俊傑		tw +ab
+愛人錯過	告五人		tw +ab
+小情歌	蘇打綠		tw
+遇見	孫燕姿		tw +ab
+成都	赵雷		cn
+平凡之路	朴树		cn
+南山南	马頔		cn
+起风了	买辣椒也用券		cn
+消愁	毛不易		cn
+董小姐	宋冬野		cn
+丑八怪	薛之谦		cn
+有何不可	许嵩		cn
+夜空中最亮的星	逃跑计划		cn
+云烟成雨	房东的猫		cn
+海闊天空	Beyond		hk +ab
+富士山下	陳奕迅		hk +ab
+K歌之王	陳奕迅		hk +ab
+光輝歲月	Beyond		hk
+紅日	李克勤		hk +ab
+吻別	張學友		hk +ab
+Shape of You	Ed Sheeran		en
+Blinding Lights	The Weeknd		en
+Someone Like You	Adele		en
+Yesterday	The Beatles		en
+Bohemian Rhapsody	Queen		en
+Hotel California	Eagles		en
+Billie Jean	Michael Jackson		en
+Viva La Vida	Coldplay		en
+夜に駆ける	YOASOBI		jp
+Lemon	米津玄師		jp
+前前前世	RADWIMPS		jp
+紅蓮華	LiSA		jp
+残酷な天使のテーゼ	高橋洋子		jp
+Spring Day	BTS		kr
+Hype Boy	NewJeans		kr
+Love Dive	IVE		kr
+Good Day	IU		kr
+River Flows in You	Yiruma		inst
+Comptine d'un autre été, l'après-midi	Yann Tiersen		inst
+Stronger (What Doesn't Kill You)	Kelly Clarkson		special
+Uptown Funk (feat. Bruno Mars)	Mark Ronson		special
+Don't Stop Believin'	Journey		special
+Love Story (Taylor's Version)	Taylor Swift		special
