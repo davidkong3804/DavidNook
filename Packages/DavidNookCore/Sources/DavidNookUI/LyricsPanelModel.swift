@@ -90,6 +90,16 @@ public enum LyricsPanelMetrics {
         CGFloat(clampedVisibleLines(n)) * linePitch(fontSize: fontSize) + 4
     }
 
+    /// 目前行（焦點）在面板高度的哪個比例位置。
+    ///
+    /// 奇數行（3、5、7）對稱，焦點在正中央（0.5）。偶數行（4、6）若仍置中，最外側兩行會被面板邊緣切掉一半；
+    /// 所以焦點上移半個節距，讓每一行都完整落在 `n × 節距` 的格子裡：4 行＝上一行、目前行、後兩行。
+    public static func focusFraction(forVisibleLines n: Int, fontSize: CGFloat = 14) -> CGFloat {
+        let count = clampedVisibleLines(n)
+        let slotOfFocus = (count - 1) / 2
+        return (2 + linePitch(fontSize: fontSize) * (CGFloat(slotOfFocus) + 0.5)) / height(forVisibleLines: count, fontSize: fontSize)
+    }
+
     /// 可用高度放得下幾行（夾在 3–7）：預設高度 5 行，高度不足降為 4 行，再不足 3 行。
     public static func visibleLines(forAvailableHeight height: CGFloat, fontSize: CGFloat = 14) -> Int {
         guard height.isFinite else { return defaultVisibleLines }

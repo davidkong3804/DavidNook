@@ -99,16 +99,55 @@ final class LyricsVisibleLinesTests: XCTestCase {
         XCTAssertGreaterThan(seven, five - 1)
     }
 
-    func testCurrentLineStaysCenteredAndWhiteWithFourLines() throws {
+    // MARK: - 焦點位置（偶數行不得把最外側的行切半）
+
+    func testFocusFractionIsCenteredForOddCountsAndRaisedForEvenCounts() {
+        for n in [3, 5, 7] {
+            XCTAssertEqual(LyricsPanelMetrics.focusFraction(forVisibleLines: n), 0.5, accuracy: 1e-9, "n=\(n)")
+        }
+        XCTAssertEqual(LyricsPanelMetrics.focusFraction(forVisibleLines: 4), 38.0 / 100, accuracy: 1e-9)
+        XCTAssertEqual(LyricsPanelMetrics.focusFraction(forVisibleLines: 6), 62.0 / 148, accuracy: 1e-9)
+    }
+
+    func testEveryVisibleLineSlotFitsInsideThePanel() {
+        // 以一行高 17、節距 24 估算：目前行前後各取 n 個格子中心，整行（±8.5）都在 0…高度 之內。
+        let pitch = LyricsPanelMetrics.linePitch()
+        for n in LyricsPanelMetrics.visibleLinesRange {
+            let height = LyricsPanelMetrics.height(forVisibleLines: n)
+            let focusY = LyricsPanelMetrics.focusFraction(forVisibleLines: n) * height
+            let before = Int((focusY - 2 - 8.5) / pitch + 1e-9)          // 目前行之前放得下的整行數
+            let after = Int((height - focusY - 8.5 - 2 + 8.5) / pitch + 1e-9)
+            XCTAssertEqual(before + 1 + after, n, "n=\(n)：整行可見數應等於 n（before \(before)、after \(after)）")
+            let top = focusY - CGFloat(before) * pitch - 8.5
+            let bottom = focusY + CGFloat(after) * pitch + 8.5
+            XCTAssertGreaterThanOrEqual(top, 0, "n=\(n) 最上一行被切")
+            XCTAssertLessThanOrEqual(bottom, height, "n=\(n) 最下一行被切")
+        }
+    }
+
+    func testCurrentLineIsWhiteAtTheFocusPositionWithFourLines() throws {
         let image = try renderImage(
             LyricsPanelView(lines: lines, currentIndex: 3, status: .loaded, visibleLineCount: 4)
                 .frame(width: 240).background(Color.black)
         )
         let px = Pixels(image)
-        let mid = px.height / 2
-        let band = (mid - px.height / 10)...(mid + px.height / 10)
-        XCTAssertGreaterThan(px.maxLuminance(rows: band), 0.95, "目前行（白色）應在垂直中央")
+        let focus = Int(LyricsPanelMetrics.focusFraction(forVisibleLines: 4) * CGFloat(px.height))
+        let band = (focus - px.height / 12)...(focus + px.height / 12)
+        XCTAssertGreaterThan(px.maxLuminance(rows: band), 0.95, "目前行（白色）應在焦點位置（約 38% 高度）")
+        // 面板正中央（50%）不是目前行：整個目前行都在焦點帶內，中央帶下方的下一行是暗色。
+        let below = (focus + px.height / 6)...(focus + px.height / 3)
+        XCTAssertLessThan(px.maxLuminance(rows: below), 0.75)
         XCTAssertLessThan(px.maxLuminance(rows: 0...(px.height / 14)), 0.3, "上緣應淡出")
         XCTAssertLessThan(px.maxLuminance(rows: (px.height - px.height / 14)...(px.height - 1)), 0.3, "下緣應淡出")
+    }
+
+    func testCurrentLineStaysCenteredAndWhiteWithFiveLines() throws {
+        let image = try renderImage(
+            LyricsPanelView(lines: lines, currentIndex: 3, status: .loaded, visibleLineCount: 5)
+                .frame(width: 240).background(Color.black)
+        )
+        let px = Pixels(image)
+        let mid = px.height / 2
+        XCTAssertGreaterThan(px.maxLuminance(rows: (mid - px.height / 10)...(mid + px.height / 10)), 0.95)
     }
 }

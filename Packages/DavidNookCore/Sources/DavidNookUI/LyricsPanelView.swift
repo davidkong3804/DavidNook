@@ -80,7 +80,11 @@ public struct LyricsPanelView: View {
     // MARK: - 歌詞
 
     private var lyricsBody: some View {
-        LyricsScrollLayout(position: scrollPosition, spacing: LyricsPanelMetrics.lineSpacing) {
+        LyricsScrollLayout(
+            position: scrollPosition,
+            spacing: LyricsPanelMetrics.lineSpacing,
+            focus: LyricsPanelMetrics.focusFraction(forVisibleLines: visibleLineCount, fontSize: fontSize)
+        ) {
             ForEach(lines) { line in
                 lineView(line)
             }
