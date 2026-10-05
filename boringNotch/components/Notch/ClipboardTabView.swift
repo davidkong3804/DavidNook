@@ -130,7 +130,7 @@ struct ClipboardTabView: View {
                 onOpenPermissionSettings: { controller.openPermissionSettings() }
             )
         )
-        .frame(height: 128)
+        .frame(maxHeight: .infinity)
         .background(ClipboardKeyboardHost(viewModel: vm) { controller.handle($0) })
         .onAppear {
             controller.closeNotch = { vm.close() }

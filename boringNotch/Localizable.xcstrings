@@ -1093,6 +1093,57 @@
         }
       }
     },
+    "Expanded height" : {
+      "comment" : "Notch settings: expanded panel size (added with the motion/sizing work).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expanded height"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展開高度"
+          }
+        }
+      }
+    },
+    "Expanded panel" : {
+      "comment" : "Notch settings: expanded panel size (added with the motion/sizing work).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expanded panel"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展開面板"
+          }
+        }
+      }
+    },
+    "Expanded width" : {
+      "comment" : "Notch settings: expanded panel size (added with the motion/sizing work).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expanded width"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展開寬度"
+          }
+        }
+      }
+    },
     "Expands the notch and switches to the Clipboard tab. Not set by default." : {
       "comment" : "Shortcuts settings footer for the clipboard shortcut.",
       "localizations" : {
@@ -2703,6 +2754,23 @@
         }
       }
     },
+    "Reset size to default" : {
+      "comment" : "Notch settings: expanded panel size (added with the motion/sizing work).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset size to default"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "還原預設尺寸"
+          }
+        }
+      }
+    },
     "Reset to Defaults" : {
       "localizations" : {
         "en" : {
@@ -3015,6 +3083,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "隨機播放"
+          }
+        }
+      }
+    },
+    "Size of the opened notch for the Home and Clipboard tabs. Changes apply immediately." : {
+      "comment" : "Notch settings: expanded panel size (added with the motion/sizing work).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Size of the opened notch for the Home and Clipboard tabs. Changes apply immediately."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展開後面板的尺寸（首頁與剪貼簿分頁皆適用），變更立即生效。"
           }
         }
       }
