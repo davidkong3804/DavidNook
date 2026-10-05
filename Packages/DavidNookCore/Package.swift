@@ -14,7 +14,8 @@ let package = Package(
     targets: [
         .target(
             name: "DavidNookCore",
-            dependencies: [.product(name: "OpenCC", package: "SwiftyOpenCC")]
+            dependencies: [.product(name: "OpenCC", package: "SwiftyOpenCC")],
+            resources: [.process("Chinese/Resources")]
         ),
         .testTarget(
             name: "DavidNookCoreTests",
