@@ -168,15 +168,16 @@ struct NotchSettingsView: View {
                     }
                 }
             }
-            Defaults.Toggle(key: .compactMode) {
-                Text("Compact mode")
+            VStack(alignment: .leading, spacing: 4) {
+                Defaults.Toggle(key: .compactMode) {
+                    Text("Compact mode")
+                }
+                Text("Opens a smaller notch with only the music player. There is no tab bar, so clipboard history is not available in this mode.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         } header: {
             Text("Behavior")
-        } footer: {
-            Text("Shows a smaller opened notch with just the music player — no tabs or calendar.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 

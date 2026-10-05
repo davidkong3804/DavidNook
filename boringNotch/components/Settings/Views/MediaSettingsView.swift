@@ -139,7 +139,7 @@ struct MediaSettingsView: View {
 
             Section {
                 Defaults.Toggle(key: .coloredSpectrogram) {
-                    Text("Colored spectrogram")
+                    Text("Colored playback bars")
                 }
                 Defaults.Toggle(key: .playerColorTinting) {
                     Text("Player tinting")
@@ -212,7 +212,7 @@ struct MediaSettingsView: View {
             }
         } else {
             footerText(
-                "'Now Playing' was the only option on previous versions and works with all media apps."
+                "Now Playing works with most players. If it is unavailable, DavidNook falls back to the Music app through Apple events, and macOS asks for Automation permission the first time that is needed."
             )
         }
     }

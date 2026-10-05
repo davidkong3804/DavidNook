@@ -37,6 +37,7 @@ struct AppearanceSettingsView: View {
                     Text("Custom").tag(true)
                 }
                 .pickerStyle(.segmented)
+                .labelsHidden()
                 .onChange(of: useCustomAccentColor) {
                     if useCustomAccentColor {
                         loadCustomColor()
@@ -131,11 +132,6 @@ struct AppearanceSettingsView: View {
             .padding(.vertical, 4)
         } header: {
             Text("Accent color")
-        } footer: {
-            Text("Choose between your system accent color or customize it with your own selection.")
-                .multilineTextAlignment(.trailing)
-                .foregroundStyle(.secondary)
-                .font(.caption)
         }
     }
 

@@ -1,0 +1,23 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "NSAppleEventsUsageDescription" : {
+      "comment" : "Shown in the macOS Automation permission prompt for the Music app.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook uses Apple events to read the current track, favorite state and volume of the Music app and to control its playback. This only happens when Now Playing information is unavailable, or when the Music app is the one playing."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook 透過 Apple 事件讀取「音樂」App 目前的曲目、喜好項目與音量，並控制其播放。只有在「正在播放」資訊無法使用，或正在播放的是「音樂」App 時才會用到。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.1"
+}

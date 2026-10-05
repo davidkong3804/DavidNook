@@ -47,22 +47,6 @@
         }
       }
     },
-    "'Now Playing' was the only option on previous versions and works with all media apps." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "'Now Playing' was the only option on previous versions and works with all media apps."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "「正在播放」是舊版本唯一的選項，適用於所有媒體 App。"
-          }
-        }
-      }
-    },
     "1 day" : {
       "comment" : "Clipboard settings: retention option.",
       "localizations" : {
@@ -114,6 +98,16 @@
         }
       }
     },
+    "A notch utility for macOS with synced lyrics and clipboard history." : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 瀏海工具，提供同步歌詞與剪貼簿歷史。"
+          }
+        }
+      }
+    },
     "About" : {
       "localizations" : {
         "en" : {
@@ -143,6 +137,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "強調色彩"
+          }
+        }
+      }
+    },
+    "Accessibility (paste events)" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輔助使用（貼上事件）"
           }
         }
       }
@@ -427,22 +431,6 @@
         }
       }
     },
-    "Choose a Music Source" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a Music Source"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "選擇音樂來源"
-          }
-        }
-      }
-    },
     "Choose any color" : {
       "localizations" : {
         "en" : {
@@ -455,22 +443,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選擇任何顏色"
-          }
-        }
-      }
-    },
-    "Choose between your system accent color or customize it with your own selection." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose between your system accent color or customize it with your own selection."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "可使用系統的強調色彩，或自行挑選喜歡的顏色。"
           }
         }
       }
@@ -609,6 +581,16 @@
         }
       }
     },
+    "Clipboard history" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剪貼簿歷史"
+          }
+        }
+      }
+    },
     "Clipboard is empty" : {
       "comment" : "Clipboard panel: empty state when there is no history.",
       "localizations" : {
@@ -658,18 +640,12 @@
         }
       }
     },
-    "Colored spectrogram" : {
+    "Colored playback bars" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Colored spectrogram"
-          }
-        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "彩色頻譜"
+            "value" : "彩色播放動態條"
           }
         }
       }
@@ -680,23 +656,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "精簡模式"
-          }
-        }
-      }
-    },
-    "Connects directly to the Apple Music app." : {
-      "comment" : "Onboarding description of the Apple Music source.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connects directly to the Apple Music app."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "直接連接「音樂」App。"
           }
         }
       }
@@ -882,12 +841,32 @@
         }
       }
     },
-    "DavidNook is a GPL-3.0 fork of boring.notch by The Bored Team and contributors." : {
+    "DavidNook is a derivative work of boring.notch (TheBoredTeam), licensed under GPL-3.0." : {
       "localizations" : {
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "DavidNook 是 The Bored Team 與貢獻者所開發之 boring.notch 的 GPL-3.0 衍生版本。"
+            "value" : "本專案是 boring.notch（TheBoredTeam）的衍生作品，使用 GPL-3.0 授權。"
+          }
+        }
+      }
+    },
+    "DavidNook is an independent implementation and is not affiliated with NotchNook or its authors." : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook 為獨立實作，與 NotchNook 及其作者無關。"
+          }
+        }
+      }
+    },
+    "DavidNook is free software released under the GNU General Public License v3.0 (GPL-3.0). It comes with no warranty of any kind." : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook 是自由軟體，依 GNU 通用公共授權條款第 3 版（GPL-3.0）發佈，不提供任何形式的擔保。"
           }
         }
       }
@@ -898,6 +877,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "DavidNook 與「正在播放」的連線中斷，正在自動重新連線…"
+          }
+        }
+      }
+    },
+    "DavidNook turns the notch into a small control center. Everything stays on this Mac." : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook 讓瀏海變成小型控制中心，所有資料都只留在這台 Mac。"
           }
         }
       }
@@ -974,6 +963,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示器"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
           }
         }
       }
@@ -1237,6 +1236,16 @@
         }
       }
     },
+    "GPL-3.0 license text" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GPL-3.0 授權全文"
+          }
+        }
+      }
+    },
     "General" : {
       "localizations" : {
         "en" : {
@@ -1328,7 +1337,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "僅音樂 App 全螢幕時隱藏"
+            "value" : "僅媒體 App 全螢幕時隱藏"
           }
         }
       }
@@ -1430,6 +1439,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "游標停留延遲"
+          }
+        }
+      }
+    },
+    "How DavidNook works" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook 如何運作"
           }
         }
       }
@@ -1605,6 +1624,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "版面預覽"
+          }
+        }
+      }
+    },
+    "License and credits" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授權與致謝"
+          }
+        }
+      }
+    },
+    "Links" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連結"
           }
         }
       }
@@ -1851,6 +1890,16 @@
         }
       }
     },
+    "Music (Automation)" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音樂（自動化）"
+          }
+        }
+      }
+    },
     "Music Source" : {
       "localizations" : {
         "en" : {
@@ -1863,6 +1912,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "音樂來源"
+          }
+        }
+      }
+    },
+    "Needed for clipboard history. macOS asks when DavidNook first reads the clipboard (after you copy something); allow it in System Settings → Privacy & Security → Paste from Other Apps." : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剪貼簿歷史需要這項權限。macOS 會在 DavidNook 第一次讀取剪貼簿時詢問（複製東西之後）；請到「系統設定 → 隱私權與安全性 → 從其他App貼上」選擇允許。"
+          }
+        }
+      }
+    },
+    "Network" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "網路"
           }
         }
       }
@@ -2021,12 +2090,32 @@
         }
       }
     },
+    "Nothing here asks for a permission now. You can change everything later in Settings." : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這一頁不會現在要求任何權限，之後都可以在設定中調整。"
+          }
+        }
+      }
+    },
     "Now Playing" : {
       "localizations" : {
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在播放"
+          }
+        }
+      }
+    },
+    "Now Playing and lyrics" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在播放與歌詞"
           }
         }
       }
@@ -2061,6 +2150,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "「正在播放」連線中斷"
+          }
+        }
+      }
+    },
+    "Now Playing works with most players. If it is unavailable, DavidNook falls back to the Music app through Apple events, and macOS asks for Automation permission the first time that is needed." : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「正在播放」適用於大多數播放器；無法使用時，DavidNook 會改以 Apple 事件使用「音樂」App，macOS 會在第一次需要時詢問「自動化」權限。"
+          }
+        }
+      }
+    },
+    "Only for the experimental “paste automatically after choosing” option, off by default. You grant it yourself from Settings → Clipboard." : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅用於實驗性的「點選後自動貼上」，預設關閉。需要時請自行在「設定 → 剪貼簿」授權。"
           }
         }
       }
@@ -2142,6 +2251,16 @@
         }
       }
     },
+    "Opens a smaller notch with only the music player. There is no tab bar, so clipboard history is not available in this mode." : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展開時只顯示音樂播放器的小型瀏海。此模式沒有分頁列，因此無法使用剪貼簿歷史。"
+          }
+        }
+      }
+    },
     "Paste automatically after choosing (requires Accessibility)" : {
       "comment" : "Clipboard settings: experimental auto-paste switch.",
       "localizations" : {
@@ -2155,6 +2274,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "點選後自動貼上（需輔助使用權限）"
+          }
+        }
+      }
+    },
+    "Paste from Other Apps" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從其他App貼上"
           }
         }
       }
@@ -2250,6 +2379,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "尚未授權"
+          }
+        }
+      }
+    },
+    "Permissions" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "權限"
           }
         }
       }
@@ -2408,6 +2547,16 @@
         }
       }
     },
+    "Reads and controls the Music app: as a fallback when the system's Now Playing information is unavailable, and for favorites and volume when the Music app is the one playing. macOS asks the first time it is needed." : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讀取與控制「音樂」App：「正在播放」資訊無法使用時作為備援，以及「音樂」App 正在播放時的喜好項目與音量。macOS 會在第一次需要時詢問。"
+          }
+        }
+      }
+    },
     "Record clipboard history" : {
       "comment" : "Clipboard settings: master switch for recording.",
       "localizations" : {
@@ -2471,6 +2620,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "記住上次使用的分頁"
+          }
+        }
+      }
+    },
+    "Remembers the text, images and files you copy so you can paste them again." : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "記住複製過的文字、圖片與檔案，之後可以再次貼上。"
           }
         }
       }
@@ -2669,22 +2828,6 @@
         }
       }
     },
-    "Select the music source you want to use. You can change this later in the app settings." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select the music source you want to use. You can change this later in the app settings."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "請選擇要使用的音樂來源，之後可在 App 設定中變更。"
-          }
-        }
-      }
-    },
     "Settings" : {
       "localizations" : {
         "en" : {
@@ -2856,12 +2999,12 @@
         }
       }
     },
-    "Shows a smaller opened notch with just the music player — no tabs or calendar." : {
+    "Shows the current track with playback controls and line-by-line synced lyrics." : {
       "localizations" : {
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "展開時改成較小的瀏海，只顯示音樂播放器，沒有分頁與行事曆。"
+            "value" : "顯示目前曲目、播放控制與逐行同步歌詞。"
           }
         }
       }
@@ -3047,6 +3190,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "複製文字、圖片或檔案後會出現在這裡"
+          }
+        }
+      }
+    },
+    "The license text is not bundled with this build. See the project repository." : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此版本沒有內附授權全文，請參閱專案儲存庫。"
+          }
+        }
+      }
+    },
+    "The only connection: the title, artist and duration of the current track go to lrclib.net to look up lyrics (can be turned off in Settings → Media). No telemetry, no update server." : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "唯一的對外連線：把目前曲目的曲名、歌手與長度送到 lrclib.net 查詢歌詞（可在「設定 → 媒體」關閉）。沒有遙測，也沒有更新伺服器。"
+          }
+        }
+      }
+    },
+    "Third-party licenses" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第三方授權"
           }
         }
       }
@@ -3330,6 +3503,16 @@
         }
       }
     },
+    "What it does" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "功能"
+          }
+        }
+      }
+    },
     "When lyrics are on, the track title, artist and duration are sent to lrclib.net to look up lyrics." : {
       "localizations" : {
         "en" : {
@@ -3379,23 +3562,6 @@
         }
       }
     },
-    "Works with most media apps, including browsers, to detect what's playing. Note: This may be removed in a future macOS version." : {
-      "comment" : "Onboarding description of the universal macOS Now Playing music source.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Works with most media apps, including browsers, to detect what's playing. Note: This may be removed in a future macOS version."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "可偵測大多數媒體 App（包含瀏覽器）正在播放的內容。注意：未來的 macOS 版本可能會移除這項功能。"
-          }
-        }
-      }
-    },
     "You can now enjoy the app. If you want to tweak things further, you can always visit the settings." : {
       "localizations" : {
         "en" : {
@@ -3440,6 +3606,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "目前 macOS 系統的強調色彩"
+          }
+        }
+      }
+    },
+    "lrclib.net only" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只連線 lrclib.net"
           }
         }
       }

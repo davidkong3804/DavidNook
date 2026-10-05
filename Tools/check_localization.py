@@ -16,6 +16,7 @@
    D. xcstrings 內出現 en、zh-Hant 以外的語言，或 sourceLanguage 不是 en
    E. AppKit 直接塞字面字串、完全不經在地化的 API（window.title = "…"、NSMenuItem(title: "…")、
       NSAlert 的 messageText／informativeText／addButton、toolTip、.stringValue = "…"）
+   F. boringNotch/InfoPlist.xcstrings（權限提示文字等 Info.plist 字串）每個 key 都要有 en 與 zh-Hant。
 3. 可選：--stringsdata <DerivedData 目錄>：把編譯器抽出的 `.stringsdata`（Xcode 以
    SWIFT_EMIT_LOC_STRINGS 產生，是 SwiftUI 在地化 key 的「真實來源」）也併入「已使用」集合，並列出
    「編譯器抽到、但本腳本的規則掃不到」的 key（代表規則有缺口）。沒有給這個參數時只靠原始碼規則。
@@ -65,6 +66,11 @@ KEY_CALL_PREFIXES = [
     r"\bNSLocalizedString\(\s*",
     r"\bcustomBadge\(\s*text:\s*",
     r"\bfooterText\(\s*",
+    r"\bgroup\(\s*",  # OnboardingOverviewView 的區塊標題
+    r"\blinkRow\(\s*title:\s*",  # AboutView 連結列
+    r"\bitem\(\s*icon:\s*\"[^\"]*\",\s*title:\s*",  # OnboardingOverviewView 條目標題
+    r"\bdetail:\s*",
+    r"\bhelp:\s*",  # AboutView.linkRow 的 help 參數
 ]
 KEY_CALL_RE = re.compile("|".join(f"(?:{p})" for p in KEY_CALL_PREFIXES))
 
@@ -287,10 +293,32 @@ def main() -> int:
         for k in sorted(compiler_only):
             print(f"  - {show(k)}  <- {', '.join(compiler_keys[k][:2])}")
 
-    total = len(missing_key) + len(missing_zh) + len(orphans) + len(bad_langs) + int(bad_source) + len(appkit_hits)
+    # F：InfoPlist.xcstrings
+    info_problems: list[str] = []
+    info_path = root / "boringNotch" / "InfoPlist.xcstrings"
+    if info_path.exists():
+        info = json.loads(info_path.read_text(encoding="utf-8"))
+        if info.get("sourceLanguage") != "en":
+            info_problems.append("InfoPlist.xcstrings sourceLanguage 不是 en")
+        for k, v in info.get("strings", {}).items():
+            locs = v.get("localizations", {})
+            for lang in sorted(ALLOWED_LANGS):
+                unit = locs.get(lang, {}).get("stringUnit", {})
+                if not unit.get("value"):
+                    info_problems.append(f"{k} 缺 {lang}")
+            for lang in sorted(set(locs) - ALLOWED_LANGS):
+                info_problems.append(f"{k} 多餘語言 {lang}")
+    else:
+        info_problems.append("找不到 boringNotch/InfoPlist.xcstrings")
+    print(f"\n[F InfoPlist.xcstrings 缺語言] {len(info_problems)}")
+    for it in info_problems:
+        print(f"  - {it}")
+
+    total = len(info_problems) + len(missing_key) + len(missing_zh) + len(orphans) + len(bad_langs) + int(bad_source) + len(appkit_hits)
     print("\n" + "=" * 60)
     print(f"缺 zh-Hant（A+B）= {len(missing_key) + len(missing_zh)}；孤兒 key（C）= {len(orphans)}；"
-          f"其他語言（D）= {len(bad_langs) + int(bad_source)}；AppKit 未在地化（E）= {len(appkit_hits)}")
+          f"其他語言（D）= {len(bad_langs) + int(bad_source)}；AppKit 未在地化（E）= {len(appkit_hits)}；"
+          f"InfoPlist（F）= {len(info_problems)}")
     print("結果：" + ("通過" if total == 0 else "未通過"))
     return 0 if total == 0 else 1
 

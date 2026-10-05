@@ -129,7 +129,9 @@ final class MusicManager: ObservableObject {
         preferredMediaController = Defaults[.mediaController]
 
         if preferredMediaController == .nowPlaying {
-            activateFallback()
+            // 啟動時不預先啟用「音樂」備援：AppleMusicController 一建立，只要「音樂」App 正在執行就會送 Apple 事件，
+            // 會在使用者還沒看到任何說明前跳出「自動化」授權提示。等可用性檢查有結果再決定：
+            // 不可用才改用備援（見 startAvailabilityCheck），可用就直接啟用 Now Playing。
             ensureNowPlayingAvailabilityChecked()
         } else {
             activateControllerIfNeeded(preferredMediaController)

@@ -38,12 +38,15 @@ enum SnapshotHarness {
         let settingsWidth: CGFloat = 500
         let pages: [(String, AnyView, CGSize)] = [
             ("settings-general", AnyView(GeneralSettings()), CGSize(width: settingsWidth, height: 520)),
-            ("settings-notch", AnyView(NotchSettingsView()), CGSize(width: settingsWidth, height: 1000)),
+            ("settings-notch", AnyView(NotchSettingsView()), CGSize(width: settingsWidth, height: 1150)),
             ("settings-appearance", AnyView(AppearanceSettingsView()), CGSize(width: settingsWidth, height: 620)),
             ("settings-media", AnyView(MediaSettingsView()), CGSize(width: settingsWidth, height: 1350)),
             ("settings-clipboard", AnyView(ClipboardSettingsView()), CGSize(width: settingsWidth, height: 760)),
             ("settings-shortcuts", AnyView(ShortcutsSettingsView()), CGSize(width: settingsWidth, height: 480)),
             ("settings-about", AnyView(AboutView()), CGSize(width: settingsWidth, height: 620)),
+            ("onboarding-welcome", AnyView(WelcomeView()), CGSize(width: 400, height: 600)),
+            ("onboarding-overview", AnyView(OnboardingOverviewView(onContinue: {})), CGSize(width: 400, height: 600)),
+            ("onboarding-finish", AnyView(OnboardingFinishView(onFinish: {}, onOpenSettings: {})), CGSize(width: 400, height: 600)),
         ]
         for (name, view, size) in pages {
             let content = view

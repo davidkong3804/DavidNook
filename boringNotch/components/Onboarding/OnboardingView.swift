@@ -10,7 +10,8 @@ import Defaults
 
 enum OnboardingStep {
     case welcome
-    case musicPermission
+    /// 權限與資料流向的說明頁（只說明，不會觸發任何系統權限提示）。
+    case overview
     case finished
 }
 
@@ -25,16 +26,18 @@ struct OnboardingView: View {
             case .welcome:
                 WelcomeView {
                     withAnimation(.easeInOut(duration: 0.6)) {
-                        step = .musicPermission
+                        step = .overview
                     }
                 }
                 .transition(.opacity)
 
-            case .musicPermission:
-                MusicControllerSelectionView(
+            case .overview:
+                OnboardingOverviewView(
                     onContinue: {
                         withAnimation(.easeInOut(duration: 0.6)) {
                             BoringViewCoordinator.shared.firstLaunch = false
+                            // 預設的「正在播放」來源視為使用者已確認：之後若改用備援，才會顯示備援提示。
+                            Defaults[.didChooseMediaController] = true
                             step = .finished
                         }
                     }
@@ -47,7 +50,4 @@ struct OnboardingView: View {
         }
         .frame(width: 400, height: 600)
     }
-
-    // MARK: - Permission Request Logic
-
 }

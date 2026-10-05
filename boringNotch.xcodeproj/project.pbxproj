@@ -26,7 +26,6 @@
 		11CC44A22CEE614100C7244B /* BoringViewCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CC44A12CEE614100C7244B /* BoringViewCoordinator.swift */; };
 		11CFC65B2E097E9D00748C80 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CFC65A2E097E9D00748C80 /* WelcomeView.swift */; };
 		11CFC65F2E097F2F00748C80 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CFC65E2E097F2100748C80 /* OnboardingView.swift */; };
-		11CFC6632E09918400748C80 /* MusicControllerSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CFC6622E09917B00748C80 /* MusicControllerSelectionView.swift */; };
 		11CFC6652E09C7B300748C80 /* OnboardingFinishView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CFC6642E09C7B300748C80 /* OnboardingFinishView.swift */; };
 		11DB26662EDD0BE1001EA0CF /* LyricsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11DB26652EDD0BE1001EA0CF /* LyricsService.swift */; };
 		11F748822ECB07A400F841DB /* MusicControlButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F748812ECB07A400F841DB /* MusicControlButton.swift */; };
@@ -70,6 +69,10 @@
 		DA71D0C0DE000000000A0005 /* DavidNookUI in Frameworks */ = {isa = PBXBuildFile; productRef = DA71D0C0DE000000000A0004 /* DavidNookUI */; };
 		DA71D0C0DE00000000C10002 /* ClipboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000C10001 /* ClipboardService.swift */; };
 		DA71D0C0DE00000000C20002 /* ClipboardTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000C20001 /* ClipboardTabView.swift */; };
+		DA71D0C0DE0000000D000002 /* OnboardingOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE0000000D000001 /* OnboardingOverviewView.swift */; };
+		DA71D0C0DE00000000E00002 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000E00001 /* LICENSE */; };
+		DA71D0C0DE00000000E10002 /* THIRD_PARTY_NOTICES.md in Resources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000E10001 /* THIRD_PARTY_NOTICES.md */; };
+		DA71D0C0DE00000000E20002 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000E20001 /* InfoPlist.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -114,7 +117,6 @@
 		11CC44A12CEE614100C7244B /* BoringViewCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoringViewCoordinator.swift; sourceTree = "<group>"; };
 		11CFC65A2E097E9D00748C80 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		11CFC65E2E097F2100748C80 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		11CFC6622E09917B00748C80 /* MusicControllerSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicControllerSelectionView.swift; sourceTree = "<group>"; };
 		11CFC6642E09C7B300748C80 /* OnboardingFinishView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFinishView.swift; sourceTree = "<group>"; };
 		11DB26652EDD0BE1001EA0CF /* LyricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsService.swift; sourceTree = "<group>"; };
 		11F748812ECB07A400F841DB /* MusicControlButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicControlButton.swift; sourceTree = "<group>"; };
@@ -157,6 +159,10 @@
 		EAB1C3E8B149445A9E57C6AF /* NotchWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWindowManager.swift; sourceTree = "<group>"; };
 		DA71D0C0DE00000000C10001 /* ClipboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardService.swift; sourceTree = "<group>"; };
 		DA71D0C0DE00000000C20001 /* ClipboardTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardTabView.swift; sourceTree = "<group>"; };
+		DA71D0C0DE0000000D000001 /* OnboardingOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingOverviewView.swift; sourceTree = "<group>"; };
+		DA71D0C0DE00000000E00001 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		DA71D0C0DE00000000E10001 /* THIRD_PARTY_NOTICES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = THIRD_PARTY_NOTICES.md; sourceTree = "<group>"; };
+		DA71D0C0DE00000000E20001 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -275,6 +281,8 @@
 		14CEF4092C5CAED200855D72 = {
 			isa = PBXGroup;
 			children = (
+				DA71D0C0DE00000000E10001 /* THIRD_PARTY_NOTICES.md */,
+				DA71D0C0DE00000000E00001 /* LICENSE */,
 				112B0EB62E30DD0F00562D6C /* mediaremote-adapter */,
 				14CEF4142C5CAED300855D72 /* boringNotch */,
 				A5167213301F85B40018095A /* boringNotchTests */,
@@ -295,6 +303,7 @@
 		14CEF4142C5CAED300855D72 /* boringNotch */ = {
 			isa = PBXGroup;
 			children = (
+				DA71D0C0DE00000000E20001 /* InfoPlist.xcstrings */,
 				14288DE22C6E016F00B9F80C /* observers */,
 				14288DD92C6E015000B9F80C /* helpers */,
 				B186543A2C6F49A4000B926A /* Shortcuts */,
@@ -378,8 +387,8 @@
 		B141C23B2CA5F50900AC8CC8 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
+				DA71D0C0DE0000000D000001 /* OnboardingOverviewView.swift */,
 				11CFC6642E09C7B300748C80 /* OnboardingFinishView.swift */,
-				11CFC6622E09917B00748C80 /* MusicControllerSelectionView.swift */,
 				11CFC65E2E097F2100748C80 /* OnboardingView.swift */,
 				11CFC65A2E097E9D00748C80 /* WelcomeView.swift */,
 			);
@@ -531,6 +540,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DA71D0C0DE00000000E20002 /* InfoPlist.xcstrings in Resources */,
+				DA71D0C0DE00000000E10002 /* THIRD_PARTY_NOTICES.md in Resources */,
+				DA71D0C0DE00000000E00002 /* LICENSE in Resources */,
 				14CEF41D2C5CAED400855D72 /* Preview Assets.xcassets in Resources */,
 				14CEF41A2C5CAED400855D72 /* Assets.xcassets in Resources */,
 				112B0EB82E30DD0F00562D6C /* MediaRemoteAdapterTestClient in Resources */,
@@ -553,6 +565,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DA71D0C0DE0000000D000002 /* OnboardingOverviewView.swift in Sources */,
 				DA71D0C0DE00000000C20002 /* ClipboardTabView.swift in Sources */,
 				DA71D0C0DE00000000C10002 /* ClipboardService.swift in Sources */,
 				5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */,
@@ -600,7 +613,6 @@
 				11F748822ECB07A400F841DB /* MusicControlButton.swift in Sources */,
 				14288E0C2C6F8EC000B9F80C /* AppIcons.swift in Sources */,
 				B19016242CC15B5000E3F12E /* Constants.swift in Sources */,
-				11CFC6632E09918400748C80 /* MusicControllerSelectionView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -781,7 +793,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "DavidNook 只在本機「正在播放」資訊無法使用時，才透過 Apple 事件控制「音樂」app 的播放與讀取目前曲目。";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "DavidNook uses Apple events to read the current track, favorite state and volume of the Music app and to control its playback. This only happens when Now Playing information is unavailable, or when the Music app is the one playing.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024-2026 The Bored Team and contributors (boring.notch); DavidNook modifications © 2026 davidkong3804. Licensed under GPL-3.0.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -841,7 +853,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "DavidNook 只在本機「正在播放」資訊無法使用時，才透過 Apple 事件控制「音樂」app 的播放與讀取目前曲目。";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "DavidNook uses Apple events to read the current track, favorite state and volume of the Music app and to control its playback. This only happens when Now Playing information is unavailable, or when the Music app is the one playing.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024-2026 The Bored Team and contributors (boring.notch); DavidNook modifications © 2026 davidkong3804. Licensed under GPL-3.0.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
