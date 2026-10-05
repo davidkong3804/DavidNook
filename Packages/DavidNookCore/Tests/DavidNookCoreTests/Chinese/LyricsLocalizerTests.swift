@@ -56,10 +56,10 @@ final class LyricsLocalizerTests: XCTestCase {
     }
 
     func testAmbiguousOnlyLinesInsideSimplifiedDocumentAreStillConverted() throws {
-        // 「后来」這行本身沒有專有字，但整篇是簡體 → 全文轉換，這行也要轉。
-        let result = try localize(["我们都没有说话", "后来", "里面"])
+        // 「后面」「里面」這兩行本身沒有專有字，但整篇是簡體 → 全文轉換，這兩行也要轉。
+        let result = try localize(["我们都没有说话", "后面", "里面"])
         XCTAssertEqual(result.script, .simplified)
-        XCTAssertEqual(result.lines, ["我們都沒有說話", "後來", "裡面"])
+        XCTAssertEqual(result.lines, ["我們都沒有說話", "後面", "裡面"])
     }
 
     // MARK: - 繁體 → 不轉（僅 t2tw 變體正規化）
@@ -105,7 +105,7 @@ final class LyricsLocalizerTests: XCTestCase {
     }
 
     func testNeutralChineseWithoutEvidenceIsLeftAlone() throws {
-        let lines = ["后来", "里面", "你我他"]
+        let lines = ["后面", "里面", "你我他"]
         let result = try localize(lines)
         XCTAssertEqual(result.script, .neutral)
         XCTAssertEqual(result.lines, lines)
@@ -128,7 +128,7 @@ final class LyricsLocalizerTests: XCTestCase {
             "里面有软件",              // 簡體 → 轉
             "裡面有軟體",              // 繁體 → 不轉
             "鄰里之間",                // 繁體 → 不轉（不可變成鄰裡）
-            "后来",                    // 中性行（只有通用字）→ 原樣
+            "后面",                    // 中性行（只有 后 面 等通用字）→ 原樣
             "头发散落",                // 簡體 → 轉
         ]
         let result = try localize(lines)
@@ -146,7 +146,7 @@ final class LyricsLocalizerTests: XCTestCase {
             "裡面有軟件",
             "裡面有軟體",
             "鄰里之間",
-            "后来",
+            "后面",
             "頭髮散落",
         ])
     }
@@ -159,11 +159,11 @@ final class LyricsLocalizerTests: XCTestCase {
     }
 
     func testMixedLineWithBothScriptsStillGetsSimplifiedCharactersConverted() throws {
-        let lines = ["我愿意為你", "我願意為你", "这个世界"]
+        let lines = ["我爱你們", "我愛你們", "这个世界"]
         let result = try localize(lines)
         XCTAssertEqual(result.script, .mixed)
         XCTAssertEqual(result.lineScripts?[0], .mixed)
-        XCTAssertEqual(result.lines[0], "我願意為你")
+        XCTAssertEqual(result.lines[0], "我愛你們")
     }
 
     // MARK: - 略過中繼行索引（只影響偵測）
@@ -218,10 +218,132 @@ final class LyricsLocalizerTests: XCTestCase {
         }
     }
 
+    // MARK: - 自編整首簡體歌詞（端到端；內容為本專案自編，非真實歌詞）
+
+    func testWholeSimplifiedSongEndToEnd() throws {
+        let input = [
+            "我愿意为你被放逐天际",
+            "头发被风吹乱了",
+            "你的发梢带着雨的气息",
+            "后来的后来我们都没有回头",
+            "海里的鱼不知道天空有多高",
+            "我在干净的月光下干杯",
+            "面条和面包都凉了",
+            "托着下巴想象你的样子",
+            "回应我的每一个梦",
+            "不断发现新的自己",
+            "不断发展的城市里没有风",
+            "这里那里哪里都是你",
+            "爱像发如雪一样落下",
+            "我发端的指尖微凉",
+            "白发苍苍的老人",
+            "成长发展的故事",
+            "苍白发抖的手",
+            "象征与特征",
+            "周杰伦和林俊杰",
+            "钟意你的人",
+            "周而复始的夜晚",
+            "托付给你的信",
+            "寄托着我的希望",
+            "拜托你别走",
+            "征途漫漫",
+            "后街的灯火",
+            "皇后与国王",
+            "曲终人散",
+            "干涉与干部",
+            "树干和骨干",
+            "千里之外万里无云",
+            "公里和英里",
+            "一只鸟两只猫",
+            "只要你只想你",
+            "The night is quiet",
+            "",
+        ]
+        let expected = [
+            "我願意為你被放逐天際",
+            "頭髮被風吹亂了",
+            "你的髮梢帶著雨的氣息",
+            "後來的後來我們都沒有回頭",
+            "海裡的魚不知道天空有多高",
+            "我在乾淨的月光下乾杯",
+            "麵條和麵包都涼了",
+            "托著下巴想像你的樣子",
+            "回應我的每一個夢",
+            "不斷發現新的自己",
+            "不斷發展的城市裡沒有風",
+            "這裡那裡哪裡都是你",
+            "愛像髮如雪一樣落下",
+            "我髮端的指尖微涼",
+            "白髮蒼蒼的老人",
+            "成長發展的故事",
+            "蒼白發抖的手",
+            "象徵與特徵",
+            "周杰倫和林俊傑",
+            "鍾意你的人",
+            "周而復始的夜晚",
+            "託付給你的信",
+            "寄託著我的希望",
+            "拜託你別走",
+            "征途漫漫",
+            "後街的燈火",
+            "皇后與國王",
+            "曲終人散",
+            "干涉與幹部",
+            "樹幹和骨幹",
+            "千里之外萬里無雲",
+            "公里和英里",
+            "一隻鳥兩隻貓",
+            "只要你只想你",
+            "The night is quiet",
+            "",
+        ]
+        let result = try localize(input)
+        XCTAssertEqual(result.script, .simplified)
+        XCTAssertEqual(result.lines.count, expected.count)
+        for (index, (actual, want)) in zip(result.lines, expected).enumerated() {
+            XCTAssertEqual(actual, want, "第 \(index + 1) 行：\(input[index])")
+        }
+    }
+
+    // MARK: - 多執行緒
+
+    func testConcurrentLocalizationGivesIdenticalResults() throws {
+        let lines = ["头发被风吹乱了", "海里的鱼", "发如雪", "这个软件没有网络", "Hello"]
+        let baseline = try localize(lines).lines
+        let failures = LockedCounter()
+        DispatchQueue.concurrentPerform(iterations: 200) { _ in
+            do {
+                let result = try localizer.localize(lines: lines)
+                if result.lines != baseline { failures.increment() }
+            } catch {
+                failures.increment()
+            }
+        }
+        XCTAssertEqual(failures.value, 0)
+    }
+
     // MARK: - shared 實例
 
     func testSharedInstanceWorks() throws {
         let result = try LyricsLocalizer.shared.localize(lines: ["周杰伦", "我们"])
         XCTAssertEqual(result.lines, ["周杰倫", "我們"])
+    }
+}
+
+/// 多執行緒測試用的計數器。
+private final class LockedCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    var value: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return count
+    }
+
+    func increment() {
+        lock.lock()
+        count += 1
+        lock.unlock()
     }
 }
