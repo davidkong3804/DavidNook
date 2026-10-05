@@ -293,6 +293,80 @@ final class LyricsChineseConverterTests: XCTestCase {
         ])
     }
 
+    // MARK: - 審稿補充（真實資料：OpenCC 轉錯或風格不合的詞；樣本皆為單詞或自編短句）
+
+    func testReviewTearsDry() throws {
+        // 「泪干」OpenCC 對「已干」「都干」會轉成「幹」（錯，應為乾）。
+        try assertConverts(.conservative, [
+            ("泪干", "淚乾"),
+            ("泪已干", "淚已乾"),
+            ("泪都干", "淚都乾"),
+            ("你的泪已干了", "你的淚已乾了"),
+            ("泪水", "淚水"),
+        ])
+    }
+
+    func testReviewSadlyBeautiful() throws {
+        // OpenCC 轉成「悽美」；歌詞慣用「淒美」。其他「淒」詞維持 OpenCC 結果。
+        try assertConverts(.conservative, [
+            ("凄美", "淒美"),
+            ("凄美的夜", "淒美的夜"),
+            ("凄凉", "淒涼"),
+        ])
+    }
+
+    func testReviewGrainPile() throws {
+        try assertConverts(.conservative, [
+            ("谷堆", "穀堆"),
+            ("南山有谷堆", "南山有穀堆"),
+            ("山谷", "山谷"),
+        ])
+    }
+
+    func testReviewLiAfterNounPhrases() throws {
+        // 「書本里」「課本里」…OpenCC 保留「里」；歌詞裡幾乎都是「…裡」。
+        try assertConverts(.conservative, [
+            ("书本里", "書本裡"), ("课本里", "課本裡"), ("剧本里", "劇本裡"),
+            ("日记本里", "日記本裡"), ("笔记本里", "筆記本裡"),
+            ("里美丽", "裡美麗"),
+            ("场景里美丽的人", "場景裡美麗的人"),
+            ("千里美丽", "千里美麗"),               // 保護：千里美麗的「里」是里程
+            ("千里之外", "千里之外"),
+        ])
+    }
+
+    func testReviewTaiIsKeptInCommonWordsOnTheSimplifiedPath() throws {
+        // 風格決定：簡體來源的常見詞保留「台」（舞台、站台…），不改成「臺」。
+        let kept: [(String, String)] = [
+            ("舞台", "舞台"), ("站台", "站台"), ("月台", "月台"), ("阳台", "陽台"), ("后台", "後台"),
+            ("讲台", "講台"), ("电台", "電台"), ("台词", "台詞"), ("台上", "台上"), ("台下", "台下"), ("台前", "台前"),
+            ("我们站在舞台上", "我們站在舞台上"), ("站台上的灯", "站台上的燈"),
+        ]
+        try assertConverts(.conservative, kept)
+        try assertConverts(.taiwanIdioms, kept)
+    }
+
+    func testReviewTaiStillBecomesTaiWhereTheOtherCharacterIsMeant() throws {
+        try assertConverts(.conservative, [
+            ("台风", "颱風"),
+            ("柜台", "櫃檯"),
+            ("柜台上", "櫃檯上"),
+            ("台湾", "臺灣"),
+        ])
+    }
+
+    func testReviewLiaoJieIsKept() throws {
+        // 風格決定：「了解」不轉成「瞭解」（OpenCC 預設會轉）。
+        let kept: [(String, String)] = [("了解", "了解"), ("不了解", "不了解"), ("我了解你", "我了解你"), ("了解吗", "了解嗎")]
+        try assertConverts(.conservative, kept)
+        try assertConverts(.taiwanIdioms, kept)
+    }
+
+    func testReviewStyleDecisionsLeaveOtherOpenCCVariantsAlone() throws {
+        // 維持現狀：着→著、裏→裡、污→汙 的 t2tw 正規化；週／溼／嘆／蒐／昇不特別處理。
+        try assertConverts(.variantsOnly, [("跟着我", "跟著我"), ("裏面", "裡面"), ("污染", "汙染")])
+    }
+
     // MARK: - 覆寫表與轉換器的互動
 
     func testOverrideBeatsOpenCCPhrases() throws {

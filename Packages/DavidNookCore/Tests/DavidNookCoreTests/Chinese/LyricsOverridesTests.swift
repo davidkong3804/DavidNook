@@ -114,6 +114,18 @@ final class LyricsOverridesTests: XCTestCase {
         XCTAssertEqual(table["白发"], "白髮")
         XCTAssertEqual(table["头发"], "頭髮")
         XCTAssertEqual(table["青丝白发"], "青絲白髮")
+        // 審稿補充
+        let reviewed: [String: String] = [
+            "凄美": "淒美", "谷堆": "穀堆", "泪干": "淚乾", "泪已干": "淚已乾", "泪都干": "淚都乾",
+            "里美丽": "裡美麗", "千里美": "千里美",
+            "书本里": "書本裡", "课本里": "課本裡", "剧本里": "劇本裡", "日记本里": "日記本裡", "笔记本里": "筆記本裡",
+            "舞台": "舞台", "站台": "站台", "月台": "月台", "阳台": "陽台", "后台": "後台", "讲台": "講台",
+            "电台": "電台", "台词": "台詞", "台上": "台上", "台下": "台下", "台前": "台前",
+            "台风": "颱風", "柜台": "櫃檯", "了解": "了解",
+        ]
+        for (key, value) in reviewed {
+            XCTAssertEqual(table[key], value, "覆寫表缺少或錯誤：\(key)")
+        }
     }
 
     func testBundledValuesAreTraditional() {
