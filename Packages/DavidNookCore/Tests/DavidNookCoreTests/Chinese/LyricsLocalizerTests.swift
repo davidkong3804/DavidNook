@@ -561,6 +561,12 @@ final class LyricsLocalizerTests: XCTestCase {
         XCTAssertEqual(Array(result.lines.suffix(4)), extra)
     }
 
+    func testResidualOverridesKeepTheLongestMatchProtectionOfIdentityEntries() throws {
+        // 保護條目「千里美」擋住「里美丽→裡美麗」：行內的簡體「丽」照常修成「麗」，千里的「里」不會被吃成「裡」。
+        let result = try localize(traditionalDocument(adding: ["我們千里美丽的夢", "那里美丽的夢"]))
+        XCTAssertEqual(Array(result.lines.suffix(2)), ["我們千里美麗的夢", "那裡美麗的夢"])
+    }
+
     func testResidualFuWordsInNeutralLinesOfAMixedDocument() throws {
         var doc = Array(repeating: "我们爱红色的花", count: 10)
         doc += Array(repeating: "我們一起走過這條安靜的街", count: 10)

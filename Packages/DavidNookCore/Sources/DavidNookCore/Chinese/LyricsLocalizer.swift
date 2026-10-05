@@ -42,11 +42,14 @@ public final class LyricsLocalizer: @unchecked Sendable {
 
     private let detector: ChineseScriptDetector
     private let converterProvider: (LyricsConversionMode) throws -> LyricsChineseConverter
+    /// 原生繁體路徑用的覆寫表子集合（鍵含簡體字形的條目，見 `LyricsOverrides.restrictedToSimplifiedKeys`）。
+    private let traditionalResidualOverrides: LyricsOverrides
 
     /// 使用內建覆寫表；轉換器由 `LyricsChineseConverter.cached` 全域快取。
     public init(detector: ChineseScriptDetector = ChineseScriptDetector()) {
         self.detector = detector
         self.converterProvider = { try LyricsChineseConverter.cached($0) }
+        self.traditionalResidualOverrides = Self.residualOverrides(of: .bundled, detector: detector)
     }
 
     /// 使用自訂覆寫表（主要供測試）；轉換器在此實例內快取。
@@ -54,6 +57,15 @@ public final class LyricsLocalizer: @unchecked Sendable {
         self.detector = detector
         let store = LocalConverterStore(overrides: overrides)
         self.converterProvider = { try store.converter(for: $0) }
+        self.traditionalResidualOverrides = Self.residualOverrides(of: overrides, detector: detector)
+    }
+
+    /// 在「簡體專有字」之外，台灣標準繁體文字不會出現、但偵測器因 Big5 收錄而不當作簡體證據的簡體字形。
+    /// 鍵含這些字的覆寫條目（重复、反复、复杂、复制、复习）也能安全套用在原生繁體文字上。
+    private static let undetectedSimplifiedForms: Set<Unicode.Scalar> = Set("复".unicodeScalars)
+
+    private static func residualOverrides(of overrides: LyricsOverrides, detector: ChineseScriptDetector) -> LyricsOverrides {
+        overrides.restrictedToSimplifiedKeys { detector.isSimplifiedOnly($0) || undetectedSimplifiedForms.contains($0) }
     }
 
     /// - Parameters:
@@ -82,7 +94,9 @@ public final class LyricsLocalizer: @unchecked Sendable {
             )
 
         case .traditional:
-            let repairer = try TraditionalLineRepairer(detector: detector, converterProvider: converterProvider)
+            let repairer = try TraditionalLineRepairer(
+                detector: detector, residualOverrides: traditionalResidualOverrides, converterProvider: converterProvider
+            )
             return LocalizedLyrics(
                 lines: try lines.map { line in
                     guard !line.isEmpty, !detector.isJapaneseOrKorean(line) else { return line }
@@ -100,14 +114,20 @@ public final class LyricsLocalizer: @unchecked Sendable {
             for (line, lineScript) in zip(lines, lineScripts) {
                 switch lineScript {
                 case .neutral:
-                    // 沒有專有字的行：文件已確定是華語，只套用「里→裡」詞級規則（日韓行不動）。
-                    converted.append(line.isEmpty || detector.isJapaneseOrKorean(line) ? line : finish(line))
+                    // 沒有專有字的行：文件已確定是華語，只套用殘留「复」詞與「里→裡」詞級規則（日韓行不動）。
+                    guard !line.isEmpty, !detector.isJapaneseOrKorean(line) else {
+                        converted.append(line)
+                        continue
+                    }
+                    converted.append(finish(traditionalResidualOverrides.apply(to: line) { $0 }))
                 case .simplified, .mixed:
                     if simplifiedConverter == nil { simplifiedConverter = try converterProvider(simplifiedMode) }
                     converted.append(finish(simplifiedConverter!.convert(line)))
                 case .traditional:
                     if repairer == nil {
-                        repairer = try TraditionalLineRepairer(detector: detector, converterProvider: converterProvider)
+                        repairer = try TraditionalLineRepairer(
+                            detector: detector, residualOverrides: traditionalResidualOverrides, converterProvider: converterProvider
+                        )
                     }
                     converted.append(finish(try repairer!.convert(line)))
                 }
@@ -132,17 +152,23 @@ public final class LyricsLocalizer: @unchecked Sendable {
 ///   其餘字元原樣，之後再做 t2tw。這樣「红塵」→「紅塵」，而同行的「鄰里」不會被轉成「鄰裡」。
 ///   `.conservative` 若改變了字數（理論上不會）就退回逐字轉換。
 ///
+/// 殘留的「复」（重复、反复、复杂、复制、复习）不是偵測器的簡體專有字，所以另外先套用覆寫表中
+/// 「鍵含簡體字形」的條目（`residualOverrides`；鍵全由繁體也會用的字組成的條目不套用，避免誤傷正確的繁體）。
+/// 這一步用原行的證據判斷走哪條路，不改變上面的分流。
 /// 「里」這類兩邊通用的歧義字不是簡體專有字，這裡不處理（見 `LiWordRule`）。
 private struct TraditionalLineRepairer {
     let detector: ChineseScriptDetector
     let variants: LyricsChineseConverter
+    private let residualOverrides: LyricsOverrides
     private let conservativeProvider: () throws -> LyricsChineseConverter
 
     init(
         detector: ChineseScriptDetector,
+        residualOverrides: LyricsOverrides,
         converterProvider: @escaping (LyricsConversionMode) throws -> LyricsChineseConverter
     ) throws {
         self.detector = detector
+        self.residualOverrides = residualOverrides
         self.variants = try converterProvider(.variantsOnly)
         // `.conservative` 要載入字典（約 20 ms），只有真的遇到殘留簡體字的行才載入。
         let lazy = LazyConverter { try converterProvider(.conservative) }
@@ -152,11 +178,19 @@ private struct TraditionalLineRepairer {
     func convert(_ line: String) throws -> String {
         if line.isEmpty || detector.isJapaneseOrKorean(line) { return line }
         let evidence = detector.evidence(in: line)
-        guard evidence.simplified > 0 else { return variants.convert(line) }
+        guard evidence.simplified > 0 else { return variants.convert(applyingResidualOverrides(to: line)) }
 
         let conservative = try conservativeProvider()
+        // 整行是簡體：`.conservative` 已套用整張覆寫表。
         if evidence.traditional == 0 { return conservative.convert(line) }
-        return variants.convert(replacingSimplifiedOnlyCharacters(in: line, using: conservative))
+        return variants.convert(
+            replacingSimplifiedOnlyCharacters(in: applyingResidualOverrides(to: line), using: conservative)
+        )
+    }
+
+    /// 只把命中的覆寫條目換成繁體詞，其餘原樣（之後才交給 t2tw／逐字修復）。
+    private func applyingResidualOverrides(to line: String) -> String {
+        residualOverrides.apply(to: line) { $0 }
     }
 
     private func replacingSimplifiedOnlyCharacters(in line: String, using conservative: LyricsChineseConverter) -> String {

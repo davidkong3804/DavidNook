@@ -153,17 +153,19 @@ final class LyricsOverridesTests: XCTestCase {
     // MARK: - 原生繁體路徑用的子集合
 
     func testRestrictedSubsetKeepsOnlyEntriesWhoseKeyContainsASimplifiedForm() {
-        let overrides = LyricsOverrides(parsing: "重复=重複\n海里=海裡\n托=托\n台上=台上\n泪干=淚乾\n谷堆=穀堆\n复习=複習")
+        let overrides = LyricsOverrides(parsing: "重复=重複\n海里=海裡\n泪干=淚乾\n谷堆=穀堆\n复习=複習")
         let subset = overrides.restrictedToSimplifiedKeys { "复泪".unicodeScalars.contains($0) }
         XCTAssertEqual(Set(subset.entries.map(\.key)), ["重复", "泪干", "复习"])
         XCTAssertEqual(subset.apply(to: "重复海里谷堆泪干") { $0 }, "重複海里谷堆淚乾")
     }
 
-    func testRestrictedSubsetDropsIdentityEntriesEvenWhenTheKeyHasASimplifiedForm() {
-        // 保護條目（值＝鍵）在原生繁體路徑沒有意義（t2tw 本來就不會動它們）。
-        let overrides = LyricsOverrides(parsing: "复=复\n重复=重複")
-        let subset = overrides.restrictedToSimplifiedKeys { $0 == "复" }
-        XCTAssertEqual(subset.entries.map(\.key), ["重复"])
+    func testRestrictedSubsetKeepsIdentityEntriesSoLongestMatchStillProtects() {
+        // 保護條目輸出原文、不改字，留著才能維持最長匹配的保護：「千里美」擋住「里美丽」。
+        let overrides = LyricsOverrides(parsing: "千里美=千里美\n里美丽=裡美麗\n托=托")
+        let subset = overrides.restrictedToSimplifiedKeys { $0 == "丽" }
+        XCTAssertEqual(Set(subset.entries.map(\.key)), ["千里美", "里美丽", "托"])
+        XCTAssertEqual(subset.apply(to: "千里美丽") { $0 }, "千里美丽", "里要留給後面的轉換器判斷，不能被吃成「裡」")
+        XCTAssertEqual(subset.apply(to: "那里美丽") { $0 }, "那裡美麗")
     }
 
     func testBundledValuesAreTraditional() {

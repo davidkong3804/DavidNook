@@ -55,9 +55,13 @@ public struct LyricsOverrides: Sendable {
             entries.append(Entry(key: key, value: value))
         }
 
+        self.init(entries: entries, duplicateKeys: duplicates, malformedLineNumbers: malformed)
+    }
+
+    private init(entries: [Entry], duplicateKeys: [String], malformedLineNumbers: [Int]) {
         self.entries = entries
-        self.duplicateKeys = duplicates
-        self.malformedLineNumbers = malformed
+        self.duplicateKeys = duplicateKeys
+        self.malformedLineNumbers = malformedLineNumbers
 
         // 重複的鍵：後面的覆蓋前面的。
         var effective: [String: String] = [:]
@@ -78,8 +82,19 @@ public struct LyricsOverrides: Sendable {
 
     public var isEmpty: Bool { entries.isEmpty }
 
-    /// （TDD 紅燈階段的空殼：尚未實作，原樣回傳。）
-    func restrictedToSimplifiedKeys(isSimplified: (Unicode.Scalar) -> Bool) -> LyricsOverrides { self }
+    /// 原生繁體路徑用的子集合：「值不等於鍵」的條目只留「鍵含簡體字形」者；保護條目（值＝鍵）全留。
+    ///
+    /// 覆寫表的鍵是簡體詞。簡體路徑整張表都套用；原生繁體文字本來就是繁體，只有鍵裡含**簡體字形**的條目
+    /// （`isSimplified` 為真的字）才可能命中上傳者沒轉乾淨的殘留，而不會命中正確的繁體——
+    /// 例如「谷堆→穀堆」「后街→後街」「想象→想像」的鍵全由繁體也會用的字組成，會誤傷「山谷堆滿了雪」
+    /// 「皇后街」，所以排除。保護條目輸出原文，留著不會改字，卻能維持「最長匹配優先」的保護作用
+    /// （「千里美」擋住「里美丽→裡美麗」吃掉千里的「里」）。
+    func restrictedToSimplifiedKeys(isSimplified: (Unicode.Scalar) -> Bool) -> LyricsOverrides {
+        let kept = entries.filter { entry in
+            entry.key == entry.value || entry.key.unicodeScalars.contains(where: isSimplified)
+        }
+        return LyricsOverrides(entries: kept, duplicateKeys: [], malformedLineNumbers: [])
+    }
 
     // MARK: - 內建覆寫表
 

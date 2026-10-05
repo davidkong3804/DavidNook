@@ -14,7 +14,8 @@ public enum LyricsConversionMode: String, Sendable, CaseIterable {
 
     /// 只做台灣變體正規化（`[.twStandard]`，t2tw）：用於原生繁體歌詞。
     /// 不改「台灣」「鄰里」「裡面」；會把 着→著、裏→裡、爲→為 等變體統一成台灣字形。
-    /// 不套用覆寫表（表內的鍵是簡體詞）。
+    /// 轉換器本身不套用覆寫表（表內的鍵是簡體詞）；`LyricsLocalizer` 會另外在這之前套用覆寫表中
+    /// 「鍵含簡體字形」的條目（見 `LyricsOverrides.restrictedToSimplifiedKeys`），修殘留的「重复」。
     case variantsOnly
 
     /// 繁→簡（t2s，含台灣字形反查，等同 OpenCC 的 tw2s，**不含**慣用詞）。
