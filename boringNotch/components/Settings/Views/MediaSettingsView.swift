@@ -17,6 +17,7 @@ struct MediaSettingsView: View {
     @Default(.sliderColor) var sliderColor
 
     @Default(.enableLyrics) var enableLyrics
+    @State private var lyricsCacheCleared = false
     @ObservedObject private var musicManager = MusicManager.shared
 
     var body: some View {
@@ -90,12 +91,6 @@ struct MediaSettingsView: View {
 
             Section {
                 MusicSlotConfigurationView()
-                Defaults.Toggle(key: .enableLyrics) {
-                    HStack {
-                        Text("Show lyrics below artist name")
-                        customBadge(text: "Beta")
-                    }
-                }
                 Defaults.Toggle(key: .showRemainingTime) {
                     Text("Show remaining time instead of duration")
                 }
@@ -103,6 +98,41 @@ struct MediaSettingsView: View {
                 Text("Media controls")
             }  footer: {
                 Text("Customize which controls appear in the music player. Volume expands when active.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                Defaults.Toggle(key: .enableLyrics) {
+                    Text("Show lyrics")
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Defaults.Toggle(key: .lyricsTaiwanIdioms) {
+                        Text("Apply Taiwan-style wording conversion")
+                    }
+                    Text("May change the meaning of some lyrics (e.g. 支持 → 支援, 打开 → 開啟). Only affects Simplified Chinese lyrics; off by default.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .disabled(!enableLyrics)
+                Button {
+                    LyricsService.shared.clearCache()
+                    lyricsCacheCleared = true
+                    Task {
+                        try? await Task.sleep(for: .seconds(2))
+                        lyricsCacheCleared = false
+                    }
+                } label: {
+                    if lyricsCacheCleared {
+                        Label("Lyrics cache cleared", systemImage: "checkmark.circle")
+                    } else {
+                        Text("Clear lyrics cache")
+                    }
+                }
+            } header: {
+                Text("Lyrics")
+            } footer: {
+                Text("When lyrics are on, the track title, artist and duration are sent to lrclib.net to look up lyrics.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

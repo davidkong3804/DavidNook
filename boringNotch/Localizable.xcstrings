@@ -24097,118 +24097,6 @@
         }
       }
     },
-    "Show lyrics below artist name" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Songtexte unter Künstlernamen anzeigen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show lyrics below artist name"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show lyrics below artist name"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostrar las letras de canciones bajo el nombre del artista"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher les paroles sous le nom d'artiste"
-          }
-        },
-        "he" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "הצג מילים מתחת לשם האמן"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dalszöveg megjelenítése az előadó neve alatt"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostra il testo sotto il nome dell'artista"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アーティスト名の下に歌詞を表示"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "아티스트 이름 아래 가사 표시"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toon songteksten onder de naam van de artiest"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pokaż tekst utworu pod nazwą wykonawcy"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostrar letra abaixo do nome do artista"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Показывать текст песни под именем исполнителя"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sanatçı isminin altında şarkı sözlerini göster"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Показати текст пісень під назвою виконавця"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在歌手下方显示歌词"
-          }
-        },
-        "zh-Hant-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "喺歌手名稱下方顯示歌詞"
-          }
-        }
-      }
-    },
     "Show menu bar icon" : {
       "localizations" : {
         "de" : {
@@ -30494,6 +30382,102 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "隱藏歌詞"
+          }
+        }
+      }
+    },
+    "Lyrics" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyrics"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歌詞"
+          }
+        }
+      }
+    },
+    "Apply Taiwan-style wording conversion" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply Taiwan-style wording conversion"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "套用台灣慣用詞轉換"
+          }
+        }
+      }
+    },
+    "May change the meaning of some lyrics (e.g. 支持 → 支援, 打开 → 開啟). Only affects Simplified Chinese lyrics; off by default." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "May change the meaning of some lyrics (e.g. 支持 → 支援, 打开 → 開啟). Only affects Simplified Chinese lyrics; off by default."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可能改變部分歌詞的原意（例如「支持」→「支援」、「打开」→「開啟」）。僅影響簡體歌詞，預設關閉。"
+          }
+        }
+      }
+    },
+    "Clear lyrics cache" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear lyrics cache"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除歌詞快取"
+          }
+        }
+      }
+    },
+    "Lyrics cache cleared" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyrics cache cleared"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已清除歌詞快取"
+          }
+        }
+      }
+    },
+    "When lyrics are on, the track title, artist and duration are sent to lrclib.net to look up lyrics." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When lyrics are on, the track title, artist and duration are sent to lrclib.net to look up lyrics."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟歌詞時，會將曲名、歌手與長度送至 lrclib.net 查詢"
           }
         }
       }
