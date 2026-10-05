@@ -44,6 +44,8 @@ enum SnapshotHarness {
             ("settings-clipboard", AnyView(ClipboardSettingsView()), CGSize(width: settingsWidth, height: 760)),
             ("settings-shortcuts", AnyView(ShortcutsSettingsView()), CGSize(width: settingsWidth, height: 480)),
             ("settings-about", AnyView(AboutView()), CGSize(width: settingsWidth, height: 620)),
+            ("legal-third-party", AnyView(LegalDocumentSheet(document: .thirdParty)), CGSize(width: 640, height: 520)),
+            ("legal-gpl", AnyView(LegalDocumentSheet(document: .gpl)), CGSize(width: 640, height: 520)),
             ("onboarding-welcome", AnyView(WelcomeView()), CGSize(width: 400, height: 600)),
             ("onboarding-overview", AnyView(OnboardingOverviewView(onContinue: {})), CGSize(width: 400, height: 600)),
             ("onboarding-finish", AnyView(OnboardingFinishView(onFinish: {}, onOpenSettings: {})), CGSize(width: 400, height: 600)),

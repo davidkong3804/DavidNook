@@ -46,4 +46,4 @@ cd Packages/DavidNookCore && swift test
 
 ## 授權
 
-GPL-3.0。第三方元件與其授權請見 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 與 [`THIRD_PARTY_LICENSES`](THIRD_PARTY_LICENSES)。
+GPL-3.0。第三方元件與其授權請見 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 與 [`LICENSES/`](LICENSES/)。

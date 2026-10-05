@@ -1,0 +1,14 @@
+DavidNook 整體以 GNU General Public License v3.0（GPL-3.0）授權，不附帶任何擔保。
+
+授權全文請見專案根目錄的 LICENSE（為上游 boring.notch 的 GPL-3.0 原文，未更動）；
+App 內的「設定 → 關於 → GPL-3.0 授權全文」顯示的就是隨 App 內附的同一份 LICENSE。
+本檔只是指標，不重複全文。
+
+DavidNook is licensed under the GNU General Public License v3.0 and comes with ABSOLUTELY NO
+WARRANTY. The full license text is the file LICENSE at the root of the source tree (bundled with the
+app as "LICENSE"); this file is only a pointer and does not repeat it.
+
+GPL-3.0 授權的上游／來源專案（程式碼層級的衍生，授權相同，故不另附全文）：
+  - boring.notch — The Bored Team 與貢獻者 — https://github.com/TheBoredTeam/boring.notch
+  - Atoll — Ebullioscopic — https://github.com/Ebullioscopic/Atoll
+    （Compact 播放器版面比例與剩餘時間顯示，見 CompactHomeView.swift、NotchHomeView.swift 的檔頭／註解）

@@ -73,6 +73,7 @@
 		DA71D0C0DE00000000E00002 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000E00001 /* LICENSE */; };
 		DA71D0C0DE00000000E10002 /* THIRD_PARTY_NOTICES.md in Resources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000E10001 /* THIRD_PARTY_NOTICES.md */; };
 		DA71D0C0DE00000000E20002 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000E20001 /* InfoPlist.xcstrings */; };
+		DA71D0C0DE00000000E30002 /* LICENSES in Resources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000E30001 /* LICENSES */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -163,6 +164,7 @@
 		DA71D0C0DE00000000E00001 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		DA71D0C0DE00000000E10001 /* THIRD_PARTY_NOTICES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = THIRD_PARTY_NOTICES.md; sourceTree = "<group>"; };
 		DA71D0C0DE00000000E20001 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		DA71D0C0DE00000000E30001 /* LICENSES */ = {isa = PBXFileReference; lastKnownFileType = folder; path = LICENSES; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -281,6 +283,7 @@
 		14CEF4092C5CAED200855D72 = {
 			isa = PBXGroup;
 			children = (
+				DA71D0C0DE00000000E30001 /* LICENSES */,
 				DA71D0C0DE00000000E10001 /* THIRD_PARTY_NOTICES.md */,
 				DA71D0C0DE00000000E00001 /* LICENSE */,
 				112B0EB62E30DD0F00562D6C /* mediaremote-adapter */,
@@ -540,6 +543,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DA71D0C0DE00000000E30002 /* LICENSES in Resources */,
 				DA71D0C0DE00000000E20002 /* InfoPlist.xcstrings in Resources */,
 				DA71D0C0DE00000000E10002 /* THIRD_PARTY_NOTICES.md in Resources */,
 				DA71D0C0DE00000000E00002 /* LICENSE in Resources */,
