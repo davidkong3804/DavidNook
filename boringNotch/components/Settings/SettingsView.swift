@@ -12,6 +12,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case notch
     case appearance
     case media
+    case clipboard
     case shortcuts
     case about
 
@@ -28,6 +29,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .notch: "Notch"
         case .appearance: "Appearance"
         case .media: "Media"
+        case .clipboard: "Clipboard"
         case .shortcuts: "Shortcuts"
         case .about: "About"
         }
@@ -39,6 +41,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .notch: .custom("notch")
         case .appearance: .system("paintbrush")
         case .media: .system("play.rectangle")
+        case .clipboard: .system("doc.on.clipboard")
         case .shortcuts: .system("keyboard")
         case .about: .system("info.circle")
         }
@@ -71,6 +74,8 @@ struct SettingsView: View {
                     AppearanceSettingsView()
                 case .media:
                     MediaSettingsView()
+                case .clipboard:
+                    ClipboardSettingsView()
                 case .shortcuts:
                     ShortcutsSettingsView()
                 case .about:

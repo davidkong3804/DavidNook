@@ -4026,6 +4026,12 @@
             "state" : "translated",
             "value" : "取消"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
         }
       }
     },
@@ -30853,6 +30859,465 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "請在「系統設定 → 隱私權與安全性 → 從其他App貼上」把 DavidNook 設為「允許」"
+          }
+        }
+      }
+    },
+    "Record clipboard history" : {
+      "comment" : "Clipboard settings: master switch for recording.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record clipboard history"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "記錄剪貼簿歷史"
+          }
+        }
+      }
+    },
+    "Maximum items" : {
+      "comment" : "Clipboard settings: maximum number of unpinned items kept.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maximum items"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筆數上限"
+          }
+        }
+      }
+    },
+    "Keep history for" : {
+      "comment" : "Clipboard settings: how long unpinned items are kept.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep history for"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留時間"
+          }
+        }
+      }
+    },
+    "Forever" : {
+      "comment" : "Clipboard settings: keep history without time limit.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forever"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "永久"
+          }
+        }
+      }
+    },
+    "1 day" : {
+      "comment" : "Clipboard settings: retention option.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 day"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 天"
+          }
+        }
+      }
+    },
+    "7 days" : {
+      "comment" : "Clipboard settings: retention option.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7 days"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7 天"
+          }
+        }
+      }
+    },
+    "30 days" : {
+      "comment" : "Clipboard settings: retention option.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 days"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 天"
+          }
+        }
+      }
+    },
+    "%lld days" : {
+      "comment" : "Clipboard settings: custom retention value.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld days"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 天"
+          }
+        }
+      }
+    },
+    "Recording" : {
+      "comment" : "Clipboard settings: section header.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "記錄"
+          }
+        }
+      }
+    },
+    "Pinned items are never removed by the item limit or the retention time." : {
+      "comment" : "Clipboard settings footer.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pinned items are never removed by the item limit or the retention time."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "釘選的項目不會被筆數上限或保留時間移除。"
+          }
+        }
+      }
+    },
+    "Text larger than 1 MB and images larger than 20 MB are not recorded." : {
+      "comment" : "Clipboard settings footer.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text larger than 1 MB and images larger than 20 MB are not recorded."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "超過 1 MB 的文字與超過 20 MB 的圖片不會被記錄。"
+          }
+        }
+      }
+    },
+    "Clipboard data is stored only on this Mac. Items marked as passwords or one-time content are never recorded." : {
+      "comment" : "Clipboard settings: privacy statement.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipboard data is stored only on this Mac. Items marked as passwords or one-time content are never recorded."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剪貼簿資料只存放在這台 Mac。標示為密碼或一次性內容的項目不會被記錄。"
+          }
+        }
+      }
+    },
+    "Paste automatically after choosing (requires Accessibility)" : {
+      "comment" : "Clipboard settings: experimental auto-paste switch.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste automatically after choosing (requires Accessibility)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點選後自動貼上（需輔助使用權限）"
+          }
+        }
+      }
+    },
+    "Experimental" : {
+      "comment" : "Badge next to an experimental option.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Experimental"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "實驗性"
+          }
+        }
+      }
+    },
+    "Permission granted" : {
+      "comment" : "Clipboard settings: auto-paste permission state.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permission granted"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已授權"
+          }
+        }
+      }
+    },
+    "Permission not granted" : {
+      "comment" : "Clipboard settings: auto-paste permission state.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permission not granted"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未授權"
+          }
+        }
+      }
+    },
+    "Request permission" : {
+      "comment" : "Clipboard settings: button that asks macOS for the event-posting permission.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Request permission"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請求授權"
+          }
+        }
+      }
+    },
+    "Open Accessibility Settings" : {
+      "comment" : "Clipboard settings: opens the Accessibility pane.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Accessibility Settings"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟輔助使用設定"
+          }
+        }
+      }
+    },
+    "Pasting" : {
+      "comment" : "Clipboard settings: section header.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasting"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "貼上"
+          }
+        }
+      }
+    },
+    "Experimental. DavidNook runs in the App Sandbox, so whether ⌘V can be sent depends on macOS accepting it after you grant permission; this has not been verified on every macOS version. Without permission the item is only copied back to the clipboard." : {
+      "comment" : "Clipboard settings footer for auto-paste.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Experimental. DavidNook runs in the App Sandbox, so whether ⌘V can be sent depends on macOS accepting it after you grant permission; this has not been verified on every macOS version. Without permission the item is only copied back to the clipboard."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "實驗性功能。DavidNook 在 App 沙盒內執行，能否送出 ⌘V 取決於授權後 macOS 是否接受，尚未在所有 macOS 版本驗證。未授權時，項目只會被放回剪貼簿。"
+          }
+        }
+      }
+    },
+    "Clear unpinned" : {
+      "comment" : "Clipboard settings: delete all items that are not pinned.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear unpinned"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除未釘選"
+          }
+        }
+      }
+    },
+    "Unpinned items cleared" : {
+      "comment" : "Clipboard settings: confirmation after clearing unpinned items.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpinned items cleared"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已清除未釘選項目"
+          }
+        }
+      }
+    },
+    "Clear all" : {
+      "comment" : "Clipboard settings: delete the whole history.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear all"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除全部"
+          }
+        }
+      }
+    },
+    "Clear all clipboard history?" : {
+      "comment" : "Clipboard settings: confirmation dialog title.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear all clipboard history?"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除全部剪貼簿歷史？"
+          }
+        }
+      }
+    },
+    "This deletes all clipboard history (including pinned items) and cached images. This cannot be undone." : {
+      "comment" : "Clipboard settings: confirmation dialog message.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This deletes all clipboard history (including pinned items) and cached images. This cannot be undone."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這會刪除所有剪貼簿歷史（包含已釘選項目）與暫存的圖片，無法復原。"
+          }
+        }
+      }
+    },
+    "Some files could not be deleted" : {
+      "comment" : "Clipboard settings: shown when Clear all failed to remove some files.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some files could not be deleted"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有些檔案無法刪除"
+          }
+        }
+      }
+    },
+    "Clear history" : {
+      "comment" : "Clipboard settings: section header.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear history"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除歷史"
           }
         }
       }
