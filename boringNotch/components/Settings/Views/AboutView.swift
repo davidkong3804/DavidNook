@@ -6,6 +6,7 @@
 //
 
 import Defaults
+import DavidNookCore
 import SwiftUI
 
 struct AboutView: View {
@@ -30,6 +31,12 @@ struct AboutView: View {
                         withAnimation {
                             showBuildNumber.toggle()
                         }
+                    }
+                    HStack {
+                        Text("Core library")
+                        Spacer()
+                        Text(DavidNookCore.version)
+                            .foregroundStyle(.secondary)
                     }
                 } header: {
                     Text("Version info")

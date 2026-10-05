@@ -67,6 +67,7 @@
 		B19016222CC15B3D00E3F12E /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = B19016212CC15B3D00E3F12E /* Defaults */; };
 		B19016242CC15B5000E3F12E /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B19016232CC15B4D00E3F12E /* Constants.swift */; };
 		B1A78C822C8BA08100BD51B0 /* FullscreenMediaDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A78C812C8BA08100BD51B0 /* FullscreenMediaDetection.swift */; };
+		DA71D0C0DE000000000A0003 /* DavidNookCore in Frameworks */ = {isa = PBXBuildFile; productRef = DA71D0C0DE000000000A0002 /* DavidNookCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -167,6 +168,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DA71D0C0DE000000000A0003 /* DavidNookCore in Frameworks */,
 				111BEA5F2ED07A340079DD4E /* MacroVisionKit in Frameworks */,
 				1194E8852EA57D23009C82D6 /* SkyLightWindow in Frameworks */,
 				112B0EBB2E30DD5000562D6C /* MediaRemoteAdapter.framework in Frameworks */,
@@ -433,6 +435,7 @@
 			);
 			name = boringNotch;
 			packageProductDependencies = (
+				DA71D0C0DE000000000A0002 /* DavidNookCore */,
 				14D032192C68F32E0096E6A1 /* LaunchAtLogin */,
 				B18654382C6F4990000B926A /* KeyboardShortcuts */,
 				B19016212CC15B3D00E3F12E /* Defaults */,
@@ -498,6 +501,7 @@
 			);
 			mainGroup = 14CEF4092C5CAED200855D72;
 			packageReferences = (
+				DA71D0C0DE000000000A0001 /* XCLocalSwiftPackageReference "Packages/DavidNookCore" */,
 				14D032182C68F32E0096E6A1 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */,
 				B18654372C6F4990000B926A /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
 				B19016202CC15B3D00E3F12E /* XCRemoteSwiftPackageReference "Defaults" */,
@@ -931,6 +935,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		DA71D0C0DE000000000A0001 /* XCLocalSwiftPackageReference "Packages/DavidNookCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/DavidNookCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		111BEA6D2ED166E20079DD4E /* XCRemoteSwiftPackageReference "MacroVisionKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -975,6 +986,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		DA71D0C0DE000000000A0002 /* DavidNookCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DavidNookCore;
+		};
 		111BEA502ECFBF7F0079DD4E /* MacroVisionKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = MacroVisionKit;
