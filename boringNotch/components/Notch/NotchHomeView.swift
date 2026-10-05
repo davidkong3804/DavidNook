@@ -17,12 +17,23 @@ struct MusicPlayerView: View {
     let albumArtNamespace: Namespace.ID
     let horizontalMediaGestureFeedback: CGFloat
     @Binding var isHoveringMusicArea: Bool
+    @Default(.enableLyrics) private var enableLyrics
+    @Default(.showLyricsPanel) private var showLyricsPanel
+
+    /// 歌詞面板寬度；左：專輯圖＋曲名／歌手／進度／控制鈕，右：歌詞。
+    private static let lyricsPanelWidth: CGFloat = 215
 
     var body: some View {
         HStack {
             AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace).frame(width: 120).padding(.all, 5 * (vm.notchSize.height / 190))
             MusicControlsView(horizontalMediaGestureFeedback: horizontalMediaGestureFeedback)
                 .compositingGroup()
+            if enableLyrics && showLyricsPanel {
+                LyricsSidePanel()
+                    .frame(width: Self.lyricsPanelWidth, height: 124)
+                    .padding(.trailing, 2)
+                    .transition(.opacity)
+            }
         }
         .contentShape(Rectangle())
         .onHover { hovering in
@@ -120,6 +131,8 @@ struct MusicControlsView: View {
     @Default(.musicControlSlots) private var slotConfig
     @Default(.musicControlSlotLimit) private var slotLimit
     @Default(.showRemainingTime) private var showRemainingTime
+    @Default(.enableLyrics) private var enableLyrics
+    @Default(.showLyricsPanel) private var showLyricsPanel
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -142,7 +155,13 @@ struct MusicControlsView: View {
 
     private func songInfo(width: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            MarqueeText(musicManager.songTitle, font: .headline, color: .white, frameWidth: width)
+            // 歌名旁的按鈕：切換右側歌詞面板（只在歌詞功能開啟時出現）。
+            HStack(spacing: 4) {
+                MarqueeText(musicManager.songTitle, font: .headline, color: .white, frameWidth: enableLyrics ? max(width - 24, 0) : width)
+                if enableLyrics {
+                    LyricsToggleButton(isShowing: $showLyricsPanel)
+                }
+            }
             MarqueeText(
                 musicManager.artistName,
                 font: .headline,

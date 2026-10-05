@@ -33,6 +33,7 @@
 		14288E0C2C6F8EC000B9F80C /* AppIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14288E0B2C6F8EC000B9F80C /* AppIcons.swift */; };
 		1443E7F32C609DCE0027C1FC /* matters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1443E7F22C609DCE0027C1FC /* matters.swift */; };
 		147163982C5D35B70068B555 /* MusicVisualizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 147163972C5D35B70068B555 /* MusicVisualizer.swift */; };
+		DA71D0C0DE000000000B0002 /* LyricsSidePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE000000000B0001 /* LyricsSidePanel.swift */; };
 		1471639A2C5D35FF0068B555 /* MusicManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 147163992C5D35FF0068B555 /* MusicManager.swift */; };
 		14A7E5882C64A89C008C1BE9 /* HelloAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A7E5872C64A89C008C1BE9 /* HelloAnimation.swift */; };
 		14CEF4162C5CAED300855D72 /* boringNotchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CEF4152C5CAED300855D72 /* boringNotchApp.swift */; };
@@ -66,6 +67,7 @@
 		B19016242CC15B5000E3F12E /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B19016232CC15B4D00E3F12E /* Constants.swift */; };
 		B1A78C822C8BA08100BD51B0 /* FullscreenMediaDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A78C812C8BA08100BD51B0 /* FullscreenMediaDetection.swift */; };
 		DA71D0C0DE000000000A0003 /* DavidNookCore in Frameworks */ = {isa = PBXBuildFile; productRef = DA71D0C0DE000000000A0002 /* DavidNookCore */; };
+		DA71D0C0DE000000000A0005 /* DavidNookUI in Frameworks */ = {isa = PBXBuildFile; productRef = DA71D0C0DE000000000A0004 /* DavidNookUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -118,6 +120,7 @@
 		1443E7F22C609DCE0027C1FC /* matters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = matters.swift; sourceTree = "<group>"; };
 		1443E7F42C609E650027C1FC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		147163972C5D35B70068B555 /* MusicVisualizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicVisualizer.swift; sourceTree = "<group>"; };
+		DA71D0C0DE000000000B0001 /* LyricsSidePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsSidePanel.swift; sourceTree = "<group>"; };
 		147163992C5D35FF0068B555 /* MusicManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicManager.swift; sourceTree = "<group>"; };
 		14A7E5872C64A89C008C1BE9 /* HelloAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloAnimation.swift; sourceTree = "<group>"; };
 		14CEF4122C5CAED300855D72 /* DavidNook.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DavidNook.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -166,6 +169,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DA71D0C0DE000000000A0003 /* DavidNookCore in Frameworks */,
+				DA71D0C0DE000000000A0005 /* DavidNookUI in Frameworks */,
 				111BEA5F2ED07A340079DD4E /* MacroVisionKit in Frameworks */,
 				1194E8852EA57D23009C82D6 /* SkyLightWindow in Frameworks */,
 				111BEA6F2ED166E20079DD4E /* MacroVisionKit in Frameworks */,
@@ -381,6 +385,7 @@
 			isa = PBXGroup;
 			children = (
 				147163972C5D35B70068B555 /* MusicVisualizer.swift */,
+				DA71D0C0DE000000000B0001 /* LyricsSidePanel.swift */,
 			);
 			path = Music;
 			sourceTree = "<group>";
@@ -431,6 +436,7 @@
 			name = boringNotch;
 			packageProductDependencies = (
 				DA71D0C0DE000000000A0002 /* DavidNookCore */,
+				DA71D0C0DE000000000A0004 /* DavidNookUI */,
 				14D032192C68F32E0096E6A1 /* LaunchAtLogin */,
 				B18654382C6F4990000B926A /* KeyboardShortcuts */,
 				B19016212CC15B3D00E3F12E /* Defaults */,
@@ -542,6 +548,7 @@
 			files = (
 				5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */,
 				147163982C5D35B70068B555 /* MusicVisualizer.swift in Sources */,
+				DA71D0C0DE000000000B0002 /* LyricsSidePanel.swift in Sources */,
 				11CC44A22CEE614100C7244B /* BoringViewCoordinator.swift in Sources */,
 				B186543C2C6F49AE000B926A /* ShortcutConstants.swift in Sources */,
 				11A45C792E34E63100CEB175 /* MediaChecker.swift in Sources */,
@@ -985,6 +992,10 @@
 		DA71D0C0DE000000000A0002 /* DavidNookCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = DavidNookCore;
+		};
+		DA71D0C0DE000000000A0004 /* DavidNookUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DavidNookUI;
 		};
 		111BEA502ECFBF7F0079DD4E /* MacroVisionKit */ = {
 			isa = XCSwiftPackageProductDependency;

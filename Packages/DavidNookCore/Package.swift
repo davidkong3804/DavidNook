@@ -6,6 +6,7 @@ let package = Package(
     platforms: [.macOS(.v14)],
     products: [
         .library(name: "DavidNookCore", targets: ["DavidNookCore"]),
+        .library(name: "DavidNookUI", targets: ["DavidNookUI"]),
     ],
     dependencies: [
         // MIT；內含 OpenCC 1.1.2 字典（Apache-2.0）。上游最後更新 2021，故以 revision 釘選。
@@ -20,6 +21,12 @@ let package = Package(
         .testTarget(
             name: "DavidNookCoreTests",
             dependencies: ["DavidNookCore"]
+        ),
+        // SwiftUI 元件（歌詞面板、偏移控制）：資料驅動，不含網路或播放邏輯。
+        .target(name: "DavidNookUI"),
+        .testTarget(
+            name: "DavidNookUITests",
+            dependencies: ["DavidNookUI"]
         ),
     ]
 )
