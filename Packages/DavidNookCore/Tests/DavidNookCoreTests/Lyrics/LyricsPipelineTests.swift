@@ -63,6 +63,24 @@ final class LyricsPipelineTests: XCTestCase {
         XCTAssertEqual(LyricsPipeline.queryVariants(for: LyricsQuery(title: "Night Lamp", artist: "Someone", duration: 180)), [])
     }
 
+    func testJapaneseQueryGetsNoVariants() {
+        // 日文歌名含新字體（国・恋）與假名：不是華語，不該送出簡繁變體請求（浪費 LRCLIB 請求）。
+        XCTAssertEqual(LyricsPipeline.queryVariants(for: LyricsQuery(title: "恋する国の夜", artist: "テストバンド", duration: 200)), [])
+    }
+
+    func testJapaneseCandidateIsClassifiedNeutralByThePicker() throws {
+        // 日文同步歌詞（假名＋新字體）：挑選結果的字體屬性是 neutral，不會被當成簡體而排在後面。
+        let lrc = "[00:05.00]恋する国の声が聞こえる\n[00:12.00]残酷な夜に会えたなら\n[00:20.00]ありがとう"
+        let candidate = LrclibCandidate(
+            id: 1, trackName: "恋する国の夜", artistName: "テストバンド", albumName: nil, duration: 200,
+            instrumental: false, plainLyrics: nil, syncedLyrics: lrc
+        )
+        let picked = try XCTUnwrap(LyricsPipeline.makePicker().pick(
+            from: [candidate], for: LyricsQuery(title: "恋する国の夜", artist: "テストバンド", duration: 200)
+        ))
+        XCTAssertEqual(picked.script, .neutral)
+    }
+
     // MARK: - 端到端（用戶端＋挑選＋剝檔頭＋本地化）
 
     func testTraditionalPlayerTitleFindsSimplifiedLRCLIBEntryViaVariantAndLocalizesToTraditional() async throws {

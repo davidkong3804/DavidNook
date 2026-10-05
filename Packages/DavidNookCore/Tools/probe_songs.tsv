@@ -1,0 +1,55 @@
+# DavidNookProbe 歌單：歌名<TAB>歌手<TAB>長度秒（空白＝未知，工具以 LRCLIB search 結果的長度叢集代入並標記）<TAB>備註（第一個詞為分類：tw 台灣華語／cn 中國大陸華語／hk 粵語／en 英文／jp 日文／kr 韓文／inst 純音樂／special 特殊符號）
+# 長度為 LRCLIB search 結果中（歌名相同且有同步歌詞者）±2 秒內成員最多的長度叢集中位數（四捨五入到整秒），備註標「長度估計」；不是 Apple Music 的實際長度。
+# 備註的 +ab：另外查簡繁變體寫法的 search（與 App 在 search 階段送出的變體相同），取得另一種字體的版本供 A/B 對照。
+# 只含公開事實資訊（歌名、歌手、長度、分類），不含任何歌詞。
+髮如雪	周杰倫	302	tw +ab 長度估計
+倔強	五月天	261	tw +ab 長度估計
+旅行的意義	陳綺貞	244	tw +ab 長度估計
+日不落	蔡依林	227	tw 長度估計
+怎麼了	周興哲	321	tw +ab 長度估計
+小幸運	田馥甄	266	tw +ab 長度估計
+江南	林俊傑	268	tw +ab 長度估計
+愛人錯過	告五人	292	tw +ab 長度估計
+小情歌	蘇打綠	274	tw 長度估計
+遇見	孫燕姿	210	tw +ab 長度估計
+成都	赵雷	328	cn 長度估計
+平凡之路	朴树	301	cn 長度估計
+南山南	马頔	325	cn 長度估計
+起风了	买辣椒也用券	326	cn 長度估計
+消愁	毛不易	179	cn 長度估計
+董小姐	宋冬野	310	cn 長度估計
+丑八怪	薛之谦	248	cn 長度估計
+有何不可	许嵩	242	cn 長度估計
+夜空中最亮的星	逃跑计划	252	cn 長度估計
+云烟成雨	房东的猫	241	cn 長度估計
+海闊天空	Beyond	324	hk +ab 長度估計
+富士山下	陳奕迅	259	hk +ab 長度估計
+K歌之王	陳奕迅	219	hk +ab 長度估計
+光輝歲月	Beyond	302	hk 長度估計
+紅日	李克勤	192	hk +ab 長度估計
+吻別	張學友	305	hk +ab 長度估計
+Shape of You	Ed Sheeran	234	en 長度估計
+Blinding Lights	The Weeknd	202	en 長度估計
+Someone Like You	Adele	285	en 長度估計
+Yesterday	The Beatles	126	en 長度估計
+Bohemian Rhapsody	Queen	355	en 長度估計
+Hotel California	Eagles	391	en 長度估計
+Billie Jean	Michael Jackson	294	en 長度估計
+Viva La Vida	Coldplay	242	en 長度估計
+夜に駆ける	YOASOBI	261	jp 長度估計
+Lemon	米津玄師	256	jp 長度估計
+前前前世	RADWIMPS	275	jp 長度估計
+紅蓮華	LiSA	238	jp 長度估計
+残酷な天使のテーゼ	高橋洋子	245	jp 長度估計
+Spring Day	BTS	274	kr 長度估計
+Hype Boy	NewJeans	179	kr 長度估計
+Love Dive	IVE	179	kr 長度估計
+Good Day	IU	236	kr 長度估計
+River Flows in You	Yiruma	215	inst 長度估計
+Comptine d'un autre été, l'après-midi	Yann Tiersen	144	inst 長度估計
+Stronger (What Doesn't Kill You)	Kelly Clarkson	222	special 長度估計
+Uptown Funk (feat. Bruno Mars)	Mark Ronson	270	special 長度估計
+Don't Stop Believin'	Journey	249	special 長度估計
+Love Story (Taylor's Version)	Taylor Swift	241	special 長度估計
+唔該			hk 口語粵語（僅歌名查詢；LRCLIB 回 0 筆）
+我哋			hk 口語粵語（僅歌名查詢；LRCLIB 回 0 筆）

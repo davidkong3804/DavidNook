@@ -89,3 +89,16 @@ M1 瀏海殼（匯入上游、裁剪、改名、多螢幕）→ M2 Now Playing�
 - `Tools/build_release.sh`／`Tools/install.sh`：見 README。`build_release.sh` 建置後檢查 Hardened Runtime 仍開啟與主程式未連結 adapter；`install.sh` 不用 sudo、不改登入項目。本機沒有 shellcheck，以 `bash -n` 檢查。產物架構以 `lipo -archs` 為準：`arm64`（`ONLY_ACTIVE_ARCH = YES`；Intel 未驗證）。
 - 授權稽核（`THIRD_PARTY_NOTICES.md`）：新發現先前漏列的靜態連入元件 marisa-trie 0.2.6（BSD-2-Clause 或 LGPL-2.1+，選 BSD-2-Clause）與 darts-clone 0.32（BSD-2-Clause；隨附的 `darts.h` 沒有授權標頭，授權依其上游 COPYING.md）。OpenCC 目錄沒有 NOTICE 檔。swift-syntax 只在建置期。上游的 `THIRD_PARTY_LICENSES` 已併入 `LICENSES/` 並移除。
 - **未驗證／需決定**：NotchDrop 是否仍有殘存程式碼（未逐檔比對上游）；OpenCC 字典資料是否有逐檔授權例外；README 的 Gatekeeper 說明只寫「依系統提示」（macOS 27 的實際按鈕名稱未查證）。
+
+## 歌詞管線真實資料稽核（DavidNookProbe，2026-10-05）
+
+工具：`Packages/DavidNookCore/Sources/DavidNookProbe`（唯讀 executable target，**App 不連結**），`swift run -c release DavidNookProbe --list Tools/probe_songs.tsv --out <報告目錄> [--cache <目錄>] [--offline]`。用 Core 的真實類別跑 LRCLIB 真實回應；磁碟快取＋預算帳本（`--max-requests`，預設 120）＋≥1.25 秒節流＋probe 專用 User-Agent；`--offline` 只用快取（修程式前後各跑一次零請求）。報告含真實歌詞，**只能放 `--out`（scratchpad），不可 commit**；歌單 `Tools/probe_songs.tsv` 只有歌名／歌手／長度（LRCLIB 長度叢集推估，已標記）／分類。
+
+結果（51 首：台灣華語 10、大陸華語 10、粵語 8〔其中 2 首口語粵語只查歌名、LRCLIB 回 0 筆〕、英文 8、日文 5、韓文 4、純音樂 2、特殊符號 4；共 120 次連網請求、0 次 429、2 次 503 皆重試成功）：
+- 47 首挑到同步歌詞（純音樂 2 首＋口語粵語 2 首無結果；純音樂無法與「找不到」區分，同前述已知風險）。495 個可用候選中：Enhanced LRC 標籤 0、解析器遺漏行 0、檔頭剝除未發現誤殺或漏殺（只有 17 個候選有檔頭，被剝掉的 15 種行皆為作詞作曲等中繼行）。
+- 26 首華語歌有 23 首選到原生繁體版（簡體版 3 首）；簡轉繁路徑在真實使用中主要服務簡體中繼資料的使用者。
+- 簡→繁準確度：真實「簡體版 vs 原生繁體版」配對僅 5 對（1263 字，語意不一致 0）；合成對照（繁體→t2s→我們的 s2t→與原文逐字比對）23 首 8997 字，人工複核後我們的語意錯誤 5 處（0.056%）、風格差異 14 處（0.156%，皆為 OpenCC twStandard 的異體選擇：悽／淒、週／周、溼／濕、嘆／歎、昇／升、搜／蒐）。
+- 修掉的缺陷（紅燈 commit→綠燈 commit）：①**日文／韓文被簡轉繁**（5 首日文歌共 27 字：声→聲、会→會、恋→戀…）→ `ChineseScriptDetector.isJapaneseOrKorean`（一行假名＋諺文 ≥5% 的 CJK 字元＝日韓行，不計證據、不轉換；日韓行占 ≥30% 則整份 neutral）；②**雙語歌詞**（Lemon：12 個可用版本中 4 個逐行附越南文翻譯，翻譯行與原文同時間戳，`/api/get` 直接選中）→ `LyricsTranslationCollapser`（同刻行 ≥3 且 ≥30% 才收合，每組留第一行）；③覆寫表補 注定／扎馬尾（辮子、頭髮）／一齣好戲（悲劇、喜劇、鬧劇）。
+- **未修的已知問題**：「書本里」「電影里」這類名詞＋里 OpenCC 不轉成「裡」（67 次出現中 2 次，約 3%；不加通則，因為「千里」「幾里路」的里不能轉）；「谷堆」不轉「穀堆」；「发」單獨表頭髮而不在覆寫詞組內時轉成「發」（26 次中 1 次）；簡體來源的粵語口語「系」（＝係）會被轉成「繫」；`/api/get` 命中時完全繞過 Picker 的排序（47 首中 26 首與 Picker 首選不同，其中 5 首時間軸有 ≥1 秒的分歧）；LRCLIB search 最多回 20 筆，多數歌回滿 20 筆（結果可能被截斷）。
+- **需使用者決定的風格取捨**：台→臺（簡體來源「舞台→舞臺」，原生繁體路徑保持「台」，兩條路徑不一致）、了解→瞭解（目前不處理）、粵語歌詞的港式寫法被 t2tw 改成臺灣寫法（真實資料：着→著 3、裏→裡 2、污→汙 3，作用在 6 首港式歌詞中的 3 首）是否保留、OpenCC 異體選擇（悽／溼／昇…）是否接受。
+- **未驗證**：歌詞時間軸對實際音訊同步；真實播放；真實口語粵語歌詞（嘅咗喺嘢啲）只用自編句子驗證不被改動；韓文夾漢字只有自編測試；簡體來源的真實樣本偏少（3 首轉換、5 對配對）。

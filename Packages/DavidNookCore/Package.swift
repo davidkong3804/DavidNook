@@ -29,5 +29,12 @@ let package = Package(
             name: "DavidNookUITests",
             dependencies: ["DavidNookUI"]
         ),
+        // 開發用稽核工具（唯讀、不屬於 App）：以 Core 的真實歌詞管線批次跑 LRCLIB 真實資料。
+        // 只依賴 DavidNookCore；App（xcodeproj）只連結 DavidNookCore／DavidNookUI 產品，不會連結它。
+        // 用法：swift run -c release DavidNookProbe --list Tools/probe_songs.tsv --out <報告目錄>
+        .executableTarget(
+            name: "DavidNookProbe",
+            dependencies: ["DavidNookCore"]
+        ),
     ]
 )

@@ -256,6 +256,43 @@ final class LyricsChineseConverterTests: XCTestCase {
         ])
     }
 
+    // MARK: - 真實資料稽核補充（簡體→繁體來源：以原生繁體歌詞 t2s 後再轉回，與原文逐字比對發現的 OpenCC 轉錯）
+
+    func testAuditFoundDestinyIsNotTurnedIntoRegisterWord() throws {
+        // 「注定」被 OpenCC 轉成「註定」（錯）；「注」在注意／注視／注射都是「注」。
+        try assertConverts(.conservative, [
+            ("注定", "注定"),
+            ("命中注定的相遇", "命中注定的相遇"),
+            ("我们注定分开", "我們注定分開"),
+            ("注意看", "注意看"),
+            ("注视着你", "注視著你"),
+        ])
+    }
+
+    func testAuditFoundTieUpIsPutInTraditionalForm() throws {
+        // 「扎」表示綁、束時，臺灣標準寫「紮」；刺入、掙扎的「扎」不變。
+        try assertConverts(.conservative, [
+            ("扎马尾", "紮馬尾"),
+            ("扎辫子", "紮辮子"),
+            ("扎头发", "紮頭髮"),
+            ("扎针", "扎針"),
+            ("挣扎", "掙扎"),
+        ])
+    }
+
+    func testAuditFoundPlayClassifier() throws {
+        // 戲劇的量詞「齣」：一齣戲、一齣悲劇；「一出門」「一出來」的「出」不變。
+        try assertConverts(.conservative, [
+            ("一出戏", "一齣戲"),
+            ("一出好戏", "一齣好戲"),
+            ("一出悲剧", "一齣悲劇"),
+            ("一出喜剧", "一齣喜劇"),
+            ("一出闹剧", "一齣鬧劇"),
+            ("一出门", "一出門"),
+            ("一出来", "一出來"),
+        ])
+    }
+
     // MARK: - 覆寫表與轉換器的互動
 
     func testOverrideBeatsOpenCCPhrases() throws {

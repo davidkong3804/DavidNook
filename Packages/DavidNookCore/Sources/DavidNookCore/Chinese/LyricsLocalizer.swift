@@ -30,6 +30,8 @@ public struct LocalizedLyrics: Equatable, Sendable {
 /// - `mixed`：逐行判斷——簡體行轉換、繁體行 variantsOnly、中性行（沒有專有字，如英文）原樣。
 ///   一行內簡繁並存時，視為簡體行轉換（簡體殘留比誤改罕見的繁體用字更顯眼）。
 /// - `neutral`：原樣。
+/// - 日文／韓文行（假名／諺文占比 ≥ 5%）一律原樣，不論整篇是哪一種：日文新字體（国・恋・声）不是簡體，
+///   不可轉成「國・戀・聲」；整份歌詞多數是日韓行時整篇為 `neutral`（見 `ChineseScriptDetector`）。
 ///
 /// - Important: **只傳入歌詞內文的行**。歌名、歌手名等中繼資料不得進入此管線——它們不經過轉換，
 ///   以播放器提供的原樣顯示（簡轉繁可能把人名/曲名改錯，標題也不是可靠的字體證據）。
@@ -74,14 +76,14 @@ public final class LyricsLocalizer: @unchecked Sendable {
         case .simplified:
             let converter = try converterProvider(simplifiedMode)
             return LocalizedLyrics(
-                lines: lines.map { $0.isEmpty ? $0 : converter.convert($0) },
+                lines: lines.map { $0.isEmpty || detector.isJapaneseOrKorean($0) ? $0 : converter.convert($0) },
                 script: .simplified, lineScripts: nil, appliedMode: simplifiedMode
             )
 
         case .traditional:
             let converter = try converterProvider(.variantsOnly)
             return LocalizedLyrics(
-                lines: lines.map { $0.isEmpty ? $0 : converter.convert($0) },
+                lines: lines.map { $0.isEmpty || detector.isJapaneseOrKorean($0) ? $0 : converter.convert($0) },
                 script: .traditional, lineScripts: nil, appliedMode: .variantsOnly
             )
 
