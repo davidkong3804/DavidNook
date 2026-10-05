@@ -2,7 +2,7 @@ import Foundation
 
 /// 檔案版持久化：索引為 `index.json`，圖片為 `<hash>.<副檔名>`，全部放在可注入的目錄內。
 ///
-/// - 目錄權限 0700、檔案權限 0600。
+/// - 目錄權限 0700、檔案權限 0600；目錄標為「排除備份」（Time Machine 不會備份明文歷史，新建與既有目錄都會補設）。
 /// - 寫入採「同目錄暫存檔（建立時就是 0600）→ fsync → rename」的原子寫入；寫入失敗不會破壞既有檔案。
 /// - 載入時容忍損毀：整份索引壞掉 → 回傳空並把壞檔改名為 `index.json.corrupt`；個別條目壞掉或圖片檔遺失 → 只丟棄該條目。
 /// - 圖片檔名嚴格驗證（`<64 位小寫 hex>.<1–8 位小寫英數>`），不可能穿越到目錄之外。
@@ -29,6 +29,8 @@ public final class FileClipboardPersistence: ClipboardPersistence, @unchecked Se
         do {
             try fm.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
             try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
+            // 新建或既有（舊版建立、尚未標記）的目錄一律排除備份；失敗就視為目錄不可用，不在可能被備份的地方存明文。
+            try BackupExclusion.exclude(directory)
         } catch {
             throw ClipboardPersistenceError.directoryUnavailable
         }
