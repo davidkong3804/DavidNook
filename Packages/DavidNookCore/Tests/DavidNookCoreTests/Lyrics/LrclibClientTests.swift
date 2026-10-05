@@ -59,7 +59,7 @@ final class LrclibClientTests: XCTestCase {
 
     func testGetRequestOmitsAlbumWhenNilOrBlank() async throws {
         for album in [nil, "", "   "] as [String?] {
-            let t = StubTransport(steps: [.ok(good())])
+            let t = StubTransport(steps: [.ok(good(duration: 200))])
             let q = LyricsQuery(title: "原樣", artist: "阿虛", album: album, duration: 200)
             _ = try await makeClient(t).lyrics(for: q)
             XCTAssertNil(queryDict(t.requests[0])["album_name"], "album=\(String(describing: album))")
@@ -87,7 +87,7 @@ final class LrclibClientTests: XCTestCase {
     }
 
     func testQueryValuesArePercentEncoded() async throws {
-        let t = StubTransport(steps: [.ok(good())])
+        let t = StubTransport(steps: [.ok(good(duration: 200))])
         let q = LyricsQuery(title: "A+B & C=D 夜", artist: "x/y?z#w", album: nil, duration: 200)
         _ = try await makeClient(t).lyrics(for: q)
         let raw = try XCTUnwrap(rawQuery(t.requests[0]))
@@ -163,7 +163,7 @@ final class LrclibClientTests: XCTestCase {
 
     func testSearchOnlyAfterEveryGetVariantIs404() async throws {
         let t = StubTransport(steps: [.notFound, .notFound, .notFound,
-                                      .ok(jsonString([recordObject(id: 8, synced: goodSynced)]))])
+                                      .ok(jsonString([recordObject(id: 8, duration: 223, synced: goodSynced)]))])
         let picked = try await makeClient(t, variants: variants(["t1", "t2"])).lyrics(for: query)
         XCTAssertEqual(picked?.candidateID, 8)
         XCTAssertEqual(t.requests.map { $0.url?.path }, ["/api/get", "/api/get", "/api/get", "/api/search"])
@@ -189,14 +189,14 @@ final class LrclibClientTests: XCTestCase {
 
     func testSearchSecondVariantCanStillSucceed() async throws {
         let t = StubTransport(steps: [.notFound, .notFound, .ok("[]"),
-                                      .ok(jsonString([recordObject(id: 6, synced: goodSynced)]))])
+                                      .ok(jsonString([recordObject(id: 6, duration: 223, synced: goodSynced)]))])
         let picked = try await makeClient(t, variants: variants(["t1"])).lyrics(for: query)
         XCTAssertEqual(picked?.candidateID, 6)
         XCTAssertEqual(queryDict(t.requests[3])["track_name"], "t1")
     }
 
     func testSearchResultsDecodeLossily() async throws {
-        let body = "[{\"foo\":1}," + jsonString(recordObject(id: 4, synced: goodSynced)) + "]"
+        let body = "[{\"foo\":1}," + jsonString(recordObject(id: 4, duration: 223, synced: goodSynced)) + "]"
         let t = StubTransport(steps: [.notFound, .ok(body)])
         let picked = try await makeClient(t).lyrics(for: query)
         XCTAssertEqual(picked?.candidateID, 4, "單筆壞資料不應拖垮整個結果")
