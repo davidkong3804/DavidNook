@@ -26,8 +26,9 @@ public struct LocalizedLyrics: Equatable, Sendable {
 /// 歌詞簡繁整合管線：偵測全文字體 → 選轉換模式 → 轉換。
 ///
 /// - `simplified`：全部以 `.conservative`（使用者開啟慣用詞時 `.taiwanIdioms`）轉換。
-/// - `traditional`：全部以 `.variantsOnly`（只做台灣變體正規化，不改原生繁體用字）。
-/// - `mixed`：逐行判斷——簡體行轉換、繁體行 variantsOnly、中性行（沒有專有字，如英文）原樣。
+/// - `traditional`：逐行以 `.variantsOnly`（只做台灣變體正規化，不改原生繁體用字）；
+///   行內殘留的簡體專有字（上傳者轉換不完整）另外修復，見 `TraditionalLineRepairer`。
+/// - `mixed`：逐行判斷——簡體行轉換、繁體行 variantsOnly（同樣修復殘留簡體字）、中性行（沒有專有字，如英文）原樣。
 ///   一行內簡繁並存時，視為簡體行轉換（簡體殘留比誤改罕見的繁體用字更顯眼）。
 /// - `neutral`：原樣。
 /// - 日文／韓文行（假名／諺文占比 ≥ 5%）一律原樣，不論整篇是哪一種：日文新字體（国・恋・声）不是簡體，
@@ -81,16 +82,16 @@ public final class LyricsLocalizer: @unchecked Sendable {
             )
 
         case .traditional:
-            let converter = try converterProvider(.variantsOnly)
+            let repairer = try TraditionalLineRepairer(detector: detector, converterProvider: converterProvider)
             return LocalizedLyrics(
-                lines: lines.map { $0.isEmpty || detector.isJapaneseOrKorean($0) ? $0 : converter.convert($0) },
+                lines: try lines.map { try repairer.convert($0) },
                 script: .traditional, lineScripts: nil, appliedMode: .variantsOnly
             )
 
         case .mixed:
             let lineScripts = detector.detectEachLine(lines)
             var simplifiedConverter: LyricsChineseConverter?
-            var variantsConverter: LyricsChineseConverter?
+            var repairer: TraditionalLineRepairer?
             var converted: [String] = []
             converted.reserveCapacity(lines.count)
             for (line, lineScript) in zip(lines, lineScripts) {
@@ -101,12 +102,88 @@ public final class LyricsLocalizer: @unchecked Sendable {
                     if simplifiedConverter == nil { simplifiedConverter = try converterProvider(simplifiedMode) }
                     converted.append(simplifiedConverter!.convert(line))
                 case .traditional:
-                    if variantsConverter == nil { variantsConverter = try converterProvider(.variantsOnly) }
-                    converted.append(variantsConverter!.convert(line))
+                    if repairer == nil {
+                        repairer = try TraditionalLineRepairer(detector: detector, converterProvider: converterProvider)
+                    }
+                    converted.append(try repairer!.convert(line))
                 }
             }
             return LocalizedLyrics(lines: converted, script: .mixed, lineScripts: lineScripts, appliedMode: nil)
         }
+    }
+}
+
+/// 原生繁體行的轉換：t2tw 變體正規化＋殘留簡體字修復。
+///
+/// 原生繁體歌詞常夾雜上傳者沒轉乾淨的簡體字（整句繁體卻留著「红」、「这」）。逐行處理：
+/// - 日文／韓文行、空行：原樣。
+/// - 行內沒有簡體專有字：只做 t2tw（`.variantsOnly`）。
+/// - 有簡體專有字、**沒有**繁體專有字：整行是簡體 → 整行 `.conservative`（始終不用慣用詞層）。
+/// - 簡體與繁體專有字並存：**只改簡體專有字那幾個位置**（取 `.conservative` 整行轉換結果中同一位置的字），
+///   其餘字元原樣，之後再做 t2tw。這樣「红塵」→「紅塵」，而同行的「鄰里」不會被轉成「鄰裡」。
+///   `.conservative` 若改變了字數（理論上不會）就退回逐字轉換。
+///
+/// 「里」「复」這類兩邊通用的歧義字不是簡體專有字，這裡不處理（見 `ClauseFinalLiRule` 與覆寫表）。
+private struct TraditionalLineRepairer {
+    let detector: ChineseScriptDetector
+    let variants: LyricsChineseConverter
+    private let conservativeProvider: () throws -> LyricsChineseConverter
+
+    init(
+        detector: ChineseScriptDetector,
+        converterProvider: @escaping (LyricsConversionMode) throws -> LyricsChineseConverter
+    ) throws {
+        self.detector = detector
+        self.variants = try converterProvider(.variantsOnly)
+        // `.conservative` 要載入字典（約 20 ms），只有真的遇到殘留簡體字的行才載入。
+        let lazy = LazyConverter { try converterProvider(.conservative) }
+        self.conservativeProvider = { try lazy.get() }
+    }
+
+    func convert(_ line: String) throws -> String {
+        if line.isEmpty || detector.isJapaneseOrKorean(line) { return line }
+        let evidence = detector.evidence(in: line)
+        guard evidence.simplified > 0 else { return variants.convert(line) }
+
+        let conservative = try conservativeProvider()
+        if evidence.traditional == 0 { return conservative.convert(line) }
+        return variants.convert(replacingSimplifiedOnlyCharacters(in: line, using: conservative))
+    }
+
+    private func replacingSimplifiedOnlyCharacters(in line: String, using conservative: LyricsChineseConverter) -> String {
+        let original = Array(line.unicodeScalars)
+        let wholeLine = Array(conservative.convert(line).unicodeScalars)
+        var output = String.UnicodeScalarView()
+        for (index, scalar) in original.enumerated() {
+            guard detector.isSimplifiedOnly(scalar) else {
+                output.append(scalar)
+                continue
+            }
+            if wholeLine.count == original.count {
+                output.append(wholeLine[index])
+            } else {
+                output.append(contentsOf: conservative.convert(String(scalar)).unicodeScalars)
+            }
+        }
+        return String(output)
+    }
+}
+
+/// 第一次用到才建立的轉換器（執行緒安全）。
+private final class LazyConverter: @unchecked Sendable {
+    private let make: () throws -> LyricsChineseConverter
+    private let lock = NSLock()
+    private var value: LyricsChineseConverter?
+
+    init(_ make: @escaping () throws -> LyricsChineseConverter) { self.make = make }
+
+    func get() throws -> LyricsChineseConverter {
+        lock.lock()
+        defer { lock.unlock() }
+        if let value { return value }
+        let created = try make()
+        value = created
+        return created
     }
 }
 

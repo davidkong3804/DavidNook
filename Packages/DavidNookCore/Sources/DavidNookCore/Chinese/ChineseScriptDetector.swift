@@ -95,6 +95,11 @@ public struct ChineseScriptDetector: Sendable {
 
     // MARK: - 統計
 
+    /// 這個字元是不是「簡體專有字」（本偵測器所用的保守字集：GB2312 有、Big5 沒有、OpenCC 會改它）。
+    public func isSimplifiedOnly(_ scalar: Unicode.Scalar) -> Bool {
+        ScriptCharsets.shared.simplified.contains(scalar)
+    }
+
     /// 統計一段文字中的簡體／繁體專有字出現次數。
     public func evidence(in text: String) -> ScriptEvidence {
         var evidence = ScriptEvidence()
