@@ -46,12 +46,16 @@ public final class MemoryLyricsCacheStore: LyricsCacheStore, @unchecked Sendable
 /// - 找到的歌詞永久快取。
 /// - **找不到**也快取一小段時間（負快取，`negativeTTL` 秒，預設 30 分鐘；0 代表不做負快取），避免狂打 API。
 /// - **錯誤不快取**：網路錯誤、429、503、取消（`CancellationError`）都原樣往外拋，下次會重新查詢。
+/// - **退而求其次的結果不快取**（`LyricsFetchOutcome.isDegraded`：search 失敗而退回 get 的單筆結果）：
+///   這次照用，但不寫入快取，下次播放重新取得多版本共識的結果。
+/// - **同一曲目的並發呼叫合併**成一次抓取（共用結果或錯誤）；所有等待者都取消時，才取消進行中的抓取。
 /// - 歌名為空白的查詢直接回傳 nil，不發請求也不寫快取。
 public struct LyricsRepository: Sendable {
     private let fetcher: any LyricsFetching
     private let store: any LyricsCacheStore
     private let negativeTTL: TimeInterval
     private let now: @Sendable () -> Date
+    private let inflight = InflightFetches()
 
     /// - Parameters:
     ///   - fetcher: 實際抓歌詞的來源（`LrclibClient`）。
@@ -77,17 +81,85 @@ public struct LyricsRepository: Sendable {
         guard query.hasUsableTitle else { return nil }
         let key = query.trackKey
 
-        if !forceRefresh, let cached = store.entry(for: key) {
-            if let lyrics = cached.lyrics { return lyrics }
-            if negativeTTL > 0, now().timeIntervalSince(cached.storedAt) < negativeTTL { return nil }
-        }
+        if !forceRefresh, let hit = cachedValue(for: key) { return hit }
 
-        let result = try await fetcher.lyrics(for: query)
-        if let result {
-            store.store(LyricsCacheEntry(lyrics: result, storedAt: now()), for: key)
-        } else if negativeTTL > 0 {
-            store.store(LyricsCacheEntry(lyrics: nil, storedAt: now()), for: key)
+        let fetcher = fetcher, store = store, negativeTTL = negativeTTL, now = now
+        let result = try await inflight.run(key: key) { [self] in
+            // 等到真的輪到這次抓取才再看一次快取：前一個同曲抓取剛好寫完快取、本次才加入時，不必再連網。
+            if !forceRefresh, let hit = cachedValue(for: key) { return hit }
+            let outcome = try await fetcher.fetch(query)
+            if let lyrics = outcome.lyrics {
+                if !outcome.isDegraded { store.store(LyricsCacheEntry(lyrics: lyrics, storedAt: now()), for: key) }
+            } else if negativeTTL > 0 {
+                store.store(LyricsCacheEntry(lyrics: nil, storedAt: now()), for: key)
+            }
+            return outcome.lyrics
         }
         return result
+    }
+
+    /// 快取查詢：有效的命中回傳 `.some(歌詞)`（負快取仍在 TTL 內回傳 `.some(nil)`），沒有有效快取回傳 nil。
+    private func cachedValue(for key: TrackKey) -> PickedLyrics?? {
+        guard let cached = store.entry(for: key) else { return nil }
+        if let lyrics = cached.lyrics { return .some(lyrics) }
+        if negativeTTL > 0, now().timeIntervalSince(cached.storedAt) < negativeTTL { return .some(nil) }
+        return nil
+    }
+}
+
+/// 進行中的抓取表：同一曲目鍵的並發呼叫共用同一個 `Task`。
+///
+/// 每個呼叫者是一個「等待者」；等待者被取消時只退出自己，**最後一個等待者離開時才取消底層抓取**
+/// （避免快速切歌時白白繼續打 API）。底層 Task 結束（成功、失敗、被取消）後自己從表中移除。
+private final class InflightFetches: @unchecked Sendable {
+    private final class Slot: @unchecked Sendable {
+        var task: Task<PickedLyrics?, Error>?
+        var waiters = 0
+    }
+
+    private let lock = NSLock()
+    private var slots: [TrackKey: Slot] = [:]
+
+    func run(
+        key: TrackKey,
+        operation: @escaping @Sendable () async throws -> PickedLyrics?
+    ) async throws -> PickedLyrics? {
+        let slot: Slot = lock.withLock {
+            if let existing = slots[key] {
+                existing.waiters += 1
+                return existing
+            }
+            let created = Slot()
+            created.waiters = 1
+            created.task = Task { [self] in
+                defer { finish(key: key, slot: created) }
+                return try await operation()
+            }
+            slots[key] = created
+            return created
+        }
+        let task = lock.withLock { slot.task }!
+        let value = try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            leave(key: key, slot: slot)
+        }
+        try Task.checkCancellation()          // 被取消的呼叫者不論共用抓取是否已完成，都回報取消
+        return value
+    }
+
+    private func finish(key: TrackKey, slot: Slot) {
+        lock.withLock { if slots[key] === slot { slots[key] = nil } }
+    }
+
+    /// 取消的等待者離開；沒人在等時取消底層抓取，並讓之後的新呼叫另起一個抓取。
+    private func leave(key: TrackKey, slot: Slot) {
+        let orphan: Task<PickedLyrics?, Error>? = lock.withLock {
+            slot.waiters -= 1
+            guard slot.waiters <= 0 else { return nil }
+            if slots[key] === slot { slots[key] = nil }
+            return slot.task
+        }
+        orphan?.cancel()
     }
 }

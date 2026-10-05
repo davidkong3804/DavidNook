@@ -44,16 +44,36 @@ public enum LrclibError: Error, Equatable, Sendable {
     case unexpectedStatus(Int)
     /// 200 但內容無法解碼。
     case invalidResponse
+
+    /// `/api/get` 失敗後是否仍值得改試 `/api/search`。
+    /// 限流（429）、伺服器忙碌（503 用盡）、網路錯誤代表伺服器正要我們退讓或根本連不上，再送請求只是浪費；
+    /// 其餘（非預期狀態碼、壞掉的回應內容）是 get 端點自己的問題，search 仍可能成功。
+    var allowsSearchAfterGetFailure: Bool {
+        switch self {
+        case .unexpectedStatus, .invalidResponse: return true
+        case .network, .rateLimited, .serverOverloaded: return false
+        }
+    }
 }
 
 /// LRCLIB（https://lrclib.net）用戶端：`/api/get` + `/api/search` + 變體重試 + 禮貌性節流。
 ///
-/// ## 流程
+/// ## 流程（多版本共識）
+/// 同一首歌在 LRCLIB 有許多版本，時間軸可差 10 秒以上；`/api/get` 只回「一筆」，可能正是離群版本。
+/// 所以 get 的結果**不直接採用**，而是併入 search 的候選池，統一由 `LyricsCandidatePicker` 以多數版本共識排序。
 /// 1. 以「原樣」與注入的變體（例如簡轉繁、繁轉簡的歌名／歌手名）依序呼叫 `/api/get`（帶長度，秒）；
 ///    **只有 404（或該筆不合用）才換下一個變體**。變體會去除重複與空歌名。沒有歌手名的變體不呼叫 `/api/get`。
-/// 2. 全部沒結果才退到 `/api/search`（只帶 track_name、artist_name），同樣依序嘗試各變體。
+/// 2. 再呼叫 `/api/search`（只帶 track_name、artist_name）：get 命中時只送一次、用命中的那種寫法；
+///    沒有 get 結果時依序嘗試各變體，到第一個有可用候選的為止。get 的單筆（以 id 去重）併入候選池。
 /// 3. 候選一律交給 `LyricsCandidatePicker` 過濾與挑選（`/api/get` 的單筆也要通過長度、同步歌詞檢查）。
 /// 4. 回傳挑選結果；全部找不到回傳 nil；網路／伺服器錯誤拋出 `LrclibError`。
+///
+/// ## 失敗處理
+/// - search 失敗（429／503 用盡、網路、壞回應）而手上有 get 的結果：退而使用它，並標記 `isDegraded`
+///   （倉庫不快取，下次重新取得共識版本）。沒有 get 結果就照實拋出。
+/// - get 因 429／503 用盡／網路錯誤失敗：直接拋出，不再送 search（伺服器正要我們退讓）；
+///   get 回其他非預期狀態碼或壞內容：仍試 search，search 沒有可用結果時才拋出 get 的錯誤。
+/// - 兩者都 404（或 search 空）→ nil。
 ///
 /// ## 遵守伺服器規範
 /// - 每個請求都帶 `User-Agent: DavidNook/<版本> (https://github.com/davidkong3804/DavidNook)`。
@@ -131,39 +151,73 @@ public final class LrclibClient: LyricsFetching, @unchecked Sendable {
     // MARK: - LyricsFetching
 
     public func lyrics(for query: LyricsQuery) async throws -> PickedLyrics? {
+        try await fetch(query).lyrics
+    }
+
+    public func fetch(_ query: LyricsQuery) async throws -> LyricsFetchOutcome {
         let original = Self.trimmed(query)
-        guard original.hasUsableTitle else { return nil }
+        guard original.hasUsableTitle else { return LyricsFetchOutcome(lyrics: nil) }
         let attempts = distinctAttempts(original)
         var sent = 0
 
-        // 1. /api/get：404 或該筆不合用才換下一個變體。
+        // 1. /api/get：404 或該筆不合用才換下一個變體；命中就記下「候選＋是哪一種寫法命中的」。
+        var getHit: (candidate: LrclibCandidate, attempt: LyricsQuery)?
+        var getFailure: LrclibError?
         for attempt in attempts where !attempt.artist.isEmpty {
-            let response = try await send(getRequest(attempt), sentSoFar: &sent)
-            switch response.statusCode {
-            case 200:
-                let candidate = try decode(LrclibCandidate.self, from: response.body)
-                if let picked = picker.pick(from: [candidate], for: original) { return picked }
-            case 404:
-                continue
-            default:
-                throw LrclibError.unexpectedStatus(response.statusCode)
+            do {
+                let response = try await send(getRequest(attempt), sentSoFar: &sent)
+                switch response.statusCode {
+                case 200:
+                    let candidate = try decode(LrclibCandidate.self, from: response.body)
+                    if picker.pick(from: [candidate], for: original) != nil { getHit = (candidate, attempt) }
+                case 404:
+                    break
+                default:
+                    throw LrclibError.unexpectedStatus(response.statusCode)
+                }
+            } catch let error as LrclibError where error.allowsSearchAfterGetFailure {
+                getFailure = error          // get 端點本身怪怪的：不再試其他 get 變體，改走 search
+            }
+            if getHit != nil || getFailure != nil { break }
+        }
+
+        // 2. /api/search：get 的單筆併入搜尋結果（以 id 去重），統一交給 Picker 以多版本共識排序。
+        //    get 命中時只送一次 search（用 get 命中的那種寫法，最可能列出同曲的其他版本）；
+        //    沒有 get 結果時才依序嘗試各變體。
+        let getPick = getHit.flatMap { picker.pick(from: [$0.candidate], for: original) }
+        let searchAttempts = getHit.map { [$0.attempt] } ?? attempts
+        for attempt in searchAttempts {
+            do {
+                let response = try await send(searchRequest(attempt), sentSoFar: &sent)
+                switch response.statusCode {
+                case 200:
+                    let list = try decode([LossyCandidate].self, from: response.body).compactMap(\.value)
+                    if let getHit {
+                        let pool = Self.merged(getHit.candidate, list)
+                        return LyricsFetchOutcome(lyrics: picker.pick(from: pool, for: original) ?? getPick)
+                    }
+                    if let picked = picker.pick(from: list, for: original) { return LyricsFetchOutcome(lyrics: picked) }
+                case 404:
+                    continue
+                default:
+                    throw LrclibError.unexpectedStatus(response.statusCode)
+                }
+            } catch let error as LrclibError {
+                // search 失敗（429／503 用盡、網路、壞回應…）：有 get 的結果就退而用它；否則照實拋出。
+                if let getPick { return LyricsFetchOutcome(lyrics: getPick, isDegraded: true) }
+                throw error
             }
         }
 
-        // 2. /api/search：同樣依序嘗試各變體。
-        for attempt in attempts {
-            let response = try await send(searchRequest(attempt), sentSoFar: &sent)
-            switch response.statusCode {
-            case 200:
-                let list = try decode([LossyCandidate].self, from: response.body).compactMap(\.value)
-                if let picked = picker.pick(from: list, for: original) { return picked }
-            case 404:
-                continue
-            default:
-                throw LrclibError.unexpectedStatus(response.statusCode)
-            }
-        }
-        return nil
+        if let getPick { return LyricsFetchOutcome(lyrics: getPick) }     // search 成功但沒有結果：get 是唯一版本
+        if let getFailure { throw getFailure }                             // get 失敗、search 又沒結果：不能宣稱「找不到」
+        return LyricsFetchOutcome(lyrics: nil)
+    }
+
+    /// 把 get 的單筆放在最前面併入搜尋結果，以 id 去重（同一筆紀錄不算兩票）。
+    private static func merged(_ first: LrclibCandidate, _ rest: [LrclibCandidate]) -> [LrclibCandidate] {
+        var seen: Set<Int> = []
+        return ([first] + rest).filter { seen.insert($0.id).inserted }
     }
 
     // MARK: - 請求建構
