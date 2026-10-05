@@ -68,8 +68,9 @@ public struct NotchSizing: Equatable, Sendable {
             : min(max(CGFloat(heightScale), Self.heightScaleRange.lowerBound), Self.heightScaleRange.upperBound)
     }
 
+    /// 是否等於預設值（高度係數容許滑桿步進造成的浮點誤差）。
     public var isDefault: Bool {
-        width == Self.defaultWidth && heightScale == Self.defaultHeightScale
+        width == Self.defaultWidth && abs(heightScale - Self.defaultHeightScale) < 0.001
     }
 
     /// 把任意寬度吸附到滑桿步進（並夾到範圍）。

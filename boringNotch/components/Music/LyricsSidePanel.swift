@@ -14,6 +14,8 @@ struct LyricsSidePanel: View {
     @ObservedObject private var service = LyricsService.shared
     @ObservedObject private var musicManager = MusicManager.shared
     @State private var isHovering = false
+    /// 可見行數：預設 5 行；展開面板高度不足時由 `NotchHomeMetrics` 降為 4 行。
+    var visibleLineCount: Int = LyricsPanelMetrics.defaultVisibleLines
 
     private let strings = LyricsPanelStrings(
         loading: String(localized: "Loading lyrics…", comment: "Lyrics panel: shown while lyrics are being looked up."),
@@ -63,7 +65,8 @@ struct LyricsSidePanel: View {
                     currentIndex: service.currentIndex(at: position),
                     offsetMs: service.offsetMs,
                     status: panelStatus,
-                    strings: strings
+                    strings: strings,
+                    visibleLineCount: visibleLineCount
                 )
             }
         }

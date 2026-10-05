@@ -33,6 +33,9 @@ struct ContentView: View {
     @Namespace var albumArtNamespace
 
     @Default(.showNotHumanFace) var showNotHumanFace
+    // 設定頁的展開寬度／高度：改變時重新排版（即時生效）。實際數值一律經 NotchSizing 夾限。
+    @Default(.openNotchWidth) private var openNotchWidth
+    @Default(.openNotchHeightScale) private var openNotchHeightScale
 
     // Use standardized animations from StandardAnimations enum
     private let animationSpring = StandardAnimations.interactive
@@ -105,16 +108,24 @@ struct ContentView: View {
         return items
     }
 
-    /// nil means "size to content".
-    ///
-    /// Compact mode must use nil: this frame bounds hit-testing as well as
-    /// layout, so any value shorter than the content leaves the transport
-    /// row outside the hover region — moving toward the buttons registered
-    /// as a hover-exit and closed the notch. The compact panel's height is
-    /// controlled by its own internal padding instead, which is the honest
-    /// lever anyway.
-    private var openNotchHeight: CGFloat? {
-        Defaults[.compactMode] ? nil : vm.notchSize.height
+    // MARK: - Open size (NotchSizing)
+
+    private var sizing: NotchSizing {
+        NotchSizing(width: openNotchWidth, heightScale: openNotchHeightScale)
+    }
+
+    /// 表頭（分頁列＋瀏海缺口）高度：與 BoringHeader 的 frame 相同。
+    private var openHeaderHeight: CGFloat {
+        max(NotchSizing.minimumHeaderHeight, displayClosedNotchHeight)
+    }
+
+    /// 展開內容寬：形體寬扣掉兩側的耳朵（上緣圓角）與內縮。
+    private var openContentWidth: CGFloat {
+        sizing.contentWidth(earInset: openedInsets.top)
+    }
+
+    private func openBodyHeight(for panel: NotchSizing.Panel) -> CGFloat {
+        sizing.bodyHeight(for: panel, headerHeight: openHeaderHeight)
     }
 
     /// Compact mode drops the tab bar along with the tabs it switches
@@ -246,14 +257,6 @@ struct ContentView: View {
                     .opacity((isNotchHeightZero && vm.notchState == .closed) ? 0.01 : 1)
 
                 mainLayout
-                    // alignment: .top matters here — without it this frame
-                    // defaults to centering, and shrinking the height for a
-                    // notification (openNotchHeight < vm.notchSize.height)
-                    // then pulls the visible top edge down by half the
-                    // difference instead of staying flush with the window's
-                    // top-anchored origin. That's what read as "the notch
-                    // sits a bit off the top of the screen."
-                    .frame(height: vm.notchState == .open ? openNotchHeight : nil, alignment: .top)
                     .conditionalModifier(true) { view in
                         return view
                             .animation(vm.notchState == .open ? StandardAnimations.open : StandardAnimations.close, value: vm.notchState)
@@ -326,7 +329,11 @@ struct ContentView: View {
             }
         }
         .padding(.bottom, 8)
-        .frame(maxWidth: windowSize.width, maxHeight: windowSize.height, alignment: .top)
+        .frame(
+            maxWidth: NotchSizing.coveringWindowSize.width,
+            maxHeight: NotchSizing.coveringWindowSize.height,
+            alignment: .top
+        )
         .ignoresSafeArea(.all)
         .compositingGroup()
         .scaleEffect(
@@ -341,7 +348,8 @@ struct ContentView: View {
 
     @ViewBuilder
     func NotchLayout() -> some View {
-        VStack(alignment: .leading) {
+        // spacing: 0 —— 展開時表頭與內容區之間的距離由 NotchSizing 的高度預算決定（閉合時只有一個子視圖，不受影響）。
+        VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading) {
                 if coordinator.helloAnimationRunning {
                     Spacer()
@@ -370,7 +378,7 @@ struct ContentView: View {
                           BoringFaceAnimation()
                        } else if showsHeader {
                            BoringHeader()
-                               .frame(height: max(38, displayClosedNotchHeight))
+                               .frame(width: openContentWidth, height: openHeaderHeight)
                                .opacity(gestureProgress != 0 ? 1.0 - min(abs(gestureProgress) * 0.1, 0.3) : 1.0)
                        }
                         // New case to enable compact notch on external displays
@@ -423,16 +431,30 @@ struct ContentView: View {
                             isHoveringMusicArea = false
                         }
                     } else {
-                        switch coordinator.currentView {
-                        case .home:
-                            NotchHomeView(
-                                albumArtNamespace: albumArtNamespace,
-                                horizontalMediaGestureFeedback: horizontalMediaGestureFeedback,
-                                isHoveringMusicArea: $isHoveringMusicArea
-                            )
-                        case .clipboard:
-                            ClipboardTabView()
+                        // 內容以「最終尺寸」固定排版，外層形體的彈簧變形只負責揭露它（不會在展開途中重新折行）。
+                        ZStack(alignment: .top) {
+                            switch coordinator.currentView {
+                            case .home:
+                                NotchHomeView(
+                                    albumArtNamespace: albumArtNamespace,
+                                    horizontalMediaGestureFeedback: horizontalMediaGestureFeedback,
+                                    isHoveringMusicArea: $isHoveringMusicArea,
+                                    contentWidth: openContentWidth,
+                                    bodyHeight: openBodyHeight(for: .home)
+                                )
+                                .frame(width: openContentWidth, height: openBodyHeight(for: .home), alignment: .top)
+                                .transition(.opacity)
+                            case .clipboard:
+                                ClipboardTabView()
+                                    .frame(width: openContentWidth, height: openBodyHeight(for: .clipboard), alignment: .top)
+                                    .transition(.opacity)
+                            }
                         }
+                        .frame(
+                            width: openContentWidth,
+                            height: openBodyHeight(for: coordinator.currentView.sizingPanel),
+                            alignment: .top
+                        )
                     }
                 }
                 .transition(
@@ -866,5 +888,8 @@ extension ContentView {
     vm.open()
     return ContentView()
         .environmentObject(vm)
-        .frame(width: vm.notchSize.width, height: vm.notchSize.height)
+        .frame(
+            width: NotchSizing().openSize(for: .home).width,
+            height: NotchSizing().openSize(for: .home).height
+        )
 }

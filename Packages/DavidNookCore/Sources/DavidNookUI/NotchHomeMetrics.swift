@@ -7,7 +7,7 @@ import Foundation
 /// - 封面為正方形，高度不超過內容區（上下各留 `artPadding`），最大 144；寬度不夠時優先縮封面，
 ///   保證控制區 ≥ `controlsMinimumWidth`（放得下 5 顆按鈕的工具列）與歌詞 ≥ `lyricsMinimumWidth`。
 /// - 歌詞寬 ≈ 內容寬的 38%（夾在 190–320）；可見行數依內容高度決定（預設高度 5 行，高度不足降為 4 行，再不足 3 行）。
-/// - 控制區高度預算：標準 112（資訊 32＋滑桿 32＋播放鈕 40＋間距 8），精簡 98（播放鈕縮為 30）；
+/// - 控制區高度預算：標準 112（資訊 32＋滑桿 32＋播放鈕 40＋間距 2×4），精簡 98（資訊 32＋滑桿 30＋播放鈕 30＋間距 2×3）；
 ///   內容區 ≥ 116 用標準，否則精簡。內容區下限 `NotchSizing.minimumBodyHeight`（100）保證精簡版放得下。
 public struct NotchHomeMetrics: Equatable, Sendable {
     public enum Density: Sendable {
@@ -24,10 +24,16 @@ public struct NotchHomeMetrics: Equatable, Sendable {
     public static let lyricsWidthFraction: CGFloat = 0.38
     public static let artMaximumSize: CGFloat = 144
     public static let artPadding: CGFloat = 3
+    /// 控制區裡歌名歌手與進度條相對左緣的內縮（與舊版相同）。
+    public static let controlsLeadingInset: CGFloat = 5
 
     /// 控制區各塊高度（資訊＝歌名＋歌手；滑桿＝進度條＋時間）。
     public static let infoHeight: CGFloat = 32
-    public static let sliderHeight: CGFloat = 32
+    public static let regularSliderHeight: CGFloat = 32
+    public static let compactSliderHeight: CGFloat = 30
+    /// 控制區各塊之間的最小間距（標準／精簡）。
+    public static let regularMinimumGap: CGFloat = 4
+    public static let compactMinimumGap: CGFloat = 3
     public static let regularPrimaryButtonSize: CGFloat = 40
     public static let compactPrimaryButtonSize: CGFloat = 30
     public static let regularControlsHeight: CGFloat = 112
@@ -53,6 +59,12 @@ public struct NotchHomeMetrics: Equatable, Sendable {
     public var artBlockSize: CGFloat { artSize + 2 * Self.artPadding }
     public var primaryButtonSize: CGFloat {
         density == .regular ? Self.regularPrimaryButtonSize : Self.compactPrimaryButtonSize
+    }
+    public var sliderHeight: CGFloat {
+        density == .regular ? Self.regularSliderHeight : Self.compactSliderHeight
+    }
+    public var minimumGap: CGFloat {
+        density == .regular ? Self.regularMinimumGap : Self.compactMinimumGap
     }
 
     /// 封面區塊＋控制區＋歌詞（含各自間距）的水平總長；一律 ≤ `contentWidth`。
