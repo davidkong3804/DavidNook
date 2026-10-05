@@ -10,7 +10,7 @@ DavidNook 是 [boring.notch](https://github.com/TheBoredTeam/boring.notch)（The
 ## 功能範圍（M1）
 
 - 瀏海展開／收合與 hover、多螢幕、無瀏海螢幕
-- Now Playing（播放／暫停／上一首／下一首）與歌詞顯示
+- Now Playing（播放／暫停／上一首／下一首）與逐行同步歌詞（LRCLIB；簡體來源自動轉繁體，可逐曲調整偏移）
 - 分頁結構可擴充（`NotchViews` 列舉 + `TabSelectionView` + `ContentView` 的 switch），後續里程碑會加入剪貼簿分頁與歌詞管線
 
 已從上游移除：Shelf（含 QuickShare/AirDrop）、行事曆／提醒事項、Mirror 相機、電池 live activity、
@@ -39,8 +39,8 @@ cd Packages/DavidNookCore && swift test
 
 ## 隱私
 
-- 不含遙測、不含自動更新。唯一的對外連線是歌詞查詢（LRCLIB，M2 重寫；之後可在設定中關閉）。
-- 不記錄歌詞、剪貼簿等內容到 log。
+- 不含遙測、不含自動更新。唯一的對外連線是歌詞查詢（`lrclib.net`，只送曲名、歌手與長度；可在設定 → Media 關閉）。
+- 不記錄歌名、歌手、歌詞、剪貼簿等內容到 log。歌詞快取存在 Application Support/DavidNook/Lyrics（檔案 0600，可在設定中清除）。
 
 ## 授權
 

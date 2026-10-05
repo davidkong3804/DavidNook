@@ -145,7 +145,7 @@ final class LyricsService: ObservableObject {
             return
         }
         let key = track.key
-        // 同一首（含錯誤狀態）不重複查：錯誤由有限次數的自動重試或 retry() 處理，避免每次狀態更新都打網路。
+        // 同一首（含錯誤狀態）不重複查：錯誤由有限次數的自動重試處理，避免每次狀態更新都打網路。
         if key == loadedKey { return }
 
         cancelWork()
@@ -155,13 +155,6 @@ final class LyricsService: ObservableObject {
         lines = []
         offsetMs = offsetStore.offsetMs(for: key)
         load(track, key: key, attempt: 0, delay: Self.debounce)
-    }
-
-    /// 手動重試（例如錯誤狀態下使用者再按一次）。
-    func retry() {
-        guard status == .error || status == .notFound else { return }
-        loadedKey = nil
-        evaluate()
     }
 
     private func load(_ track: LyricsTrack, key: TrackKey, attempt: Int, delay: Duration) {
@@ -204,6 +197,8 @@ final class LyricsService: ObservableObject {
     }
 
     private func reset(to newStatus: Status) {
+        // 每次狀態更新都會呼叫 setTrack；已經是空狀態就不要再發布變更（@Published 賦值一律會通知觀察者）。
+        if status == newStatus, loadedKey == nil, lines.isEmpty, picked == nil { return }
         cancelWork()
         loadedKey = nil
         picked = nil

@@ -41,6 +41,10 @@ M1 瀏海殼（匯入上游、裁剪、改名、多螢幕）→ M2 Now Playing�
 ## 已知風險／未驗證
 - **（M1 實測教訓）ad-hoc 簽章＋Hardened Runtime＋「連結」內嵌 framework → 啟動即崩潰**：dyld 報 `mapping process and mapped file (non-platform) have different Team IDs`（library validation）。編譯成功完全看不出來，只有實際啟動才會發現。正解不是關 Hardened Runtime，而是 adapter framework 只「嵌入」不「連結」（adapter 官方設計本來就是由 perl 載入）；app 原始碼沒有任何 `import MediaRemoteAdapter`。M2 自行重建 adapter 時維持此做法。
 - **這台機器沒有實體瀏海螢幕**（M4 Pro 桌機：ASUS 外接螢幕＋一個虛擬/次要顯示器，`safeAreaInsets.top` 皆為 0），「有瀏海螢幕」的行為無法在本機實測，只能靠無瀏海（浮動瀏海）路徑與程式碼閱讀。
+- **（M2 實測／核對）adapter 預設輸出的 `timestamp` 是 UTC、秒級解析度的字串**（`yyyy-MM-dd'T'HH:mm:ss'Z'`，小數秒被截掉），拿來當錨點會讓歌詞最多差 1 秒；改用 `stream --micros`（`timestampEpochMicros`／`elapsedTimeMicros`／`durationMicros`）。欄位格式依上游 README 與原始碼 v0.7.7 核對，**未用真實播放驗證**（此刻沒有播放，adapter `get`／`stream` 皆為空）。
+- **（M2 實測）app 被 SIGTERM（pkill）時 adapter 的 perl 子行程會變孤兒**並一直活著（沒有輸出就不會因 SIGPIPE 結束）；已改為 SIGTERM 走正常終止流程。SIGKILL／當機仍可能留下孤兒，下次有輸出時會自行結束。
+- **（M2）「純音樂」狀態**：UI 元件支援，但 LRCLIB 管線目前無法區分「純音樂」與「找不到」（Picker 會剔除 instrumental 候選、`LyricsFetching` 只回 nil），所以 app 目前對純音樂顯示「這首歌沒有歌詞」。要顯示「純音樂」需要擴充 Core 的回傳型別。
+- **（M2）專輯名不送 LRCLIB**（來源資料很髒，只會降低命中率），也與設定頁揭露文字（曲名、歌手與長度）一致。
 - adapter 依賴 Apple 私有行為（/usr/bin/perl entitlement），Apple 可能封掉；已有自檢與備援設計。
 - 真實 Apple Music 播放、播放控制、歌詞時間軸 vs 實際音訊：未驗證（需使用者播放歌曲）。
 - 背景輪詢 NSPasteboard 在 macOS 27 是否觸發隱私提示：未驗證。
