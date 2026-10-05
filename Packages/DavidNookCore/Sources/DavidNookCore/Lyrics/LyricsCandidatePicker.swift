@@ -27,19 +27,24 @@ public struct LyricsCandidatePicker: Sendable {
     /// 允許的長度差，單位：秒。
     public let durationTolerance: TimeInterval
     public let stripper: LyricsMetaStripper
+    /// 計算一份歌詞（逐行文字）裡「殘留的簡體字」個數；只用於排序的次要準則（見類別說明第 4 項）。
+    public let residualSimplifiedCounter: @Sendable ([String]) -> Int
 
     /// - Parameters:
     ///   - scriptClassifier: 判斷一段歌詞全文的簡繁屬性。
     ///   - durationTolerance: 允許的長度差（秒），預設 2。
     ///   - stripper: 檔頭中繼行剝除器；需要跨簡繁比對歌名時請在其中注入 normalize。
+    ///   - residualSimplifiedCounter: 殘留簡體字計數器；預設恆為 0（不影響排序）。
     public init(
         scriptClassifier: @escaping @Sendable (String) -> LyricsScript,
         durationTolerance: TimeInterval = 2,
-        stripper: LyricsMetaStripper = LyricsMetaStripper()
+        stripper: LyricsMetaStripper = LyricsMetaStripper(),
+        residualSimplifiedCounter: @escaping @Sendable ([String]) -> Int = { _ in 0 }
     ) {
         self.scriptClassifier = scriptClassifier
         self.durationTolerance = durationTolerance
         self.stripper = stripper
+        self.residualSimplifiedCounter = residualSimplifiedCounter
     }
 
     /// 挑出最佳候選；沒有任何候選通過過濾回傳 nil。

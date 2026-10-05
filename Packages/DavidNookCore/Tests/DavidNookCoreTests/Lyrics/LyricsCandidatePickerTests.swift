@@ -283,4 +283,84 @@ final class LyricsCandidatePickerTests: XCTestCase {
         let picked = try XCTUnwrap(p.pick(from: [cand(1, synced: synced)], for: query))
         XCTAssertEqual(picked.lines.first?.text, "第一句")
     }
+
+    // MARK: - 簡體殘留字數（平手時的次要排序：時間軸共識 → 殘留較少 → id）
+
+    /// 以「RES」標記代表一個殘留的簡體字（測試用的假計數器）。
+    private let residueMarker: @Sendable ([String]) -> Int = { lines in
+        lines.reduce(0) { $0 + $1.components(separatedBy: "RES").count - 1 }
+    }
+
+    private func residuePicker() -> LyricsCandidatePicker {
+        LyricsCandidatePicker(scriptClassifier: markerClassifier, residualSimplifiedCounter: residueMarker)
+    }
+
+    func testFewerResidualSimplifiedCharactersWinWhenTimelineAndScriptTie() {
+        let messy = cand(1, synced: "[00:10.00]TRAD RES RES\n[00:20.00]x RES")
+        let clean = cand(2, synced: "[00:10.00]TRAD\n[00:20.00]x")
+        XCTAssertEqual(residuePicker().pick(from: [messy, clean], for: query)?.candidateID, 2, "id 較小但殘留較多的版本讓位")
+        XCTAssertEqual(residuePicker().pick(from: [clean, messy], for: query)?.candidateID, 2)
+    }
+
+    func testTheCandidateWithTheLeastResidueAmongSeveralWins() {
+        let a = cand(1, synced: "[00:10.00]TRAD RES RES RES")
+        let b = cand(2, synced: "[00:10.00]TRAD RES")
+        let c = cand(3, synced: "[00:10.00]TRAD RES RES")
+        XCTAssertEqual(residuePicker().pick(from: [a, b, c], for: query)?.candidateID, 2)
+    }
+
+    func testTimelineConsensusBeatsResidue() {
+        // 首句 10s 的離群版本沒有殘留；多數版本（30s）有殘留 → 仍選共識群，而且是群內殘留較少的。
+        let outlier = cand(1, synced: "[00:10.00]TRAD")
+        let messy = cand(2, synced: "[00:30.00]TRAD RES RES RES RES RES")
+        let lessMessy = cand(3, synced: "[00:30.00]TRAD RES")
+        XCTAssertEqual(residuePicker().pick(from: [outlier, messy, lessMessy], for: query)?.candidateID, 3)
+    }
+
+    func testResidueDoesNotOutrankDurationOrScript() {
+        // 長度差較小者先贏（整秒比較）；原生繁體先於簡體——即使繁體那筆殘留很多、簡體那筆「零殘留」。
+        let nearButMessy = cand(1, dur: 200, synced: "[00:10.00]TRAD RES RES RES")
+        let farButClean = cand(2, dur: 201.6, synced: "[00:10.00]TRAD")
+        XCTAssertEqual(residuePicker().pick(from: [nearButMessy, farButClean], for: query)?.candidateID, 1)
+
+        let tradMessy = cand(3, synced: "[00:10.00]TRAD RES RES")
+        let simplified = cand(4, synced: "[00:10.00]SIMP")
+        XCTAssertEqual(residuePicker().pick(from: [simplified, tradMessy], for: query)?.candidateID, 3)
+    }
+
+    func testResidueIsOnlyCountedForTraditionalAndMixedCandidates() {
+        // 中性（日文、英文…）與簡體候選的「殘留」不算（簡體整份都會被轉換；日韓的新字體不是簡體）。
+        let neutralWithMarker = cand(1, synced: "[00:10.00]neutral RES RES")
+        let neutralClean = cand(2, synced: "[00:10.00]neutral")
+        XCTAssertEqual(residuePicker().pick(from: [neutralWithMarker, neutralClean], for: query)?.candidateID, 1)
+
+        let simplifiedMany = cand(3, synced: "[00:10.00]SIMP RES RES RES")
+        let simplifiedFew = cand(4, synced: "[00:10.00]SIMP")
+        XCTAssertEqual(residuePicker().pick(from: [simplifiedMany, simplifiedFew], for: query)?.candidateID, 3)
+    }
+
+    func testPickerWithoutAResidueCounterBehavesAsBefore() {
+        let messy = cand(1, synced: "[00:10.00]TRAD RES RES")
+        let clean = cand(2, synced: "[00:10.00]TRAD")
+        XCTAssertEqual(picker().pick(from: [messy, clean], for: query)?.candidateID, 1)
+    }
+
+    func testPipelinePickerCountsRealSimplifiedOnlyCharactersAndIgnoresJapaneseLines() throws {
+        // 真實計數器（App 用的）。兩份都是「幾乎全繁體」（簡體專有字 ≤3%，判成 traditional），差別只在殘留字。
+        let base = (0..<12).map { "我們一起走過這條安靜的街\($0)" }
+        func lrc(_ lines: [String]) -> String {
+            lines.enumerated().map { String(format: "[00:%02d.00]%@", 10 + $0.offset, $0.element) }.joined(separator: "\n")
+        }
+        let messy = cand(1, synced: lrc(["红色的花"] + base))
+        let clean = cand(2, synced: lrc(["紅色的花"] + base))
+        let picker = LyricsPipeline.makePicker()
+        let result = try XCTUnwrap(picker.pick(from: [messy, clean], for: query))
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(result.candidateID, 2, "殘留「红」的版本讓位給乾淨的繁體版本")
+
+        // 日文行的新字體（恋・国・声）不是簡體殘留，不得拿來扣分：id 小者（1）照樣勝出。
+        let withJapaneseLine = cand(1, synced: lrc(["紅色的花", "恋する国の声が聞こえる"] + base))
+        let withoutIt = cand(2, synced: lrc(["紅色的花", "你好嗎"] + base))
+        XCTAssertEqual(picker.pick(from: [withoutIt, withJapaneseLine], for: query)?.candidateID, 1)
+    }
 }
