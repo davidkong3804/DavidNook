@@ -17,6 +17,16 @@ struct ShortcutsSettingsView: View {
                 Text("Notch")
             }
             Section {
+                KeyboardShortcuts.Recorder("Open Clipboard:", name: .openClipboard)
+            } header: {
+                Text("Clipboard")
+            } footer: {
+                Text("Expands the notch and switches to the Clipboard tab. Not set by default.")
+                    .multilineTextAlignment(.trailing)
+                    .foregroundStyle(.secondary)
+                    .font(.caption)
+            }
+            Section {
                 KeyboardShortcuts.Recorder("Toggle Sneak Peek:", name: .toggleSneakPeek)
             } header: {
                 Text("Media")

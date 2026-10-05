@@ -223,6 +223,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        KeyboardShortcuts.onKeyDown(for: .openClipboard) { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.showClipboardTab()
+            }
+        }
+
         // 剪貼簿歷史：依設定開始監看（輪詢 changeCount；暫停、關閉或系統需要使用者先授權時不讀內容）。
         ClipboardService.shared.start()
 
@@ -235,6 +241,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async {
                 self.showOnboardingWindow()
             }
+        }
+    }
+
+    /// 「開啟剪貼簿」快捷鍵：展開瀏海並切到剪貼簿分頁；已經在剪貼簿分頁就收合（與 toggleNotchOpen 一樣是開關）。
+    /// 精簡模式（compactMode）沒有分頁列，看不到剪貼簿，這個快捷鍵在精簡模式下不做事。
+    @MainActor
+    private func showClipboardTab() {
+        guard !Defaults[.compactMode] else { return }
+        let mouseLocation = NSEvent.mouseLocation
+        var viewModel = self.vm
+        if Defaults[.showOnAllDisplays] {
+            for screen in NSScreen.screens where screen.frame.contains(mouseLocation) {
+                if let uuid = screen.displayUUID, let screenViewModel = self.viewModels[uuid] {
+                    viewModel = screenViewModel
+                    break
+                }
+            }
+        }
+
+        closeNotchTask?.cancel()
+        closeNotchTask = nil
+
+        if viewModel.notchState == .open, coordinator.currentView == .clipboard {
+            viewModel.close()
+            return
+        }
+        coordinator.currentView = .clipboard
+        if viewModel.notchState == .closed {
+            // 打開失敗（例如首次啟動的歡迎動畫）就還原分頁。
+            if !viewModel.open() { coordinator.currentView = .home }
         }
     }
 

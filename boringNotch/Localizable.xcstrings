@@ -31321,6 +31321,40 @@
           }
         }
       }
+    },
+    "Open Clipboard:" : {
+      "comment" : "Shortcuts settings: recorder label.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Clipboard:"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟剪貼簿："
+          }
+        }
+      }
+    },
+    "Expands the notch and switches to the Clipboard tab. Not set by default." : {
+      "comment" : "Shortcuts settings footer for the clipboard shortcut.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expands the notch and switches to the Clipboard tab. Not set by default."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展開瀏海並切到剪貼簿分頁。預設不設定。"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"
