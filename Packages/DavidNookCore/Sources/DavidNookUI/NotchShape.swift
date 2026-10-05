@@ -5,14 +5,16 @@
 // Created by Kai Azim on 2023-08-24.
 // Original source: https://github.com/MrKai77/DynamicNotchKit
 // Modified by Alexander on 2025-05-18.
+//
+// DavidNook：由 App 目標搬進 DavidNookUI（內容未改，只加 public），讓離屏渲染與測試能共用同一個形體。
 
 import SwiftUI
 
-struct NotchShape: Shape {
+public struct NotchShape: Shape {
     private var topCornerRadius: CGFloat
     private var bottomCornerRadius: CGFloat
 
-    init(
+    public init(
         topCornerRadius: CGFloat? = nil,
         bottomCornerRadius: CGFloat? = nil
     ) {
@@ -20,7 +22,7 @@ struct NotchShape: Shape {
         self.bottomCornerRadius = bottomCornerRadius ?? 14
     }
 
-    var animatableData: AnimatablePair<CGFloat, CGFloat> {
+    public var animatableData: AnimatablePair<CGFloat, CGFloat> {
         get {
             .init(
                 topCornerRadius,
@@ -33,7 +35,7 @@ struct NotchShape: Shape {
         }
     }
 
-    func path(in rect: CGRect) -> Path {
+    public func path(in rect: CGRect) -> Path {
         var path = Path()
 
         path.move(
