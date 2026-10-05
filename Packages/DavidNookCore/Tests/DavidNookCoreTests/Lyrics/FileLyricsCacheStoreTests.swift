@@ -158,13 +158,12 @@ final class FileLyricsCacheStoreTests: XCTestCase {
 
     func testWellFormedJSONWithWrongShapeIsTreatedAsMiss() throws {
         let (store, directory) = try makeStore()
-        store.store(LyricsCacheEntry(lyrics: makeLyrics(), storedAt: ManualClock.reference), for: key)
-        try utf8("{\"version\":1,\"hello\":\"world\"}").write(to: try onlyCacheFile(directory))
-        XCTAssertNil(store.entry(for: key))
-        try utf8("[1,2,3]").write(to: try onlyCacheFile(directory))
-        XCTAssertNil(store.entry(for: key))
-        try Data().write(to: try onlyCacheFile(directory))
-        XCTAssertNil(store.entry(for: key))
+        // 讀到壞檔時會把它刪掉，所以每次都直接寫到該 key 的檔名。
+        let file = directory.appendingPathComponent(FileLyricsCacheStore.fileName(for: key))
+        for garbage in ["{\"version\":1,\"hello\":\"world\"}", "[1,2,3]", "", "null"] {
+            try utf8(garbage).write(to: file)
+            XCTAssertNil(store.entry(for: key), "應視為未命中：\(garbage)")
+        }
     }
 
     func testFileWhoseEmbeddedKeyDoesNotMatchIsRejected() throws {
