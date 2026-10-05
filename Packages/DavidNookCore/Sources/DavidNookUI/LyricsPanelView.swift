@@ -17,6 +17,8 @@ public struct LyricsPanelView: View {
     public var strings: LyricsPanelStrings
     /// 目前行的字級；其餘行為 `fontSize - 1`。
     public var fontSize: CGFloat
+    /// 可見行數（骨架：尚未影響版面）。
+    public var visibleLineCount: Int
 
     public init(
         lines: [LyricsPanelLine],
@@ -24,7 +26,8 @@ public struct LyricsPanelView: View {
         offsetMs: Int = 0,
         status: LyricsPanelStatus,
         strings: LyricsPanelStrings = .zhHant,
-        fontSize: CGFloat = 14
+        fontSize: CGFloat = 14,
+        visibleLineCount: Int = 5
     ) {
         self.lines = lines
         self.currentIndex = currentIndex
@@ -32,6 +35,7 @@ public struct LyricsPanelView: View {
         self.status = status
         self.strings = strings
         self.fontSize = fontSize
+        self.visibleLineCount = visibleLineCount
     }
 
     /// 目前行是空白行（間奏／結束）時，視為沒有高亮。

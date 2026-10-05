@@ -70,3 +70,11 @@ public enum LyricsOffsetFormat {
         return body
     }
 }
+
+/// 歌詞面板的尺寸度量（骨架）。
+public enum LyricsPanelMetrics {
+    public static let defaultVisibleLines = 5
+    public static func clampedVisibleLines(_ n: Int) -> Int { n }
+    public static func height(forVisibleLines n: Int, fontSize: CGFloat = 14) -> CGFloat { 0 }
+    public static func visibleLines(forAvailableHeight h: CGFloat, fontSize: CGFloat = 14) -> Int { 0 }
+}
