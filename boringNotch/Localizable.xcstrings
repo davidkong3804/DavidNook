@@ -31372,6 +31372,23 @@
           }
         }
       }
+    },
+    "Can't write clipboard history. Check available disk space." : {
+      "comment" : "Brief notice shown once when the clipboard history index repeatedly fails to save (disk full or read-only).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't write clipboard history. Check available disk space."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法寫入剪貼簿歷史，請檢查磁碟空間"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

@@ -80,6 +80,23 @@ final class ClipboardIndexRetryTests: XCTestCase {
         XCTAssertEqual(persistedTexts(persistence), ["fresh"], "下一次異動寫入的是完整的最新狀態，被刪的 old 不會復活")
     }
 
+    func testFlushIfNeededRetriesADirtyWriteAndIsANoOpWhenClean() async {
+        let persistence = FlakyIndexPersistence()
+        let store = makeStore(persistence)
+        _ = await store.add(ClipboardCapture(text: "gone soon"), now: t(1))
+        let attemptsAfterAdd = persistence.saveAttempts
+        await store.flushIfNeeded()
+        XCTAssertEqual(persistence.saveAttempts, attemptsAfterAdd, "沒有待寫的變動就不寫")
+
+        persistence.failSaveItems = true
+        await store.clearUnpinned()
+        persistence.failSaveItems = false
+        await store.flushIfNeeded()
+        let dirty = await store.hasUnsavedChanges
+        XCTAssertFalse(dirty)
+        XCTAssertEqual(persistedTexts(persistence), [])
+    }
+
     func testPruneRetriesEvenWhenRetentionIsForever() async {
         let persistence = FlakyIndexPersistence()
         let store = makeStore(persistence)

@@ -4,7 +4,8 @@ import Foundation
 ///
 /// - 目錄權限 0700、檔案權限 0600；目錄標為「排除備份」（Time Machine 不會備份明文歷史，新建與既有目錄都會補設）。
 /// - 寫入採「同目錄暫存檔（建立時就是 0600）→ fsync → rename」的原子寫入；寫入失敗不會破壞既有檔案。
-/// - 載入時容忍損毀：整份索引壞掉 → 回傳空並把壞檔改名為 `index.json.corrupt`；個別條目壞掉或圖片檔遺失 → 只丟棄該條目。
+/// - 載入時容忍損毀：整份索引壞掉 → 回傳空並把壞檔改名為 `index.json.corrupt`（最長保留 24 小時，
+///   逾期於啟動與每次 prune 時刪除；「清除未釘選」「清除全部」也會刪除）；個別條目壞掉或圖片檔遺失 → 只丟棄該條目。
 /// - 圖片檔名嚴格驗證（`<64 位小寫 hex>.<1–8 位小寫英數>`），不可能穿越到目錄之外。
 /// - 不輸出任何內容到 log；logger 只收到事件類型與數量。
 public final class FileClipboardPersistence: ClipboardPersistence, @unchecked Sendable {
@@ -36,6 +37,8 @@ public final class FileClipboardPersistence: ClipboardPersistence, @unchecked Se
         } catch {
             throw ClipboardPersistenceError.directoryUnavailable
         }
+        // 啟動時先刪掉逾期的損毀索引隔離檔（它保留完整明文）。
+        pruneQuarantine(now: Date(), maxAge: Self.quarantineMaxAge)
     }
 
     private var indexURL: URL { directory.appendingPathComponent(Self.indexFileName) }
@@ -117,6 +120,31 @@ public final class FileClipboardPersistence: ClipboardPersistence, @unchecked Se
         }
     }
 
+    // MARK: 隔離檔
+
+    private var quarantineURL: URL { directory.appendingPathComponent(Self.indexFileName + Self.corruptSuffix) }
+
+    /// 刪除年齡超過 `maxAge` 的隔離檔。年齡從「被隔離的那一刻」算起（隔離時會把修改時間設為當下）。
+    public func pruneQuarantine(now: Date, maxAge: TimeInterval) {
+        lock.withLock {
+            let fm = FileManager.default
+            guard let attributes = try? fm.attributesOfItem(atPath: quarantineURL.path),
+                  let stamped = attributes[.modificationDate] as? Date else { return }
+            if now.timeIntervalSince(stamped) > maxAge {
+                try? fm.removeItem(at: quarantineURL)
+            }
+        }
+    }
+
+    /// 立刻刪除隔離檔（不存在不算錯誤）。
+    public func deleteQuarantine() throws {
+        try lock.withLock {
+            let fm = FileManager.default
+            guard fm.fileExists(atPath: quarantineURL.path) else { return }
+            do { try fm.removeItem(at: quarantineURL) } catch { throw ClipboardPersistenceError.deleteFailed }
+        }
+    }
+
     // MARK: 清除
 
     /// 刪除本 app 產生的全部檔案；不是我們產生的檔案（檔名不符）不會被碰。
@@ -161,7 +189,8 @@ public final class FileClipboardPersistence: ClipboardPersistence, @unchecked Se
         let corrupt = directory.appendingPathComponent(Self.indexFileName + Self.corruptSuffix)
         try? fm.removeItem(at: corrupt)
         if (try? fm.moveItem(at: indexURL, to: corrupt)) != nil {
-            try? fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: corrupt.path)
+            // 權限 0600；修改時間設為「隔離的那一刻」，24 小時的保留期從這裡起算（不是原索引的最後寫入時間）。
+            try? fm.setAttributes([.posixPermissions: 0o600, .modificationDate: Date()], ofItemAtPath: corrupt.path)
         }
         logger.log(.indexCorrupted)
     }

@@ -33,6 +33,14 @@ public actor ClipboardStore {
     private var storage: [ClipboardItem]
     private let persistence: ClipboardPersistence
     private let logger: ClipboardLogging
+    /// 索引寫入失敗後為 true，成功寫入後清除。
+    private var indexDirty = false
+    /// 連續失敗的寫入次數（成功即歸零）。
+    private var consecutiveIndexFailures = 0
+    /// 這一段失敗期間是否已經回報過（避免重複打擾）。
+    private var indexFailureReported = false
+    /// 連續失敗幾次才回報（單次失敗可能只是暫時的）。
+    static let failureReportThreshold = 2
 
     /// 建立 store 並從持久化載入既有條目（載入時會合併重複內容、清掉沒有條目參照的殘留圖片檔、套用筆數上限）。
     public init(
@@ -71,8 +79,8 @@ public actor ClipboardStore {
 
     // MARK: 讀取
 
-    /// 記憶體中有尚未成功寫入磁碟索引的變動（索引寫入失敗後會重試）。
-    public var hasUnsavedChanges: Bool { false }
+    /// 記憶體中有尚未成功寫入磁碟索引的變動（索引寫入失敗後會重試：下一次異動、prune tick 或 `flushIfNeeded()`）。
+    public var hasUnsavedChanges: Bool { indexDirty }
 
     /// 全部條目：釘選在前，其餘依 lastUsedAt 由新到舊。
     public var items: [ClipboardItem] {
@@ -167,10 +175,13 @@ public actor ClipboardStore {
         return true
     }
 
-    /// 依保留期移除過期且未釘選的條目，回傳移除筆數。`now` 可注入。
-    /// 年齡剛好等於保留期視為尚未過期。
+    /// 定期維護，回傳依保留期移除的筆數。`now` 可注入。
+    /// 依序：刪除逾期的損毀索引隔離檔 → 若上次索引寫入失敗就重試 → 依保留期移除過期且未釘選的條目。
+    /// 年齡剛好等於保留期視為尚未過期。保留期為「永久」時前兩項照做。
     @discardableResult
     public func prune(now: Date = Date()) -> Int {
+        persistence.pruneQuarantine(now: now, maxAge: FileClipboardPersistence.quarantineMaxAge)
+        if indexDirty { persistIndex() }
         guard let retention else { return 0 }
         let expired = Set(storage.filter { !$0.isPinned && now.timeIntervalSince($0.lastUsedAt) > retention }.map(\.id))
         guard !expired.isEmpty else { return 0 }
@@ -216,16 +227,28 @@ public actor ClipboardStore {
             try persistence.deleteAll()
         } catch {
             logger.log(.persistenceFailed(operation: .deleteAll))
+            // 磁碟上還有殘留：標記 dirty，下一次異動或 prune tick 至少把索引重寫成空的。
+            indexDirty = true
             throw error
         }
     }
 
-    /// 只清除未釘選的條目（含其圖片檔）。
+    /// 只清除未釘選的條目（含其圖片檔與損毀索引隔離檔）。
     public func clearUnpinned() {
         let ids = Set(storage.filter { !$0.isPinned }.map(\.id))
         removeItems(ids: ids)
         logger.log(.cleared(count: ids.count, includingPinned: false))
         persistIndex()
+        do {
+            try persistence.deleteQuarantine()
+        } catch {
+            logger.log(.persistenceFailed(operation: .deleteQuarantine))
+        }
+    }
+
+    /// 若上次索引寫入失敗，現在重試一次（App 結束前呼叫；沒有待寫的變動時什麼都不做）。
+    public func flushIfNeeded() {
+        if indexDirty { persistIndex() }
     }
 
     // MARK: 內部
@@ -241,11 +264,25 @@ public actor ClipboardStore {
         }
     }
 
+    /// 寫入索引。失敗時標記 dirty（之後的異動或 prune tick 會重試），避免「記憶體已刪、磁碟還在」的條目在重啟後復活；
+    /// 連續失敗達門檻時回報一次（UI 據此提示），恢復時再回報一次。事件只帶種類，不含任何內容。
     private func persistIndex() {
         do {
             try persistence.saveItems(storage)
+            indexDirty = false
+            consecutiveIndexFailures = 0
+            if indexFailureReported {
+                indexFailureReported = false
+                logger.log(.indexWriteRecovered)
+            }
         } catch {
+            indexDirty = true
+            consecutiveIndexFailures += 1
             logger.log(.persistenceFailed(operation: .saveIndex))
+            if consecutiveIndexFailures >= Self.failureReportThreshold, !indexFailureReported {
+                indexFailureReported = true
+                logger.log(.indexWriteFailing)
+            }
         }
     }
 

@@ -69,14 +69,25 @@ enum ClipboardAccess: Equatable, Sendable {
 private final class ClipboardChangeSignal: @unchecked Sendable {
     private let lock = NSLock()
     private var handler: (@Sendable () -> Void)?
+    private var storageHandler: (@Sendable (Bool) -> Void)?
 
     func setHandler(_ handler: @escaping @Sendable () -> Void) {
         lock.withLock { self.handler = handler }
     }
 
+    /// 索引連續寫入失敗（`true`）或恢復（`false`）。
+    func setStorageHandler(_ handler: @escaping @Sendable (Bool) -> Void) {
+        lock.withLock { self.storageHandler = handler }
+    }
+
     func fire() {
         let current = lock.withLock { handler }
         current?()
+    }
+
+    func fireStorage(failing: Bool) {
+        let current = lock.withLock { storageHandler }
+        current?(failing)
     }
 }
 
@@ -85,6 +96,10 @@ private struct ClipboardChangeLogger: ClipboardLogging {
 
     func log(_ event: ClipboardLogEvent) {
         switch event {
+        case .indexWriteFailing:
+            signal.fireStorage(failing: true)
+        case .indexWriteRecovered:
+            signal.fireStorage(failing: false)
         case .snapshotSkipped, .ownWriteDetected, .recordingPaused, .recordingResumed,
              .persistenceFailed, .indexCorrupted, .itemsDropped:
             return
@@ -101,9 +116,16 @@ private struct ClipboardChangeLogger: ClipboardLogging {
 enum ClipboardNotice: Equatable {
     /// 自動貼上被擋下：目前焦點在安全輸入欄位（密碼欄等），內容已留在剪貼簿。
     case autoPasteSkippedSecureInput
+    /// 索引連續寫入失敗（磁碟已滿或無法寫入）：新的複製可能沒有被保存。
+    case storageWriteFailed
 
     var message: String {
         switch self {
+        case .storageWriteFailed:
+            return String(
+                localized: "Can't write clipboard history. Check available disk space.",
+                comment: "Brief notice shown once when the clipboard history index repeatedly fails to save (disk full or read-only)."
+            )
         case .autoPasteSkippedSecureInput:
             return String(
                 localized: "Copied; focus is in a secure input field, so it was not pasted automatically",
@@ -201,6 +223,8 @@ final class ClipboardService: ObservableObject {
     @Published private(set) var isPaused: Bool = false
     /// 系統的剪貼簿存取設定；不是 `.allowed` 時不讀取內容。
     @Published private(set) var access: ClipboardAccess = .allowed
+    /// 索引正連續寫入失敗（磁碟已滿等）。進入這個狀態時只提示一次，恢復後歸零。
+    @Published private(set) var storageWriteFailing: Bool = false
 
     var needsPermission: Bool { access.needsPermission }
 
@@ -264,6 +288,9 @@ final class ClipboardService: ObservableObject {
         signal.setHandler { [weak self] in
             Task { @MainActor in self?.scheduleRefresh() }
         }
+        signal.setStorageHandler { [weak self] failing in
+            Task { @MainActor in self?.storageWriteStateChanged(failing: failing) }
+        }
     }
 
     // MARK: 啟動／停止
@@ -306,7 +333,12 @@ final class ClipboardService: ObservableObject {
         maintenance.stop()
         reconcileTask?.cancel()
         let monitor = monitor
-        Task { await monitor.stop() }
+        let store = store
+        // 盡力而為：結束前把還沒寫成功的索引再試一次（App 即將結束，不保證來得及完成）。
+        Task {
+            await monitor.stop()
+            await store.flushIfNeeded()
+        }
     }
 
     // MARK: 使用者操作
@@ -441,6 +473,13 @@ final class ClipboardService: ObservableObject {
                 self?.show(.autoPasteSkippedSecureInput)
             }
         }
+    }
+
+    /// 索引寫入連續失敗／恢復：失敗時只提示一次（直到恢復後再次失敗才會再提示）。訊息不含任何剪貼簿內容。
+    private func storageWriteStateChanged(failing: Bool) {
+        guard failing != storageWriteFailing else { return }
+        storageWriteFailing = failing
+        if failing { show(.storageWriteFailed) }
     }
 
     /// 顯示一則短暫提示。
