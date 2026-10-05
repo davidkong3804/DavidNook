@@ -11,7 +11,8 @@ DavidNook 是 [boring.notch](https://github.com/TheBoredTeam/boring.notch)（The
 
 - 瀏海展開／收合與 hover、多螢幕、無瀏海螢幕
 - Now Playing（播放／暫停／上一首／下一首）與逐行同步歌詞（LRCLIB；簡體來源自動轉繁體，可逐曲調整偏移）
-- 分頁結構可擴充（`NotchViews` 列舉 + `TabSelectionView` + `ContentView` 的 switch），後續里程碑會加入剪貼簿分頁與歌詞管線
+- 剪貼簿歷史（文字／圖片／檔案路徑；搜尋、類型篩選、釘選、點選貼回、暫停記錄、筆數與保留時間可設；設定 → 剪貼簿）。略過密碼管理員標記的項目；資料只存在本機。「點選後自動貼上」為實驗性選項（預設關）
+- 分頁結構可擴充（`NotchViews` 列舉 + `TabSelectionView` + `ContentView` 的 switch）；目前有 Home 與剪貼簿兩個分頁
 
 已從上游移除：Shelf（含 QuickShare/AirDrop）、行事曆／提醒事項、Mirror 相機、電池 live activity、
 HUD 取代與 XPC helper、音訊波形／輸出裝置切換、通知監看與 OTP 偵測、Sparkle 自動更新、
@@ -41,6 +42,7 @@ cd Packages/DavidNookCore && swift test
 
 - 不含遙測、不含自動更新。唯一的對外連線是歌詞查詢（`lrclib.net`，只送曲名、歌手與長度；可在設定 → Media 關閉）。
 - 不記錄歌名、歌手、歌詞、剪貼簿等內容到 log。歌詞快取存在 Application Support/DavidNook/Lyrics（檔案 0600，可在設定中清除）。
+- 剪貼簿歷史只存在這台 Mac 的 Application Support/DavidNook/Clipboard（目錄 0700、檔案 0600），標示為密碼或一次性內容（`org.nspasteboard.ConcealedType` 等）的項目不會被記錄；設定 → 剪貼簿可「清除未釘選」或二次確認後「清除全部」（連同暫存圖片）。macOS 15.4 起，背景讀取剪貼簿會觸發系統的「從其他 App 貼上」提示，DavidNook 在設定為「每次詢問」或「拒絕」時不會反覆讀取，而是在面板上提示你到系統設定改成「允許」。
 
 ## 授權
 
