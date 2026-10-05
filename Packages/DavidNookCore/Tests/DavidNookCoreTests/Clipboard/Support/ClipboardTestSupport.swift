@@ -38,6 +38,11 @@ func directoryEntries(_ url: URL) -> [String] {
     ((try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? []).sorted()
 }
 
+/// 該路徑是否被標為「不納入備份」（Time Machine 等；`URLResourceValues.isExcludedFromBackup`）。
+func isExcludedFromBackup(_ url: URL) throws -> Bool {
+    try url.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup ?? false
+}
+
 /// 1x1 PNG（最小的合法 PNG，用於圖片案例）。
 let tinyPNG: Data = Data(base64Encoded:
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")!

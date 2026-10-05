@@ -33,6 +33,29 @@ final class FileClipboardPersistenceTests: XCTestCase {
         XCTAssertEqual(try posixPermissions(of: directory), 0o700)
     }
 
+    // MARK: 排除備份（F1）
+
+    func testNewDirectoryIsExcludedFromBackup() throws {
+        let (_, directory) = try makePersistence()
+        XCTAssertTrue(try isExcludedFromBackup(directory), "明文剪貼簿歷史不得進 Time Machine 備份")
+    }
+
+    func testExistingDirectoryThatWasNotExcludedGetsBackfilledOnInit() throws {
+        let root = try makeTempDirectory(for: self)
+        let directory = root.appendingPathComponent("Clipboard")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        XCTAssertFalse(try isExcludedFromBackup(directory), "前置條件：舊版建立的目錄尚未排除備份")
+        _ = try FileClipboardPersistence(directory: directory)
+        XCTAssertTrue(try isExcludedFromBackup(directory), "載入時發現目錄已存在，也要補設排除備份")
+    }
+
+    func testExclusionSurvivesSavesAndClearAll() throws {
+        let (persistence, directory) = try makePersistence()
+        try persistence.saveItems([ClipboardItem(text: "x")])
+        try persistence.deleteAll()
+        XCTAssertTrue(try isExcludedFromBackup(directory))
+    }
+
     func testIndexAndImageFilesAreMode0600() throws {
         let (persistence, directory) = try makePersistence()
         let image = ClipboardItem(imageData: tinyPNG)

@@ -48,6 +48,20 @@ final class FileLyricsCacheStoreTests: XCTestCase {
         XCTAssertEqual(try posixPermissions(of: directory), 0o700)
     }
 
+    func testNewDirectoryIsExcludedFromBackup() throws {
+        let (_, directory) = try makeStore()
+        XCTAssertTrue(try isExcludedFromBackup(directory), "歌詞快取（聽歌紀錄）不得進 Time Machine 備份")
+    }
+
+    func testExistingDirectoryThatWasNotExcludedGetsBackfilledOnInit() throws {
+        let root = try makeTempDirectory(for: self)
+        let directory = root.appendingPathComponent("Lyrics")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        XCTAssertFalse(try isExcludedFromBackup(directory), "前置條件：舊版建立的目錄尚未排除備份")
+        _ = try FileLyricsCacheStore(directory: directory)
+        XCTAssertTrue(try isExcludedFromBackup(directory))
+    }
+
     func testCacheFilesAreMode0600AndLeaveNoTempFiles() throws {
         let (store, directory) = try makeStore()
         store.store(LyricsCacheEntry(lyrics: makeLyrics(), storedAt: ManualClock.reference), for: key)
