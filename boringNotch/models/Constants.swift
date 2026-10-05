@@ -11,7 +11,7 @@ import Defaults
 // MARK: - File System Paths
 let documentsDirectory: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
     ?? URL(fileURLWithPath: NSTemporaryDirectory())
-let bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "theboringteam.boringnotch"
+let bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "io.github.davidkong3804.DavidNook"
 let appVersion = "\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""))"
 
 let temporaryDirectory: URL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
@@ -175,7 +175,6 @@ extension Defaults.Keys {
     static let menubarIcon = Key<Bool>("menubarIcon", default: true)
     static let showOnAllDisplays = Key<Bool>("showOnAllDisplays", default: false)
     static let automaticallySwitchDisplay = Key<Bool>("automaticallySwitchDisplay", default: true)
-    static let releaseName = Key<String>("releaseName", default: "Dapper Crab 🎩🦀")
 
     // MARK: Behavior
     static let minimumHoverDuration = Key<TimeInterval>("minimumHoverDuration", default: 0.3)

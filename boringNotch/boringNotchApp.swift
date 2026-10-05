@@ -5,36 +5,9 @@
 //  Created by Harsh Vardhan  Goswami  on 02/08/24.
 //
 
-import AVFoundation
 import Defaults
 import KeyboardShortcuts
 import SwiftUI
-
-enum LegacyAppBundleMigration {
-    static let legacyBundleName = "boringNotch.app"
-    static let currentBundleName = "Boring Notch.app"
-
-    enum MigrationError: Swift.Error {
-        case destinationExists(URL)
-    }
-
-    @discardableResult
-    static func migrateIfNeeded(
-        at bundleURL: URL,
-        fileManager: FileManager = .default
-    ) throws -> URL? {
-        guard bundleURL.lastPathComponent == legacyBundleName else { return nil }
-
-        let destinationURL = bundleURL.deletingLastPathComponent()
-            .appendingPathComponent(currentBundleName, isDirectory: true)
-        guard !fileManager.fileExists(atPath: destinationURL.path) else {
-            throw MigrationError.destinationExists(destinationURL)
-        }
-
-        try fileManager.moveItem(at: bundleURL, to: destinationURL)
-        return destinationURL
-    }
-}
 
 @main
 struct DynamicNotchApp: App {
@@ -43,14 +16,14 @@ struct DynamicNotchApp: App {
     @Environment(\.openWindow) var openWindow
 
     var body: some Scene {
-        MenuBarExtra("boring.notch", systemImage: "rectangle.topthird.inset.filled", isInserted: $showMenuBarIcon) {
+        MenuBarExtra("DavidNook", systemImage: "rectangle.topthird.inset.filled", isInserted: $showMenuBarIcon) {
             Button("Settings") {
                 DispatchQueue.main.async {
                     SettingsWindowController.shared.showWindow()
                 }
             }
             .keyboardShortcut(KeyEquivalent(","), modifiers: .command)
-            Button("Restart Boring Notch") {
+            Button("Restart DavidNook") {
                 ApplicationRelauncher.restart()
             }
             Button("Quit", role: .destructive) {
@@ -73,7 +46,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var screenLockedObserver: Any?
     private var screenUnlockedObserver: Any?
     private var observers: [Any] = []
-    private var isMigratingLegacyBundle = false
 
     /// Kept for existing internal readers; the state itself moved to the manager.
     var windows: [String: NSWindow] { windowManager.windows }
@@ -86,8 +58,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        if isMigratingLegacyBundle { return }
-
         NotificationCenter.default.removeObserver(self)
         if let observer = screenLockedObserver {
             DistributedNotificationCenter.default().removeObserver(observer)
@@ -117,16 +87,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        do {
-            if let migratedURL = try LegacyAppBundleMigration.migrateIfNeeded(at: Bundle.main.bundleURL) {
-                isMigratingLegacyBundle = true
-                ApplicationRelauncher.restart(at: migratedURL)
-                return
-            }
-        } catch {
-            NSLog("Failed to migrate legacy Boring Notch app bundle: %@", error.localizedDescription)
-        }
-
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(screenConfigurationDidChange),
@@ -262,13 +222,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async {
                 self.showOnboardingWindow()
             }
-            playWelcomeSound()
         }
-    }
-
-    func playWelcomeSound() {
-        let audioPlayer = AudioPlayer()
-        audioPlayer.play(fileName: "boring", fileExtension: "m4a")
     }
 
     @objc func screenConfigurationDidChange() {
