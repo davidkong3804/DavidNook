@@ -71,10 +71,28 @@ public enum LyricsOffsetFormat {
     }
 }
 
-/// 歌詞面板的尺寸度量（骨架）。
+/// 歌詞面板的尺寸度量：可見行數 ↔ 面板高度。
+///
+/// 一行的節距 = 字級 + 3（行高）+ 7（行距）= 24；`n` 行的高度 = `n × 節距 + 4`，所以 5 行 = 124 pt（與舊版固定高度相同）。
+/// 面板上下緣各有一行節距的淡出，因此「5 行」是指含上下兩行半透明邊緣在內。
 public enum LyricsPanelMetrics {
     public static let defaultVisibleLines = 5
-    public static func clampedVisibleLines(_ n: Int) -> Int { n }
-    public static func height(forVisibleLines n: Int, fontSize: CGFloat = 14) -> CGFloat { 0 }
-    public static func visibleLines(forAvailableHeight h: CGFloat, fontSize: CGFloat = 14) -> Int { 0 }
+    public static let visibleLinesRange: ClosedRange<Int> = 3...7
+    public static let lineSpacing: CGFloat = 7
+
+    public static func clampedVisibleLines(_ n: Int) -> Int {
+        min(max(n, visibleLinesRange.lowerBound), visibleLinesRange.upperBound)
+    }
+
+    public static func linePitch(fontSize: CGFloat = 14) -> CGFloat { fontSize + 3 + lineSpacing }
+
+    public static func height(forVisibleLines n: Int, fontSize: CGFloat = 14) -> CGFloat {
+        CGFloat(clampedVisibleLines(n)) * linePitch(fontSize: fontSize) + 4
+    }
+
+    /// 可用高度放得下幾行（夾在 3–7）：預設高度 5 行，高度不足降為 4 行，再不足 3 行。
+    public static func visibleLines(forAvailableHeight height: CGFloat, fontSize: CGFloat = 14) -> Int {
+        guard height.isFinite else { return defaultVisibleLines }
+        return clampedVisibleLines(Int(((height - 4) / linePitch(fontSize: fontSize)).rounded(.down)))
+    }
 }

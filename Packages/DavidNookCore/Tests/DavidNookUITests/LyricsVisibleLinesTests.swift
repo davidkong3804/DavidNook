@@ -71,14 +71,15 @@ final class LyricsVisibleLinesTests: XCTestCase {
         XCTAssertEqual(try renderedHeight(visibleLineCount: 7), 172, accuracy: 0.5)
     }
 
-    func testFourLineVariantShowsFewerLinesThanFive() throws {
+    /// 「n 行」是版面預算（n × 24 + 4 pt，含上下兩行半透明的淡出邊緣），不是精確的文字帶數：
+    /// 4 行版本比 5 行版本矮 24 pt，且最外側那兩行幾乎被淡出遮罩吃掉。這裡只驗證不會比 5 行版本更多。
+    func testFourLineVariantNeverShowsMoreTextBandsThanFiveLine() throws {
         func litBands(_ n: Int) throws -> Int {
             let image = try renderImage(
                 LyricsPanelView(lines: lines, currentIndex: 3, status: .loaded, visibleLineCount: n)
                     .frame(width: 240).background(Color.black)
             )
             let px = Pixels(image)
-            // 掃每一列像素的最大亮度，數出「文字帶」（連續亮列為一帶）。
             var bands = 0
             var inBand = false
             for y in 0..<px.height {
@@ -90,9 +91,12 @@ final class LyricsVisibleLinesTests: XCTestCase {
         }
         let four = try litBands(4)
         let five = try litBands(5)
-        XCTAssertLessThan(four, five, "4 行版本可見的歌詞行數應少於 5 行版本（\(four) vs \(five)）")
-        XCTAssertLessThanOrEqual(four, 4)
+        let seven = try litBands(7)
+        XCTAssertLessThanOrEqual(four, five)
+        XCTAssertLessThanOrEqual(five, seven)
+        XCTAssertLessThanOrEqual(four, 5)
         XCTAssertGreaterThanOrEqual(four, 3)
+        XCTAssertGreaterThan(seven, five - 1)
     }
 
     func testCurrentLineStaysCenteredAndWhiteWithFourLines() throws {

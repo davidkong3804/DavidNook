@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 資料驅動的歌詞面板：約 5 行可見，目前行白色粗體、其餘行變暗，上下邊緣淡出，換行時平滑捲動。
+/// 資料驅動的歌詞面板：預設約 5 行可見（`visibleLineCount` 可調），目前行白色粗體、其餘行變暗，上下邊緣淡出，換行時平滑捲動。
 ///
 /// 不含網路或播放邏輯——目前行索引由呼叫端依播放位置算好傳入。
 ///
@@ -17,7 +17,7 @@ public struct LyricsPanelView: View {
     public var strings: LyricsPanelStrings
     /// 目前行的字級；其餘行為 `fontSize - 1`。
     public var fontSize: CGFloat
-    /// 可見行數（骨架：尚未影響版面）。
+    /// 可見行數（預設 5；高度不足時由呼叫端降為 4）。面板高度由它決定，見 `LyricsPanelMetrics`。
     public var visibleLineCount: Int
 
     public init(
@@ -35,7 +35,7 @@ public struct LyricsPanelView: View {
         self.status = status
         self.strings = strings
         self.fontSize = fontSize
-        self.visibleLineCount = visibleLineCount
+        self.visibleLineCount = LyricsPanelMetrics.clampedVisibleLines(visibleLineCount)
     }
 
     /// 目前行是空白行（間奏／結束）時，視為沒有高亮。
@@ -68,13 +68,19 @@ public struct LyricsPanelView: View {
                 message(strings.error)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
+        .frame(height: panelHeight)
+    }
+
+    /// 面板高度：由可見行數決定（5 行 = 124 pt，4 行 = 100 pt）。
+    private var panelHeight: CGFloat {
+        LyricsPanelMetrics.height(forVisibleLines: visibleLineCount, fontSize: fontSize)
     }
 
     // MARK: - 歌詞
 
     private var lyricsBody: some View {
-        LyricsScrollLayout(position: scrollPosition, spacing: 7) {
+        LyricsScrollLayout(position: scrollPosition, spacing: LyricsPanelMetrics.lineSpacing) {
             ForEach(lines) { line in
                 lineView(line)
             }
@@ -120,12 +126,14 @@ public struct LyricsPanelView: View {
         max(0.18, 0.52 - 0.12 * Double(max(distance, 1) - 1))
     }
 
+    /// 上下緣各淡出一行節距（5 行時約 19%，與舊版的 20% 相同）。
     private var edgeFade: some View {
-        LinearGradient(
+        let fade = min(0.35, LyricsPanelMetrics.linePitch(fontSize: fontSize) / panelHeight)
+        return LinearGradient(
             stops: [
                 .init(color: .clear, location: 0),
-                .init(color: .black, location: 0.2),
-                .init(color: .black, location: 0.8),
+                .init(color: .black, location: fade),
+                .init(color: .black, location: 1 - fade),
                 .init(color: .clear, location: 1),
             ],
             startPoint: .top,
