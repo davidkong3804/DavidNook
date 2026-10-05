@@ -70,6 +70,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         MainActor.assumeIsolated {
             MusicManager.shared.destroy()
+            ClipboardService.shared.stop()
             windowManager.cleanup()
         }
 
@@ -221,6 +222,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
+
+        // 剪貼簿歷史：依設定開始監看（輪詢 changeCount；暫停、關閉或系統需要使用者先授權時不讀內容）。
+        ClipboardService.shared.start()
 
         // Sync notch height with real value on app launch if mode is matchRealNotchSize
         syncNotchHeightIfNeeded()

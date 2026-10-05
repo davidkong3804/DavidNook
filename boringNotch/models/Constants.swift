@@ -239,6 +239,18 @@ extension Defaults.Keys {
         default: MusicControlButton.defaultLayout.count
     )
 
+    // MARK: Clipboard
+    /// 記錄剪貼簿歷史（預設開）。關閉時完全不讀剪貼簿內容，也不輪詢 changeCount。
+    static let clipboardEnabled = Key<Bool>("clipboardEnabled", default: true)
+    /// 暫停記錄（開著 app 但暫時不記）。暫停中仍只輪詢 changeCount（不讀內容），恢復後不會補記暫停期間複製的內容。
+    static let clipboardPaused = Key<Bool>("clipboardPaused", default: false)
+    /// 未釘選條目的筆數上限（釘選不計入）。
+    static let clipboardMaxItems = Key<Int>("clipboardMaxItems", default: 100)
+    /// 保留天數；0 = 永久。釘選項目不受影響。
+    static let clipboardRetentionDays = Key<Int>("clipboardRetentionDays", default: 30)
+    /// 點選歷史項目後自動送出 ⌘V（實驗性；需要「輔助使用」授權，預設關）。
+    static let clipboardAutoPaste = Key<Bool>("clipboardAutoPaste", default: false)
+
     // MARK: Downloads
     static let enableDownloadListener = Key<Bool>("enableDownloadListener", default: true)
     static let enableSafariDownloads = Key<Bool>("enableSafariDownloads", default: true)
