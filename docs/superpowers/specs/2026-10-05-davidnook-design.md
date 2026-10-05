@@ -39,6 +39,8 @@ macOS 瀏海工具，完全本機、無授權伺服器、永不過期。取代�
 M1 瀏海殼（匯入上游、裁剪、改名、多螢幕）→ M2 Now Playing＋歌詞 → M3 剪貼簿 → M4 設定/繁中介面/圖示/README/NOTICES → M5 整合驗證（簡體來源華語、原生繁體、英文、無歌詞各一首，截圖；審稿 agent 檢查繁體正確性）後 push。
 
 ## 已知風險／未驗證
+- **（M1 實測教訓）ad-hoc 簽章＋Hardened Runtime＋「連結」內嵌 framework → 啟動即崩潰**：dyld 報 `mapping process and mapped file (non-platform) have different Team IDs`（library validation）。編譯成功完全看不出來，只有實際啟動才會發現。正解不是關 Hardened Runtime，而是 adapter framework 只「嵌入」不「連結」（adapter 官方設計本來就是由 perl 載入）；app 原始碼沒有任何 `import MediaRemoteAdapter`。M2 自行重建 adapter 時維持此做法。
+- **這台機器沒有實體瀏海螢幕**（M4 Pro 桌機：ASUS 外接螢幕＋一個虛擬/次要顯示器，`safeAreaInsets.top` 皆為 0），「有瀏海螢幕」的行為無法在本機實測，只能靠無瀏海（浮動瀏海）路徑與程式碼閱讀。
 - adapter 依賴 Apple 私有行為（/usr/bin/perl entitlement），Apple 可能封掉；已有自檢與備援設計。
 - 真實 Apple Music 播放、播放控制、歌詞時間軸 vs 實際音訊：未驗證（需使用者播放歌曲）。
 - 背景輪詢 NSPasteboard 在 macOS 27 是否觸發隱私提示：未驗證。
