@@ -212,7 +212,12 @@ final class ClipboardLoggingTests: XCTestCase {
 /// 靜態掃描：找出直接輸出到 console／檔案／系統 log 的寫法。
 enum ClipboardSourceLogScan {
     /// 前面不能緊接識別字字元，避免誤判 NoOpClipboardLogger() 這類名稱。
-    private static let call = try! NSRegularExpression(pattern: "(?<![A-Za-z0-9_])(print|debugPrint|NSLog|os_log|Logger|dump|fputs)\\(")
+    /// print／debugPrint／dump、NSLog／os_log／`Logger(`（不論有沒有內插一律禁止）、fputs／fprintf。
+    private static let call = try! NSRegularExpression(pattern: "(?<![A-Za-z0-9_])(print|debugPrint|NSLog|os_log|Logger|dump|fputs|fprintf|vfprintf)\\(")
+    /// `FileHandle.standardError`／`standardOutput`，以及 C 的 `stderr`／`stdout`。
+    private static let handles = try! NSRegularExpression(pattern: "(?<![A-Za-z0-9_])(FileHandle\\s*\\.\\s*(standardError|standardOutput)|stderr|stdout)(?![A-Za-z0-9_])")
+    /// `x.write(to: FileHandle…)`／`x.write(to: &FileHandle…)`。
+    private static let writeToHandle = try! NSRegularExpression(pattern: "\\.write\\(to:\\s*&?\\s*FileHandle\\b")
     private static let imp = try! NSRegularExpression(pattern: "^\\s*import\\s+(os|OSLog)\\b")
 
     static func violations(in text: String) -> [(line: Int, content: String)] {
@@ -221,7 +226,7 @@ enum ClipboardSourceLogScan {
             let content = String(raw)
             if content.trimmingCharacters(in: .whitespaces).hasPrefix("//") { continue }
             let range = NSRange(content.startIndex..., in: content)
-            if call.firstMatch(in: content, range: range) != nil || imp.firstMatch(in: content, range: range) != nil {
+            if [call, handles, writeToHandle, imp].contains(where: { $0.firstMatch(in: content, range: range) != nil }) {
                 result.append((index + 1, content))
             }
         }

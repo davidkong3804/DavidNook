@@ -48,25 +48,30 @@ public final class NSPasteboardReader: PasteboardReading, @unchecked Sendable {
 
         let box = PasteboardBox(pasteboard: pasteboard)
         let provider = sourceAppProvider
+        let observer = dataReadObserver
         return PasteboardSnapshot(
             changeCount: count,
             types: types,
             sourceAppBundleIDProvider: {
-                let sourceType = NSPasteboard.PasteboardType(ClipboardPasteboardType.source)
-                if let data = box.pasteboard.pasteboardItems?.lazy.compactMap({ $0.data(forType: sourceType) }).first,
+                if let data = Self.readData(box, ClipboardPasteboardType.source, observer).first,
                    let id = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
                    !id.isEmpty {
                     return id
                 }
                 return provider()
             },
-            dataProvider: { raw in
-                let type = NSPasteboard.PasteboardType(raw)
-                let fromItems = box.pasteboard.pasteboardItems?.compactMap { $0.data(forType: type) } ?? []
-                if !fromItems.isEmpty { return fromItems }
-                return box.pasteboard.data(forType: type).map { [$0] } ?? []
-            }
+            dataProvider: { raw in Self.readData(box, raw, observer) }
         )
+    }
+
+    /// 本檔唯一向 NSPasteboard 讀取「資料」的地方（型別清單與 changeCount 不算）：讀之前先通知 `observer`。
+    /// 所有資料讀取都必須走這裡，測試才能用計數器證明「被略過的快照一個位元組都沒讀」。
+    private static func readData(_ box: PasteboardBox, _ raw: String, _ observer: (@Sendable (String) -> Void)?) -> [Data] {
+        observer?(raw)
+        let type = NSPasteboard.PasteboardType(raw)
+        let fromItems = box.pasteboard.pasteboardItems?.compactMap { $0.data(forType: type) } ?? []
+        if !fromItems.isEmpty { return fromItems }
+        return box.pasteboard.data(forType: type).map { [$0] } ?? []
     }
 }
 

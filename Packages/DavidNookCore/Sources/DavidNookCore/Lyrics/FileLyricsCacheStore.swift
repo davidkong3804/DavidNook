@@ -142,6 +142,7 @@ public final class FileLyricsCacheStore: LyricsCacheStore, @unchecked Sendable {
         let temp = directory.appendingPathComponent(destination.lastPathComponent + Self.tempMarker + UUID().uuidString)
         let fd = open(temp.path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0o600)
         guard fd >= 0 else { throw CocoaError(.fileWriteUnknown) }
+        onTempFileCreated?(fd)
         var succeeded = fchmod(fd, 0o600) == 0
         if succeeded {
             succeeded = data.withUnsafeBytes { (buffer: UnsafeRawBufferPointer) -> Bool in
