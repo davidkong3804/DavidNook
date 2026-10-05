@@ -5,13 +5,46 @@
 //  Created by Harsh Vardhan  Goswami  on 05/08/24.
 //
 
+import DavidNookUI
 import Defaults
 import Foundation
 import SwiftUI
 
-let shadowPadding: CGFloat = 20
-let openNotchSize: CGSize = .init(width: 640, height: 190)
-let windowSize: CGSize = .init(width: openNotchSize.width, height: openNotchSize.height + shadowPadding)
+// 展開尺寸不再寫死（舊版：openNotchSize 640×190、windowSize 640×210）：
+// 每個分頁的尺寸、使用者的寬／高係數與視窗涵蓋範圍都由 DavidNookUI 的 `NotchSizing`（純邏輯，有測試）決定，
+// 這裡只負責把設定值（Defaults）接進去。
+
+/// App 端的尺寸入口。
+@MainActor
+enum NotchMetrics {
+    /// 目前設定下的尺寸模型（輸入一律由 `NotchSizing` 夾限）。
+    static var sizing: NotchSizing {
+        NotchSizing(width: Defaults[.openNotchWidth], heightScale: Defaults[.openNotchHeightScale])
+    }
+}
+
+extension NotchViews {
+    /// 對應 `NotchSizing` 的分頁。
+    var sizingPanel: NotchSizing.Panel {
+        switch self {
+        case .home: .home
+        case .clipboard: .clipboard
+        }
+    }
+}
+
+extension NotchMotion {
+    /// 依目前設定（動畫速度倍率、「Notch animation」開關）與系統「減少動態」建立的動畫參數。
+    @MainActor
+    static var current: NotchMotion {
+        NotchMotion(
+            speed: Defaults[.animationSpeedMultiplier],
+            reduceMotion: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
+            isEnabled: Defaults[.enableOpeningAnimation]
+        )
+    }
+}
+
 let cornerRadiusInsets: (opened: (top: CGFloat, bottom: CGFloat), closed: (top: CGFloat, bottom: CGFloat)) = (opened: (top: 19, bottom: 24), closed: (top: 6, bottom: 14))
 
 /// Compact mode uses a much rounder opened shape than the standard layout

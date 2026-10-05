@@ -133,7 +133,8 @@ final class BoringViewModel: NSObject, ObservableObject {
     func open() -> Bool {
         guard !coordinator.firstLaunch, notchState != .open else { return false }
 
-        self.notchSize = openNotchSize
+        // 展開尺寸由 NotchSizing 決定（隨分頁與設定變動），ContentView 直接讀取；
+        // notchSize 一律代表「閉合瀏海」尺寸，不再在展開時被改寫成寫死的 640×190。
         self.notchState = .open
 
         // Force music information update when notch is opened

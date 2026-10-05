@@ -5,6 +5,7 @@
 //  Created by Richard Kunkli on 2024. 10. 17..
 //
 
+import DavidNookUI
 import SwiftUI
 import Defaults
 
@@ -262,6 +263,10 @@ extension Defaults.Keys {
     /// bar or calendar. Off by default so existing users keep the
     /// layout they already have.
     static let compactMode = Key<Bool>("compactMode", default: false)
+    /// 展開瀏海的寬度（pt）與高度係數。預設 720／1.0；範圍 560–900／0.85–1.30，
+    /// 讀取端一律經 `NotchSizing` 夾限，所以手動改壞偏好值也不會讓版面失控。
+    static let openNotchWidth = Key<Double>("openNotchWidth", default: Double(NotchSizing.defaultWidth))
+    static let openNotchHeightScale = Key<Double>("openNotchHeightScale", default: Double(NotchSizing.defaultHeightScale))
 
     // MARK: Fullscreen Media Detection
     static let hideNotchOption = Key<HideNotchOption>("hideNotchOption", default: .nowPlayingOnly)

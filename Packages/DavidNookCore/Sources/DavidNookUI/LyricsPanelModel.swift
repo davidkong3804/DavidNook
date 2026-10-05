@@ -70,3 +70,39 @@ public enum LyricsOffsetFormat {
         return body
     }
 }
+
+/// 歌詞面板的尺寸度量：可見行數 ↔ 面板高度。
+///
+/// 一行的節距 = 字級 + 3（行高）+ 7（行距）= 24；`n` 行的高度 = `n × 節距 + 4`，所以 5 行 = 124 pt（與舊版固定高度相同）。
+/// 面板上下緣各有一行節距的淡出，因此「5 行」是指含上下兩行半透明邊緣在內。
+public enum LyricsPanelMetrics {
+    public static let defaultVisibleLines = 5
+    public static let visibleLinesRange: ClosedRange<Int> = 3...7
+    public static let lineSpacing: CGFloat = 7
+
+    public static func clampedVisibleLines(_ n: Int) -> Int {
+        min(max(n, visibleLinesRange.lowerBound), visibleLinesRange.upperBound)
+    }
+
+    public static func linePitch(fontSize: CGFloat = 14) -> CGFloat { fontSize + 3 + lineSpacing }
+
+    public static func height(forVisibleLines n: Int, fontSize: CGFloat = 14) -> CGFloat {
+        CGFloat(clampedVisibleLines(n)) * linePitch(fontSize: fontSize) + 4
+    }
+
+    /// 目前行（焦點）在面板高度的哪個比例位置。
+    ///
+    /// 奇數行（3、5、7）對稱，焦點在正中央（0.5）。偶數行（4、6）若仍置中，最外側兩行會被面板邊緣切掉一半；
+    /// 所以焦點上移半個節距，讓每一行都完整落在 `n × 節距` 的格子裡：4 行＝上一行、目前行、後兩行。
+    public static func focusFraction(forVisibleLines n: Int, fontSize: CGFloat = 14) -> CGFloat {
+        let count = clampedVisibleLines(n)
+        let slotOfFocus = (count - 1) / 2
+        return (2 + linePitch(fontSize: fontSize) * (CGFloat(slotOfFocus) + 0.5)) / height(forVisibleLines: count, fontSize: fontSize)
+    }
+
+    /// 可用高度放得下幾行（夾在 3–7）：預設高度 5 行，高度不足降為 4 行，再不足 3 行。
+    public static func visibleLines(forAvailableHeight height: CGFloat, fontSize: CGFloat = 14) -> Int {
+        guard height.isFinite else { return defaultVisibleLines }
+        return clampedVisibleLines(Int(((height - 4) / linePitch(fontSize: fontSize)).rounded(.down)))
+    }
+}

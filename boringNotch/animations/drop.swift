@@ -5,6 +5,7 @@
 //  Created by Harsh Vardhan  Goswami  on  04/08/24.
 //
 
+import DavidNookUI
 import Defaults
 import Foundation
 import SwiftUI
@@ -15,21 +16,14 @@ enum StandardAnimations {
     /// Interactive spring for responsive UI (used for notch interactions)
     static let interactive = Animation.interactiveSpring(response: 0.38, dampingFraction: 0.8, blendDuration: 0)
 
-    /// Spring animation for opening the notch
-    static var open: Animation {
-        guard Defaults[.enableOpeningAnimation] else {
-            return Animation.linear(duration: 0)
-        }
-        return Animation.spring(response: 0.42 / Defaults[.animationSpeedMultiplier], dampingFraction: 0.8, blendDuration: 0)
-    }
+    /// Spring animation for opening the notch.
+    /// 數值全部在 DavidNookUI 的 `NotchMotion`（含速度倍率、減少動態、動畫開關），這裡只是轉接，保留舊的呼叫點。
+    @MainActor
+    static var open: Animation { NotchMotion.current.animation(.open) }
 
-    /// Spring animation for closing the notch
-    static var close: Animation {
-        guard Defaults[.enableOpeningAnimation] else {
-            return Animation.linear(duration: 0)
-        }
-        return Animation.spring(response: 0.45 / Defaults[.animationSpeedMultiplier], dampingFraction: 1.0, blendDuration: 0)
-    }
+    /// Spring animation for closing the notch.
+    @MainActor
+    static var close: Animation { NotchMotion.current.animation(.close) }
 
     /// Bouncy spring for playful animations
     @available(macOS 14.0, *)

@@ -5,6 +5,7 @@
 //  Created by Alexander on 2026-09-21.
 //
 
+import DavidNookUI
 import Defaults
 import SwiftUI
 
@@ -21,10 +22,13 @@ struct NotchSettingsView: View {
     @Default(.openNotchOnHover) var openNotchOnHover
     @Default(.enableOpeningAnimation) var enableOpeningAnimation
     @Default(.animationSpeedMultiplier) var animationSpeedMultiplier
+    @Default(.openNotchWidth) var openNotchWidth
+    @Default(.openNotchHeightScale) var openNotchHeightScale
 
     var body: some View {
         Form {
             sizingSection
+            expandedPanelSection
             behaviorSection
             gesturesSection
             windowSection
@@ -119,6 +123,48 @@ struct NotchSettingsView: View {
             }
         } header: {
             Text("Sizing")
+        }
+    }
+
+    /// 展開面板的寬度與高度（即時生效、自動持久化；範圍與預設見 `NotchSizing`）。
+    private var expandedPanelSection: some View {
+        Section {
+            Slider(
+                value: $openNotchWidth,
+                in: Double(NotchSizing.widthRange.lowerBound)...Double(NotchSizing.widthRange.upperBound),
+                step: Double(NotchSizing.widthStep)
+            ) {
+                HStack {
+                    Text("Expanded width")
+                    Spacer()
+                    Text(verbatim: "\(Int(NotchSizing.snappedWidth(openNotchWidth))) pt")
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+            }
+            Slider(
+                value: $openNotchHeightScale,
+                in: Double(NotchSizing.heightScaleRange.lowerBound)...Double(NotchSizing.heightScaleRange.upperBound),
+                step: Double(NotchSizing.heightScaleStep)
+            ) {
+                HStack {
+                    Text("Expanded height")
+                    Spacer()
+                    Text(verbatim: "\(Int((NotchSizing(heightScale: openNotchHeightScale).heightScale * 100).rounded()))%")
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+            }
+            Button("Reset size to default") {
+                Defaults.reset(.openNotchWidth, .openNotchHeightScale)
+            }
+            .disabled(NotchSizing(width: openNotchWidth, heightScale: openNotchHeightScale).isDefault)
+        } header: {
+            Text("Expanded panel")
+        } footer: {
+            Text("Size of the opened notch for the Home and Clipboard tabs. Changes apply immediately.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 

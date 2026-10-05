@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 讓「焦點位置」落在容器垂直中央的直式排版：各行以容器寬度折行、依實際高度堆疊，
+/// 讓「焦點位置」落在容器垂直中央（或 `focus` 指定比例）的直式排版：各行以容器寬度折行、依實際高度堆疊，
 /// 再整體平移，使 `position`（可為小數的行索引）對應的點位於中央。
 ///
 /// - `position` 是 `animatableData`：換行時以動畫插值，就是平滑捲動；每一幀都由排版本身算出，
@@ -10,6 +10,8 @@ import SwiftUI
 struct LyricsScrollLayout: Layout {
     var position: Double
     var spacing: CGFloat
+    /// 焦點落在容器高度的哪個比例（預設 0.5＝正中央；偶數行的面板會略為上移，見 `LyricsPanelMetrics.focusFraction`）。
+    var focus: CGFloat = 0.5
 
     var animatableData: Double {
         get { position }
@@ -24,7 +26,7 @@ struct LyricsScrollLayout: Layout {
         guard !subviews.isEmpty else { return }
         let width = bounds.width
         let heights = subviews.map { $0.sizeThatFits(ProposedViewSize(width: width, height: nil)).height }
-        let tops = Self.tops(heights: heights, spacing: spacing, position: position, midY: bounds.midY - bounds.minY)
+        let tops = Self.tops(heights: heights, spacing: spacing, position: position, midY: bounds.height * focus)
         for (index, subview) in subviews.enumerated() {
             subview.place(
                 at: CGPoint(x: bounds.minX, y: bounds.minY + tops[index]),

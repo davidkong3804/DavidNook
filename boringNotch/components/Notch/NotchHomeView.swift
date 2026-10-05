@@ -7,6 +7,7 @@
 //
 
 import Combine
+import DavidNookUI
 import Defaults
 import SwiftUI
 
@@ -17,23 +18,29 @@ struct MusicPlayerView: View {
     let albumArtNamespace: Namespace.ID
     let horizontalMediaGestureFeedback: CGFloat
     @Binding var isHoveringMusicArea: Bool
+    /// 內容區尺寸（由 ContentView 依 NotchSizing 給定）；封面、控制區、歌詞的寬高全部由 `NotchHomeMetrics` 決定。
+    let contentWidth: CGFloat
+    let bodyHeight: CGFloat
     @Default(.enableLyrics) private var enableLyrics
     @Default(.showLyricsPanel) private var showLyricsPanel
 
-    /// 歌詞面板寬度；左：專輯圖＋曲名／歌手／進度／控制鈕，右：歌詞。
-    private static let lyricsPanelWidth: CGFloat = 215
+    private var metrics: NotchHomeMetrics {
+        NotchHomeMetrics(
+            contentWidth: contentWidth,
+            bodyHeight: bodyHeight,
+            showsLyrics: enableLyrics && showLyricsPanel
+        )
+    }
 
     var body: some View {
-        HStack {
-            AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace).frame(width: 120).padding(.all, 5 * (vm.notchSize.height / 190))
-            MusicControlsView(horizontalMediaGestureFeedback: horizontalMediaGestureFeedback)
+        let metrics = metrics
+        NotchHomeLayout(metrics: metrics) {
+            AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace)
+        } controls: {
+            MusicControlsView(metrics: metrics, horizontalMediaGestureFeedback: horizontalMediaGestureFeedback)
                 .compositingGroup()
-            if enableLyrics && showLyricsPanel {
-                LyricsSidePanel()
-                    .frame(width: Self.lyricsPanelWidth, height: 124)
-                    .padding(.trailing, 2)
-                    .transition(.opacity)
-            }
+        } lyrics: {
+            LyricsSidePanel(visibleLineCount: metrics.lyricsVisibleLines)
         }
         .contentShape(Rectangle())
         .onHover { hovering in
@@ -124,6 +131,7 @@ struct AlbumArtView: View {
 struct MusicControlsView: View {
     @ObservedObject var musicManager = MusicManager.shared
     @EnvironmentObject var vm: BoringViewModel
+    let metrics: NotchHomeMetrics
     let horizontalMediaGestureFeedback: CGFloat
     @State private var sliderValue: Double = 0
     @State private var dragging: Bool = false
@@ -135,22 +143,16 @@ struct MusicControlsView: View {
     @Default(.showLyricsPanel) private var showLyricsPanel
 
     var body: some View {
-        VStack(alignment: .leading) {
-            songInfoAndSlider
+        // 三塊（歌名歌手／進度條／工具列）的高度與間距由 NotchHomeMetrics 的預算決定，
+        // 最小尺寸下改用精簡密度（播放鈕 40→30、進度條 32→30），保證不重疊。
+        NotchControlsLayout(metrics: metrics) {
+            songInfo(width: max(metrics.controlsWidth - NotchHomeMetrics.controlsLeadingInset, 0))
+        } slider: {
+            musicSlider
+        } toolbar: {
             slotToolbar
         }
         .buttonStyle(PlainButtonStyle())
-    }
-
-    private var songInfoAndSlider: some View {
-        GeometryReader { geo in
-            VStack(alignment: .leading, spacing: 4) {
-                songInfo(width: geo.size.width)
-                musicSlider
-            }
-        }
-        .padding(.top, 10)
-        .padding(.leading, 5)
     }
 
     private func songInfo(width: CGFloat) -> some View {
@@ -192,8 +194,6 @@ struct MusicControlsView: View {
                 },
                 trailingLabel: showRemainingTime ? .remaining : .duration
             )
-            .padding(.top, 5)
-            .frame(height: 36)
         }
     }
 
@@ -220,7 +220,8 @@ struct MusicControlsView: View {
     private func slotView(for slot: MusicControlButton) -> some View {
         MusicControlSlotButton(
             slot: slot,
-            horizontalMediaGestureFeedback: horizontalMediaGestureFeedback
+            horizontalMediaGestureFeedback: horizontalMediaGestureFeedback,
+            compact: metrics.density == .compact
         )
     }
 }
@@ -232,6 +233,8 @@ struct MusicControlSlotButton: View {
     @ObservedObject var musicManager = MusicManager.shared
     let slot: MusicControlButton
     let horizontalMediaGestureFeedback: CGFloat
+    /// 精簡密度（最小尺寸）：播放鈕與其他按鈕同為 30pt，而不是 40pt。
+    var compact: Bool = false
 
     var body: some View {
         Group {
@@ -247,7 +250,7 @@ struct MusicControlSlotButton: View {
                 .scaleEffect(horizontalMediaGestureFeedback > 0 ? 1.12 : 1)
                 .animation(.interactiveSpring(response: 0.18, dampingFraction: 0.62), value: horizontalMediaGestureFeedback)
             case .playPause:
-                HoverButton(icon: musicManager.isPlaying ? "pause.fill" : "play.fill", scale: .large) {
+                HoverButton(icon: musicManager.isPlaying ? "pause.fill" : "play.fill", scale: compact ? .medium : .large) {
                     MusicManager.shared.togglePlay()
                 }
             case .next:
@@ -448,6 +451,8 @@ struct NotchHomeView: View {
     let albumArtNamespace: Namespace.ID
     let horizontalMediaGestureFeedback: CGFloat
     @Binding var isHoveringMusicArea: Bool
+    let contentWidth: CGFloat
+    let bodyHeight: CGFloat
 
     var body: some View {
         mainContent
@@ -459,7 +464,9 @@ struct NotchHomeView: View {
             MusicPlayerView(
                 albumArtNamespace: albumArtNamespace,
                 horizontalMediaGestureFeedback: horizontalMediaGestureFeedback,
-                isHoveringMusicArea: $isHoveringMusicArea
+                isHoveringMusicArea: $isHoveringMusicArea,
+                contentWidth: contentWidth,
+                bodyHeight: bodyHeight
             )
 
         }

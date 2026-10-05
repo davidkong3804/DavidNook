@@ -18,7 +18,6 @@
 		1153BD932D986E4300979FB0 /* AppleMusicController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1153BD922D986E4300979FB0 /* AppleMusicController.swift */; };
 		1153BD982D9881F900979FB0 /* AppleScriptHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1153BD972D9881F900979FB0 /* AppleScriptHelper.swift */; };
 		1153BD9C2D98853B00979FB0 /* NowPlayingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1153BD9B2D98853B00979FB0 /* NowPlayingController.swift */; };
-		1160F8D82DD98230006FBB94 /* NotchShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1160F8D72DD98230006FBB94 /* NotchShape.swift */; };
 		117AB5172E30E09C00558921 /* MediaRemoteAdapter.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 112B0EBA2E30DD5000562D6C /* MediaRemoteAdapter.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1194E8852EA57D23009C82D6 /* SkyLightWindow in Frameworks */ = {isa = PBXBuildFile; productRef = 1194E8842EA57D23009C82D6 /* SkyLightWindow */; };
 		1194E8872EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1194E8862EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift */; };
@@ -112,7 +111,6 @@
 		1153BD922D986E4300979FB0 /* AppleMusicController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicController.swift; sourceTree = "<group>"; };
 		1153BD972D9881F900979FB0 /* AppleScriptHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleScriptHelper.swift; sourceTree = "<group>"; };
 		1153BD9B2D98853B00979FB0 /* NowPlayingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingController.swift; sourceTree = "<group>"; };
-		1160F8D72DD98230006FBB94 /* NotchShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchShape.swift; sourceTree = "<group>"; };
 		1194E8862EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoringNotchSkyLightWindow.swift; sourceTree = "<group>"; };
 		11A45C782E34E63100CEB175 /* MediaChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaChecker.swift; sourceTree = "<group>"; };
 		11CC44A12CEE614100C7244B /* BoringViewCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoringViewCoordinator.swift; sourceTree = "<group>"; };
@@ -414,7 +412,6 @@
 				AA06CHV22E7A0001 /* CompactHomeView.swift */,
 				AA04LAS22E7A0001 /* LiveActivityStack.swift */,
 				1194E8862EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift */,
-				1160F8D72DD98230006FBB94 /* NotchShape.swift */,
 				9AB0C6BB2C73C9CB00F7CD30 /* NotchHomeView.swift */,
 				14D570C52C5F38210011E668 /* BoringHeader.swift */,
 			);
@@ -588,7 +585,6 @@
 				A1B2C3D4E5F60718293A4B5D /* NowPlayingStreamSupport.swift in Sources */,
 				14D570B92C5E98A20011E668 /* drop.swift in Sources */,
 				11DB26662EDD0BE1001EA0CF /* LyricsService.swift in Sources */,
-				1160F8D82DD98230006FBB94 /* NotchShape.swift in Sources */,
 				AA06CHV12E7A0001 /* CompactHomeView.swift in Sources */,
 				AA04LAS12E7A0001 /* LiveActivityStack.swift in Sources */,
 				1471639A2C5D35FF0068B555 /* MusicManager.swift in Sources */,

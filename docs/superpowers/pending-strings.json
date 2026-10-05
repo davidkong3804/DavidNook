@@ -1,0 +1,22 @@
+{
+  "Expanded panel": {
+    "en": "Expanded panel",
+    "zh-Hant": "展開面板"
+  },
+  "Expanded width": {
+    "en": "Expanded width",
+    "zh-Hant": "展開寬度"
+  },
+  "Expanded height": {
+    "en": "Expanded height",
+    "zh-Hant": "展開高度"
+  },
+  "Reset size to default": {
+    "en": "Reset size to default",
+    "zh-Hant": "還原預設尺寸"
+  },
+  "Size of the opened notch for the Home and Clipboard tabs. Changes apply immediately.": {
+    "en": "Size of the opened notch for the Home and Clipboard tabs. Changes apply immediately.",
+    "zh-Hant": "展開後面板的尺寸（首頁與剪貼簿分頁皆適用），變更立即生效。"
+  }
+}
