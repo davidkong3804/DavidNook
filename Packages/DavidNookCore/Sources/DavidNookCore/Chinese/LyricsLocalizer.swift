@@ -100,7 +100,7 @@ public final class LyricsLocalizer: @unchecked Sendable {
             for (line, lineScript) in zip(lines, lineScripts) {
                 switch lineScript {
                 case .neutral:
-                    // 沒有專有字的行：文件已確定是華語，只套用「里」子句尾規則（日韓行不動）。
+                    // 沒有專有字的行：文件已確定是華語，只套用「里→裡」詞級規則（日韓行不動）。
                     converted.append(line.isEmpty || detector.isJapaneseOrKorean(line) ? line : finish(line))
                 case .simplified, .mixed:
                     if simplifiedConverter == nil { simplifiedConverter = try converterProvider(simplifiedMode) }
@@ -116,9 +116,9 @@ public final class LyricsLocalizer: @unchecked Sendable {
         }
     }
 
-    /// 轉換的最後一步：「里」子句尾啟發式（見 `ClauseFinalLiRule`）。
+    /// 轉換的最後一步：「里→裡」詞級規則（見 `LiWordRule`）。
     private func finish(_ line: String) -> String {
-        ClauseFinalLiRule.apply(to: line)
+        LiWordRule.apply(to: line)
     }
 }
 
@@ -132,7 +132,7 @@ public final class LyricsLocalizer: @unchecked Sendable {
 ///   其餘字元原樣，之後再做 t2tw。這樣「红塵」→「紅塵」，而同行的「鄰里」不會被轉成「鄰裡」。
 ///   `.conservative` 若改變了字數（理論上不會）就退回逐字轉換。
 ///
-/// 「里」「复」這類兩邊通用的歧義字不是簡體專有字，這裡不處理（見 `ClauseFinalLiRule` 與覆寫表）。
+/// 「里」這類兩邊通用的歧義字不是簡體專有字，這裡不處理（見 `LiWordRule`）。
 private struct TraditionalLineRepairer {
     let detector: ChineseScriptDetector
     let variants: LyricsChineseConverter
