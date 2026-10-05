@@ -1,7 +1,6 @@
 -----------------------------------------------------------------------------
                         BSD 3-Clause License
         applies to:
-        - AsyncXPCConnection, Copyright (c) 2023, Chime
         - MediaRemoteAdapter, Copyright (c) 2025, Jonas van den Berg and contributors
 -----------------------------------------------------------------------------
 
@@ -33,21 +32,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------
                         The MIT License (MIT)
         applies to:
-        - Calendr, Copyright (c) 2021 Carlos César Neves Enumo
         - Defaults, Copyright (c) Sindre Sorhus <sindresorhus@gmail.com>
         - DynamicNotchKit, Copyright (c) 2025 Kai Azim
         - KeyboardShortcuts, Copyright (c) Sindre Sorhus <sindresorhus@gmail.com>
         - LaunchAtLogin-Modern, Copyright (c) Sindre Sorhus <sindresorhus@gmail.com>
         - NotchDrop Copyright (c) 2024 Lakr Aream
-        - Pow, Copyright (c) 2023 Emerge Tools, Inc.
         - SkyLightWindow, Copyright (c) 2025 Lakr Aream
-        - Sparkle, Copyright (c) 2006-2017 Andy Matuschak, Elgato Systems GmbH,
-          Kornel Lesiński, Mayur Pawashe, C.W. Betts, Petroules Corporation,
-          Big Nerd Ranch, and the Sparkle Project contributors
-          (Sparkle additionally bundles bsdiff, sais-lite, ed25519 and
-          SUSignatureVerifier under BSD/MIT/zlib-style terms requiring the
-          same notice reproduction)
-        - SwiftUI-Introspect, Copyright 2019 Timber Software
 -----------------------------------------------------------------------------
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -449,9 +439,6 @@ defined by the Mozilla Public License, v. 2.0.
                         Apache License
                    Version 2.0, January 2004
         applies to:
-        - lottie-spm, Copyright 2018 Airbnb, Inc.
-        - swift-collections, Copyright (c) 2020 Apple Inc. and the Swift
-          project authors
         - swift-syntax, Copyright (c) 2014 Apple Inc. and the Swift
           project authors
 -----------------------------------------------------------------------------
