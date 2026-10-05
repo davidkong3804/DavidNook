@@ -23,6 +23,9 @@ public final class FileClipboardPersistence: ClipboardPersistence, @unchecked Se
     public let directory: URL
     private let logger: ClipboardLogging
     private let lock = NSLock()
+    /// 測試用掛鉤：暫存檔剛以 `open(O_CREAT)` 建立、尚未 `fchmod`、尚未寫入任何位元組時呼叫，參數為該檔案的 fd。
+    /// 用來驗證「建立當下」的權限就是 0600（沒有先以寬鬆權限存在的空窗）。正式 App 不設定。
+    var onTempFileCreated: ((Int32) -> Void)?
 
     /// 建立持久化並確保目錄存在且權限為 0700（App 會傳 Application Support/DavidNook/Clipboard）。
     public init(directory: URL, logger: ClipboardLogging = NoOpClipboardLogger()) throws {

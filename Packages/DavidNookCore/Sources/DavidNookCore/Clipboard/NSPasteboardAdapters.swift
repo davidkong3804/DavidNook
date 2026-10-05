@@ -14,14 +14,19 @@ private struct PasteboardBox: @unchecked Sendable {
 public final class NSPasteboardReader: PasteboardReading, @unchecked Sendable {
     private let pasteboard: NSPasteboard
     private let sourceAppProvider: @Sendable () -> String?
+    private let dataReadObserver: (@Sendable (String) -> Void)?
 
     /// 建立 reader。sourceAppProvider 在剪貼簿沒有 `org.nspasteboard.source` 時作為後備（預設取最前景 App 的 bundle id）。
+    /// `dataReadObserver`（測試用）：每次真的向 NSPasteboard 讀取某型別的「資料」前呼叫一次，參數為型別字串。
+    /// 用來證明被略過（例如機密）的快照在 reader 層完全沒有讀取內容；正式 App 不傳。
     public init(
         pasteboard: NSPasteboard,
-        sourceAppProvider: @escaping @Sendable () -> String? = { NSWorkspace.shared.frontmostApplication?.bundleIdentifier }
+        sourceAppProvider: @escaping @Sendable () -> String? = { NSWorkspace.shared.frontmostApplication?.bundleIdentifier },
+        dataReadObserver: (@Sendable (String) -> Void)? = nil
     ) {
         self.pasteboard = pasteboard
         self.sourceAppProvider = sourceAppProvider
+        self.dataReadObserver = dataReadObserver
     }
 
     /// 目前的 changeCount。

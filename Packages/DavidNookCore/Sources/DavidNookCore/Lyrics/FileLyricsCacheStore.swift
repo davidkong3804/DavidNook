@@ -26,6 +26,8 @@ public final class FileLyricsCacheStore: LyricsCacheStore, @unchecked Sendable {
     /// 存放目錄。
     public let directory: URL
     private let lock = NSLock()
+    /// 測試用掛鉤：暫存檔剛以 `open(O_CREAT)` 建立、尚未 `fchmod`、尚未寫入任何位元組時呼叫，參數為該檔案的 fd。正式 App 不設定。
+    var onTempFileCreated: ((Int32) -> Void)?
 
     /// 建立快取並確保目錄存在、權限為 0700，且已排除備份。
     /// - Throws: 目錄無法建立、無法設定權限或無法排除備份。
