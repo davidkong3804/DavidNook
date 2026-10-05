@@ -150,7 +150,7 @@ for song in songs {
 
 // MARK: - 彙總 CSV
 
-var csv = "index,category,title,artist,duration,duration_estimated,outcome,candidates,viable,picked_id,pick_source,ideal_pick_id,pick_differs_from_ideal,duration_diff,picked_script,detected_script,applied_mode,converted,changed_chars,kana_chars,hangul_chars,ab_pair,ab_aligned_chars,ab_semantic,ab_style,ab_semantic_rate,ab_style_rate,rt_aligned_chars,rt_semantic,rt_style,div_median_s,div_frac_over_1s,live_requests,cached_requests,parser_anomalies,header_leak_suspect,same_timestamp_lines\n"
+var csv = "index,category,title,artist,duration,duration_estimated,outcome,candidates,viable,picked_id,pick_source,degraded,get_candidate_id,picked_is_get_candidate,ideal_pick_id,pick_differs_from_ideal,duration_diff,picked_script,detected_script,applied_mode,converted,changed_chars,kana_chars,hangul_chars,ab_pair,ab_aligned_chars,ab_semantic,ab_style,ab_semantic_rate,ab_style_rate,rt_aligned_chars,rt_semantic,rt_style,div_median_s,div_frac_over_1s,live_requests,cached_requests,parser_anomalies,header_leak_suspect,same_timestamp_lines\n"
 for r in reports {
     let l = r.localization
     let ab = r.ab
@@ -160,7 +160,9 @@ for r in reports {
     let row: [String] = [
         String(r.index), r.category, r.title, r.artist, r.duration.map { fmt($0, 1) } ?? "", r.durationEstimated ? "1" : "0",
         r.outcome, String(r.survey.total), String(r.survey.viable), r.picked.map { String($0.id) } ?? "",
-        r.pickSource ?? "", r.idealPickID.map(String.init) ?? "", r.picked == nil ? "" : (r.pickDiffersFromIdeal ? "1" : "0"),
+        r.pickSource ?? "", r.degraded ? "1" : "0", r.getCandidateID.map(String.init) ?? "",
+        r.pickedIsGetCandidate.map { $0 ? "1" : "0" } ?? "",
+        r.idealPickID.map(String.init) ?? "", r.picked == nil ? "" : (r.pickDiffersFromIdeal ? "1" : "0"),
         r.picked?.durationDiff.map { fmt($0, 2) } ?? "", r.picked?.script ?? "", l?.detected ?? "", l?.mode ?? "",
         l == nil ? "" : ((l?.converted ?? false) ? "1" : "0"), String(l?.changedCharCount ?? 0),
         String(l?.kanaChars ?? 0), String(l?.hangulChars ?? 0),
@@ -337,4 +339,7 @@ print("歌單 \(songs.count) 首；命中（有挑到同步歌詞）\(found)；�
 print("A/B 對照 \(abSongs.count) 首；對齊漢字 \(abAligned)；語意不一致 \(abDisplay.semantic)（\(fmt(abSummary.semanticRatePercent, 3))%）；風格差異 \(abDisplay.style)（\(fmt(abSummary.styleRatePercent, 3))%）；對照版殘留簡體 \(abDisplay.refResidue)")
 print("合成對照（繁體原文→t2s→我們的 s2t）\(rtSongs.count) 首；對齊漢字 \(rtAligned)；語意不一致 \(rtDisplay.semantic)（\(fmt(rtSummary.semanticRatePercent, 3))%）；風格差異 \(rtDisplay.style)（\(fmt(rtSummary.styleRatePercent, 3))%）；對照版殘留簡體 \(rtDisplay.refResidue)")
 print("累計連網請求 \(ledger.total)（200：\(ledger.count(status: 200))、404：\(ledger.count(status: 404))、429：\(ledger.count(status: 429))、503：\(ledger.count(status: 503))）")
+if options.offline {
+    print("--offline：本次執行的連網請求 0；離線快取未命中 \(transport.offlineMissCount) 次（>0 代表這次結果缺資料，不可當成完整對照）")
+}
 print("報告目錄：\(outURL.path)")

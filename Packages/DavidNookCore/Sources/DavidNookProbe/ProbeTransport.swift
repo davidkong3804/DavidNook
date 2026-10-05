@@ -60,6 +60,7 @@ final class ProbeTransport: HTTPTransport, @unchecked Sendable {
     private let lock = NSLock()
     private var ledger: Ledger
     private var lastLive: Date?
+    private var misses = 0
     private var current: [Record] = []
     private var currentBodies: [(path: String, status: Int, body: Data)] = []
 
@@ -93,6 +94,9 @@ final class ProbeTransport: HTTPTransport, @unchecked Sendable {
 
     var ledgerSnapshot: Ledger { lock.withLock { ledger } }
 
+    /// `--offline` 時快取沒有而被拒絕的請求數（離線重跑應為 0，否則對照不完整）。
+    var offlineMissCount: Int { lock.withLock { misses } }
+
     // MARK: - HTTPTransport
 
     func send(_ request: URLRequest) async throws -> HTTPResponse {
@@ -108,7 +112,11 @@ final class ProbeTransport: HTTPTransport, @unchecked Sendable {
             }
             return HTTPResponse(statusCode: cached.status, headers: cached.headers, body: body)
         }
-        if offline { throw Failure.offlineCacheMiss(path) }
+        if offline {
+            lock.withLock { misses += 1 }
+            log("離線快取未命中：\(path)")
+            throw Failure.offlineCacheMiss(path)
+        }
 
         // 預算檢查＋預先計數（先寫帳本再送，連失敗的請求也算）。
         let wait: TimeInterval = try lock.withLock {

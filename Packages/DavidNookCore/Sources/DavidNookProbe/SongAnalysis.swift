@@ -187,19 +187,28 @@ final class SongAnalyzer {
         // 真實管線：LrclibClient（get 變體 → search 變體）。
         transport.beginSong()
         var picked: PickedLyrics?
+        var degraded = false
         var outcome = "not_found"
         do {
-            picked = try await client.lyrics(for: query)
-            if picked != nil { outcome = "picked" }
+            let fetched = try await client.fetch(query)
+            picked = fetched.lyrics
+            degraded = fetched.isDegraded
+            if picked != nil { outcome = degraded ? "picked_degraded" : "picked" }
         } catch {
             outcome = "error: \(error)"
         }
         let (records, bodies) = transport.endSong()
+        // get 命中的候選 id（回應本文裡的單筆紀錄）；新流程會把它併入 search 候選池再排序。
+        var getCandidateID: Int?
+        for b in bodies where b.status == 200 && b.path.hasPrefix("/api/get") {
+            if let one = try? JSONDecoder().decode(LrclibCandidate.self, from: b.body) { getCandidateID = one.id }
+        }
 
         var report = SongReport(
             index: song.index, category: song.category, title: song.title, artist: song.artist,
             duration: duration, durationEstimated: durationEstimated, survey: surveyInfo, requests: records,
-            outcome: outcome, pickSource: nil, picked: nil, idealPickID: ideal?.candidateID, pickDiffersFromIdeal: false, divergence: nil,
+            outcome: outcome, pickSource: nil, degraded: degraded, getCandidateID: getCandidateID, pickedIsGetCandidate: nil,
+            picked: nil, idealPickID: ideal?.candidateID, pickDiffersFromIdeal: false, divergence: nil,
             viable: viables.map { v in
                 ViableInfo(
                     id: v.candidate.id, trackName: v.candidate.trackName, artistName: v.candidate.artistName,
@@ -217,9 +226,11 @@ final class SongAnalyzer {
         var headers: [HeaderRow] = []
 
         if let picked {
-            // 來源：最後一個 200 的請求是 get 還是 search。
-            let lastOK = records.last { $0.status == 200 }
-            report.pickSource = (lastOK?.path.hasPrefix("/api/get") ?? false) ? "get" : "search"
+            // 來源：這首歌有哪些端點回了 200（新流程 get 命中後仍會 search，統一排序）。
+            let gotGet = records.contains { $0.status == 200 && $0.path.hasPrefix("/api/get") }
+            let gotSearch = records.contains { $0.status == 200 && $0.path.hasPrefix("/api/search") }
+            report.pickSource = gotGet && gotSearch ? "get+search" : (gotGet ? "get" : "search")
+            report.pickedIsGetCandidate = getCandidateID.map { $0 == picked.candidateID }
             report.pickDiffersFromIdeal = ideal.map { $0.candidateID != picked.candidateID } ?? true
             if let ideal, ideal.candidateID != picked.candidateID {
                 report.divergence = divergence(picked: picked, ideal: ideal)

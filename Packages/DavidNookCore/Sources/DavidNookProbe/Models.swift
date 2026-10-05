@@ -214,6 +214,12 @@ struct SongReport: Codable {
     var requests: [ProbeTransport.Record]
     var outcome: String
     var pickSource: String?
+    /// search 失敗而退回 get 的單筆結果（共識流程的降級路徑）。
+    var degraded: Bool
+    /// `/api/get` 回應裡的候選 id（沒有 get 命中時為 nil）。
+    var getCandidateID: Int?
+    /// 最終挑中的是不是 get 的那一筆（沒有 get 命中時為 nil）。
+    var pickedIsGetCandidate: Bool?
     var picked: PickedInfo?
     var idealPickID: Int?
     var pickDiffersFromIdeal: Bool
