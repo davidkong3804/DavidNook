@@ -45,8 +45,8 @@ struct AppLanguage: RawRepresentable, Hashable, Identifiable, Defaults.Serializa
 
     var displayName: String {
         if self == .system {
-            return NSLocalizedString(
-                "System default",
+            return String(
+                localized: "System default",
                 comment: "Language picker option: follow the system app language"
             )
         }
@@ -133,9 +133,9 @@ enum MediaControllerType: String, CaseIterable, Identifiable, Defaults.Serializa
     var localizedResource: LocalizedStringResource {
         switch self {
         case .nowPlaying:
-            "Now Playing"
+            LocalizedStringResource("Now Playing")
         case .appleMusic:
-            "Apple Music"
+            LocalizedStringResource("Apple Music")
         }
     }
 

@@ -32,7 +32,7 @@ class SettingsWindowController: NSWindowController {
     private func setupWindow() {
         guard let window else { return }
 
-        window.title = "DavidNook Settings"
+        window.title = String(localized: "DavidNook Settings", comment: "Title of the settings window.")
         window.titlebarAppearsTransparent = false
         window.titleVisibility = .visible
         window.toolbarStyle = .unified

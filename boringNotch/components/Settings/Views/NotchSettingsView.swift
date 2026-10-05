@@ -163,10 +163,7 @@ struct NotchSettingsView: View {
                     HStack {
                         Text("Animation speed")
                         Spacer()
-                        Text(
-                            "\(animationSpeedMultiplier, format: .number.precision(.fractionLength(1)))x",
-                            comment: "Animation speed multiplier."
-                        )
+                        Text(verbatim: String(format: "%.1fx", animationSpeedMultiplier))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -200,11 +197,8 @@ struct NotchSettingsView: View {
                     HStack {
                         Text("Gesture sensitivity")
                         Spacer()
-                        Text(
-                            Defaults[.gestureSensitivity] == 100
-                                ? "High" : Defaults[.gestureSensitivity] == 200 ? "Medium" : "Low"
-                        )
-                        .foregroundStyle(.secondary)
+                        Text(gestureSensitivityLabel)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
@@ -223,6 +217,14 @@ struct NotchSettingsView: View {
             .multilineTextAlignment(.trailing)
             .foregroundStyle(.secondary)
             .font(.caption)
+        }
+    }
+
+    private var gestureSensitivityLabel: LocalizedStringKey {
+        switch gestureSensitivity {
+        case 100: LocalizedStringKey("High")
+        case 200: LocalizedStringKey("Medium")
+        default: LocalizedStringKey("Low")
         }
     }
 

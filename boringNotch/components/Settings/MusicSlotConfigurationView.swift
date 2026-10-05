@@ -177,7 +177,7 @@ struct MusicSlotConfigurationView: View {
         let currentSlot = slotValue(at: index)
 
         return HStack(spacing: 12) {
-            Text("\(index + 1)")
+            Text(verbatim: "\(index + 1)")
                 .font(.system(size: 14, weight: .medium, design: .monospaced))
                 .foregroundStyle(.secondary)
                 .frame(width: 20)

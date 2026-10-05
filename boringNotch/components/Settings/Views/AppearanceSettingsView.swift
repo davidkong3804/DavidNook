@@ -271,6 +271,6 @@ struct AccentCircleButton: View {
             }
         }
         .buttonStyle(.plain)
-        .help(isSystemDefault ? "Use your macOS system accent color" : "")
+        .help(isSystemDefault ? Text("Use your macOS system accent color") : Text(verbatim: ""))
     }
 }

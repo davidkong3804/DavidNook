@@ -12,7 +12,7 @@ import SwiftUI
 
 let defaultImage: NSImage = .init(
     systemSymbolName: "heart.fill",
-    accessibilityDescription: "Album Art"
+    accessibilityDescription: String(localized: "Album Art", comment: "Accessibility description of the placeholder album art.")
 )!
 
 struct NowPlayingFallbackNotice: Identifiable, Equatable {

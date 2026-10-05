@@ -25,13 +25,13 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
 
     var title: LocalizedStringKey {
         switch self {
-        case .general: "General"
-        case .notch: "Notch"
-        case .appearance: "Appearance"
-        case .media: "Media"
-        case .clipboard: "Clipboard"
-        case .shortcuts: "Shortcuts"
-        case .about: "About"
+        case .general: LocalizedStringKey("General")
+        case .notch: LocalizedStringKey("Notch")
+        case .appearance: LocalizedStringKey("Appearance")
+        case .media: LocalizedStringKey("Media")
+        case .clipboard: LocalizedStringKey("Clipboard")
+        case .shortcuts: LocalizedStringKey("Shortcuts")
+        case .about: LocalizedStringKey("About")
         }
     }
 
@@ -88,7 +88,7 @@ struct SettingsView: View {
         .toolbar(removing: .sidebarToggle)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text("")
+                Text(verbatim: "")
                     .frame(width: 0, height: 0)
                     .accessibilityHidden(true)
             }

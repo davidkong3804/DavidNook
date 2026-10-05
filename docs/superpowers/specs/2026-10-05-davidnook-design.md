@@ -63,3 +63,12 @@ M1 瀏海殼（匯入上游、裁剪、改名、多螢幕）→ M2 Now Playing�
 - **（M3）未驗證**：真實剪貼簿端到端（複製→記錄→點選寫回→貼上）、瀏海視窗成為 key window 後搜尋欄的實機輸入與焦點歸還（含注音輸入法）、`⌘V` 自動貼上、多螢幕、精簡模式（沒有分頁列，剪貼簿不可達）。
 - **（M3 教訓）**`ImageRenderer` 不會畫出 `ScrollView` 與 `TextField`（AppKit 後端）：快照以內部環境值 `clipboardStaticRender` 改用靜態列表與 `Text`；靜態列表要放在 `Color.clear.overlay` 內，否則 flexible frame 的最小高度來自子視圖，會把上方搜尋列擠出面板。快照測試曾因此一度渲染出錯位版面，只看像素斷言不夠，要逐張看圖。
 
+
+## M4 實作筆記（繁中介面、設定整理、圖示、README、NOTICES）
+
+### 在地化（步驟 1）
+- **只保留 `en` 與 `zh-Hant`**：`boringNotch/Localizable.xcstrings` 原有 21 種語言（上游 Crowdin 的 de/fr/ja/ko…、`zh-Hans`、`zh-Hant-HK`、`en-GB` 等）已全數移除。理由：原始碼自 M1 起大幅改動（Shelf、HUD、行事曆、Sparkle 等整段刪除，文案也改寫），這些翻譯多半已過時，且與新字串不一致；留著等於對使用者顯示「半新半舊」的混合介面，也沒有人能審稿。要恢復某個語言，請在該語言重新翻譯完整的 key 後再加回，並更新 `Tools/check_localization.py` 的 `ALLOWED_LANGS`。
+- **語言解析**：`CFBundleDevelopmentRegion = en`、`CFBundleLocalizations = [en, zh-Hant]`（`boringNotch/Info.plist`）、xcstrings `sourceLanguage = en`、pbxproj `developmentRegion = en`／`knownRegions = (en, zh-Hant, Base)` 四處一致。系統語言為繁體中文（`zh-Hant`、`zh-Hant-TW`、`zh-Hant-HK`，後兩者會被 macOS 對應到 `zh-Hant.lproj`）時顯示繁中，其他語言（含簡體中文）顯示英文。
+- **key 慣例**：key 為英文原文（沿用上游），`en` 值省略時即 key 本身；格式類字串用 `Text(verbatim:)`，不進 xcstrings。零散的 AppKit／純字串位置（視窗標題、分頁標籤、Music 備援占位文字）改為 `String(localized:)`。
+- **檢查**：`Tools/check_localization.py`（Python 3 標準庫）掃描原始碼中的在地化字面字串並比對 xcstrings，列出「用到但缺 zh-Hant」「孤兒 key」「非 en／zh-Hant 語言」「AppKit 直接字面字串」；加 `--stringsdata <DerivedData>` 可再與編譯器抽出的 `.stringsdata` 交叉比對（規則缺口會列出）。
+- **離屏快照**：`ImageRenderer` 畫不出 AppKit 支撐的控制項（Form／Toggle／Picker 變佔位圖示），所以只有 Debug 建置內含 `SnapshotHarness`（`boringNotch/components/Settings/SnapshotHarness.swift`）：`-davidnookSnapshot YES -clipboardPaused YES -AppleLanguages (zh-Hant)` 啟動後以 `NSHostingView.cacheDisplay` 渲染真實的設定分頁，PNG 寫在沙盒容器暫存目錄後結束（在 `ClipboardService.start()` 之前，不會監看剪貼簿）。Release 不含此程式。

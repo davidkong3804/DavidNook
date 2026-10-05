@@ -55,7 +55,7 @@ public struct OffsetControlView: View {
                 .font(.system(size: 11, weight: .semibold, design: .rounded).monospacedDigit())
                 .foregroundStyle(offsetMs == 0 ? Color.white.opacity(0.55) : Color.white)
                 .frame(minWidth: 38)
-                .accessibilityLabel("\(strings.currentOffset) \(LyricsOffsetFormat.label(offsetMs: offsetMs))")
+                .accessibilityLabel(Text(verbatim: "\(strings.currentOffset) \(LyricsOffsetFormat.label(offsetMs: offsetMs))"))
             chip("+0.5s", help: strings.advanceHelp) { onAdjust(LyricsOffsetFormat.stepMs) }
             chip(strings.reset, help: strings.resetHelp) { onReset() }
                 .disabled(offsetMs == 0)

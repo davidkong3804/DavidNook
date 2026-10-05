@@ -100,10 +100,11 @@ public struct ClipboardPanelView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 TextField(
-                    "",
                     text: Binding(get: { model.query }, set: { callbacks.onQueryChange($0) }),
                     prompt: Text(verbatim: strings.searchPlaceholder).foregroundStyle(Color.white.opacity(0.35))
-                )
+                ) {
+                    Text(verbatim: strings.searchPlaceholder)
+                }
                 .textFieldStyle(.plain)
                 .font(LyricsFont.font(size: 12, weight: .regular))
                 .foregroundStyle(Color.white)

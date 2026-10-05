@@ -89,6 +89,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+#if DEBUG
+        // 僅 Debug：`-davidnookSnapshot YES` 時只離屏渲染畫面成 PNG 並結束（見 SnapshotHarness.swift）。
+        if SnapshotHarness.isRequested {
+            Task { @MainActor in SnapshotHarness.runAndTerminate(into: SnapshotHarness.outputDirectory) }
+            return
+        }
+#endif
         // SIGTERM（例如 pkill、關機）預設不會走 applicationWillTerminate，adapter 的 perl 子行程會變成孤兒
         // 一直活著；改成走正常的終止流程（MusicManager.destroy 會關掉子行程）。
         signal(SIGTERM, SIG_IGN)
@@ -303,7 +310,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 defer: false
             )
             window.center()
-            window.title = "Onboarding"
+            window.title = String(localized: "Welcome to DavidNook", comment: "Accessibility title of the first-launch window (the title bar is hidden).")
             window.titlebarAppearsTransparent = true
             window.titleVisibility = .hidden
             window.level = .floating

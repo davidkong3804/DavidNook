@@ -21,10 +21,10 @@ struct AboutView: View {
                         Text("Version")
                         Spacer()
                         if showBuildNumber {
-                            Text("(\(Bundle.main.buildVersionNumber ?? ""))")
+                            Text(verbatim: "(\(Bundle.main.buildVersionNumber ?? ""))")
                                 .foregroundStyle(.secondary)
                         }
-                        Text(Bundle.main.releaseVersionNumber ?? "unkown")
+                        Text(verbatim: Bundle.main.releaseVersionNumber ?? "—")
                             .foregroundStyle(.secondary)
                     }
                     .onTapGesture {

@@ -25,7 +25,7 @@ struct LyricsTrack: Equatable, Sendable {
 
     /// 沒有實際曲目時 Music.app 備援會回報的占位內容，不拿去查歌詞。
     var isPlaceholder: Bool {
-        title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || (title == "Not Playing" && artist == "Unknown")
+        title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || (title == MusicPlaceholder.notPlaying && artist == MusicPlaceholder.unknown)
     }
 
     var key: TrackKey { TrackKey(title: title, artist: artist, duration: duration) }
