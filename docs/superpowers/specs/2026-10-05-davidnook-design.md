@@ -76,6 +76,8 @@ M1 瀏海殼（匯入上游、裁剪、改名、多螢幕）→ M2 Now Playing�
 
 ### 設定／About／onboarding（步驟 2）
 - **onboarding 只說明、不觸發權限**：原本第二步「選擇音樂來源」會呼叫 `MusicManager.selectMediaController`，改為 `OnboardingOverviewView`（功能、權限與原因、唯一對外連線 lrclib.net）。這一頁不呼叫 AppleScript、剪貼簿、`CGRequestPostEventAccess`；按「繼續」只設 `firstLaunch = false` 與 `didChooseMediaController = true`（後者讓之後的備援提示可以顯示）。
+- **首次啟動視窗改為橫向（使用者回饋「太長，應該要寬一點」）**：視窗內容 600×400（`OnboardingView.windowSize`，原 400×600），四頁：歡迎 → 功能與資料流向（三張卡片）→ 權限與原因 → 完成；頁尾有步驟點與 上一步／繼續。彈出時視窗淡入 0.25 秒，內容 scale 0.96→1＋輕微位移＋淡入（`spring(response: 0.45, dampingFraction: 0.58)`，回彈很小）；頁面轉場 `spring(response: 0.35, dampingFraction: 0.86)`，方向隨前進／後退。**減少動態**（`NSWorkspace.shared.accessibilityDisplayShouldReduceMotion`）時只做 0.2 秒淡入、頁面轉場改為淡入淡出。**未驗證**：減少動態分支與頁面轉場的實際動畫（只有進場起點畫格與各頁最終畫面的快照；轉場需要在真實視窗點按才看得到）。
+- **（M4 教訓）離屏快照裡不能依賴 `DispatchQueue.main.async`**：`SnapshotHarness` 在 `Task { @MainActor }` 內以巢狀 `RunLoop.run` 等待，GCD 主佇列的區塊不會被執行（所以進場動畫的 `onAppear` 改為同步設定狀態）。另外 `ImageRenderer` 會把 `NSVisualEffectView` 畫成「禁止」佔位圖示，所以 onboarding 提供內部環境值 `onboardingStaticRender` 讓快照改用純色背景（正式 App 不會設定）。
 - **（M4 發現）「音樂」自動化不只是備援**：`NowPlayingController` 在播放來源是「音樂」App 時，仍會以 AppleScript 讀取喜好項目（`fetchFavoriteStateIfSupported`）、設定音量與喜好；所以權限說明與 `NSAppleEventsUsageDescription` 寫成「備援，以及音樂 App 正在播放時的喜好項目與音量」，不再宣稱「僅備援」。
 - **（M4 修正）啟動時不再預先啟用「音樂」備援**：`MusicManager.init` 原本在可用性檢查前先 `activateFallback()`，`AppleMusicController.init` 在「音樂」App 正在執行時就會送 Apple 事件而跳出自動化授權（發生在使用者看到說明之前）。現在等可用性檢查結果：可用就啟用 Now Playing，不可用才備援（原失敗分支不變）。實測啟動後 adapter 的 perl 子行程存在（Now Playing 路徑啟用），8 秒存活。**未驗證**：adapter 不可用時的備援切換（需要刻意弄壞 adapter）、真實 Apple Music 播放。
 - **剪貼簿的系統提示仍在第一次讀取時出現**（`ClipboardService.start()` 啟動即依設定監看，預設開）：這是 M3 的設計；onboarding 文字如實說明「複製東西之後」才會問。若要更保守，可改成預設不記錄、由使用者在設定開啟後才開始（未做，需決定）。

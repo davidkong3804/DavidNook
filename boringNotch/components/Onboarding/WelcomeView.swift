@@ -3,44 +3,37 @@
 //  boringNotch
 //
 //  Created by Richard Kunkli on 2024. 09. 26..
-//  Modified for DavidNook: upstream logo/branding artwork removed.
+//  Modified for DavidNook: upstream logo/branding artwork removed；改為橫向歡迎頁（按鈕由 OnboardingView 的頁尾提供）。
 //
 
 import SwiftUI
 
-struct WelcomeView: View {
-    var onGetStarted: (() -> Void)?
+struct WelcomePage: View {
     var body: some View {
-        VStack(spacing: 8) {
+        HStack(spacing: 36) {
             Image(nsImage: NSApp.applicationIconImage)
-                .resizable().scaledToFit()
-                .frame(width: 100, height: 100)
-                .padding(.bottom, 8)
-            Text("DavidNook")
-                .font(.system(.largeTitle, design: .default))
-                .fontWeight(.semibold)
-            Text("Welcome")
-                .font(.title)
-                .foregroundStyle(.secondary)
-                .padding(.bottom, 30)
-
-            Button {
-                onGetStarted?()
-            } label: {
-                Text("Get started")
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 6)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 136, height: 136)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(verbatim: "DavidNook")
+                    .font(.system(size: 40, weight: .bold))
+                Text("Welcome")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+                Text("A notch utility for macOS with synced lyrics and clipboard history.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 6)
             }
-            .buttonStyle(BorderedProminentButtonStyle())
+            .frame(maxWidth: 300, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-        .background {
-            VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
-                .ignoresSafeArea()
-        }
+        .padding(.horizontal, 40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
 #Preview {
-    WelcomeView()
+    OnboardingView(onFinish: {}, onOpenSettings: {})
 }

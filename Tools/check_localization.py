@@ -66,9 +66,10 @@ KEY_CALL_PREFIXES = [
     r"\bNSLocalizedString\(\s*",
     r"\bcustomBadge\(\s*text:\s*",
     r"\bfooterText\(\s*",
-    r"\bgroup\(\s*",  # OnboardingOverviewView 的區塊標題
     r"\blinkRow\(\s*title:\s*",  # AboutView 連結列
-    r"\bitem\(\s*icon:\s*\"[^\"]*\",\s*title:\s*",  # OnboardingOverviewView 條目標題
+    r"\bOnboardingHeader\(\s*title:\s*",  # 首次啟動各頁的標題
+    r"\bsubtitle:\s*",
+    r"\b(?:card|OnboardingItem)\(\s*icon:\s*\"[^\"]*\",\s*title:\s*",  # 首次啟動的卡片／條目標題
     r"\bdetail:\s*",
     r"\bhelp:\s*",  # AboutView.linkRow 的 help 參數
 ]

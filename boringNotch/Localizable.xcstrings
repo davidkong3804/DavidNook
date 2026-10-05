@@ -329,6 +329,16 @@
         }
       }
     },
+    "Back" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一步"
+          }
+        }
+      }
+    },
     "Backward 15s" : {
       "localizations" : {
         "zh-Hant" : {
@@ -1926,16 +1936,6 @@
         }
       }
     },
-    "Network" : {
-      "localizations" : {
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "網路"
-          }
-        }
-      }
-    },
     "Never hide" : {
       "localizations" : {
         "en" : {
@@ -3110,6 +3110,16 @@
         }
       }
     },
+    "Step %lld of %lld" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第 %lld 步，共 %lld 步"
+          }
+        }
+      }
+    },
     "System" : {
       "localizations" : {
         "en" : {
@@ -3499,16 +3509,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "歡迎使用 DavidNook"
-          }
-        }
-      }
-    },
-    "What it does" : {
-      "localizations" : {
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "功能"
           }
         }
       }

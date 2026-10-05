@@ -3,58 +3,34 @@
 //  boringNotch
 //
 //  Created by Alexander on 2025-06-23.
+//  Modified for DavidNook: 橫向完成頁（按鈕由 OnboardingView 的頁尾提供）。
 //
 
 import SwiftUI
 
-struct OnboardingFinishView: View {
-    let onFinish: () -> Void
-    let onOpenSettings: () -> Void
-
+struct OnboardingFinishPage: View {
     var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
-
-            Image(systemName: "checkmark.circle")
-                .font(.system(size: 60))
-                .foregroundColor(.effectiveAccent)
-                .padding()
-
-            Text("You're All Set!")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-
-            Text("You can now enjoy the app. If you want to tweak things further, you can always visit the settings.")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-
-            Spacer()
-            Spacer()
-
-            VStack(spacing: 12) {
-                Button(action: onOpenSettings) {
-                    Label("Customize in Settings", systemImage: "gear")
-                        .controlSize(.large)
-                }
-                .controlSize(.large)
-
-                Button("Finish", action: onFinish)
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .keyboardShortcut(.defaultAction)
+        HStack(spacing: 32) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 88))
+                .foregroundStyle(Color.effectiveAccent)
+                .symbolRenderingMode(.hierarchical)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("You're All Set!")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                Text("You can now enjoy the app. If you want to tweak things further, you can always visit the settings.")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(24)
+            .frame(maxWidth: 320, alignment: .leading)
         }
+        .padding(.horizontal, 40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            VisualEffectView(material: .underWindowBackground, blendingMode: .behindWindow)
-                .ignoresSafeArea()
-        )
     }
 }
 
 #Preview {
-    OnboardingFinishView(onFinish: { }, onOpenSettings: { })
+    OnboardingView(step: .finished, onFinish: {}, onOpenSettings: {})
 }
