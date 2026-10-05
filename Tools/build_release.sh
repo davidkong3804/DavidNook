@@ -55,7 +55,13 @@ if ! command -v xcodebuild > /dev/null 2>&1; then
       再執行：sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
       （這個指令要你自己執行；本腳本不使用 sudo）"
 fi
-if ! XCODE_VERSION="$(xcodebuild -version 2> /dev/null | head -n 1)" || [ -z "$XCODE_VERSION" ]; then
+# 注意：不要把 xcodebuild 的輸出直接接給 head（pipefail 下 head 提早結束會讓 xcodebuild 收到 SIGPIPE 而誤判失敗）。
+XCODE_OUTPUT=""
+for _attempt in 1 2 3; do # xcodebuild 偶爾會在載入外掛時失敗一次，重試幾次再判定
+    if XCODE_OUTPUT="$(xcodebuild -version 2> /dev/null)" && [ -n "$XCODE_OUTPUT" ]; then break; fi
+    XCODE_OUTPUT=""
+done
+if [ -z "$XCODE_OUTPUT" ]; then
     die "xcodebuild 無法使用，通常是只裝了 Command Line Tools、沒有完整的 Xcode，或尚未同意授權。
       請安裝 Xcode 後執行：sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
       並開啟 Xcode 一次（或執行 sudo xcodebuild -license accept）。本腳本不使用 sudo。"
@@ -63,6 +69,7 @@ fi
 for tool in codesign lipo ditto otool plutil; do
     command -v "$tool" > /dev/null 2>&1 || die "找不到 $tool（應該隨 macOS／Xcode 提供）"
 done
+XCODE_VERSION="$(printf '%s\n' "$XCODE_OUTPUT" | head -n 1)"
 echo "==> 工具：$XCODE_VERSION"
 
 # --- 2. （可選）重建 mediaremote-adapter ---------------------------------------
@@ -113,14 +120,15 @@ ditto "$PRODUCT" "$APP"
 echo "==> 驗證簽章"
 codesign --verify --deep --strict "$APP" || die "codesign 驗證失敗"
 SIGN_INFO="$(codesign -dv --verbose=4 "$APP" 2>&1)"
-echo "$SIGN_INFO" | grep -E '^(Identifier|Format|CodeDirectory|Signature|CDHash|TeamIdentifier)' | sed 's/^/    /' || true
-if ! echo "$SIGN_INFO" | grep -q 'flags=.*runtime'; then
+printf '%s\n' "$SIGN_INFO" | grep -E '^(Identifier|Format|CodeDirectory|Signature|CDHash|TeamIdentifier)' | sed 's/^/    /' || true
+if [[ "$SIGN_INFO" != *flags=*runtime* ]]; then
     die "Hardened Runtime 未啟用（codesign flags 沒有 runtime）。這會削弱安全設定，請檢查專案設定。"
 fi
 echo "    Hardened Runtime：開啟"
 
 EXECUTABLE="$APP/Contents/MacOS/DavidNook"
-if otool -L "$EXECUTABLE" | grep -q 'MediaRemoteAdapter'; then
+LINKED_LIBS="$(otool -L "$EXECUTABLE")"
+if [[ "$LINKED_LIBS" == *MediaRemoteAdapter* ]]; then
     die "主程式連結了 MediaRemoteAdapter.framework。framework 只能嵌入、不可連結（會被 dyld library validation 擋下）。"
 fi
 echo "    MediaRemoteAdapter.framework：僅嵌入（未連結）"
