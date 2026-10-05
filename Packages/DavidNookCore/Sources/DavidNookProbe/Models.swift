@@ -75,6 +75,10 @@ struct ViableInfo: Codable {
     var spokenLines: Int
     var enhancedTags: Bool
     var droppedHeaderLines: Int
+    var droppedTexts: [String]
+    /// 與前一行時間戳相同的非空白行數（雙語／翻譯行常見的特徵）。
+    var sameTimestampLines: Int
+    var leakSuspect: Bool
     var parserAnomalies: [String]
 }
 
@@ -89,6 +93,7 @@ struct PickedInfo: Codable {
     var spokenCount: Int
     var offsetMs: Int
     var firstLineSeconds: Double
+    var sameTimestampLines: Int
 }
 
 struct HeaderInfo: Codable {
@@ -129,16 +134,19 @@ struct DiffExample: Codable {
 struct DiffTally: Codable {
     var semantic = 0
     var style = 0
+    /// 對照版本身殘留簡體專有字造成的不一致（不算我們的錯）。
+    var refResidue = 0
     var byCategory: [String: Int] = [:]
     var byPair: [String: Int] = [:]
     /// 以「正規化簡體字」為鍵的不一致數（用來算每個歧義字的錯誤率）。
     var byCanon: [String: Int] = [:]
 
-    var total: Int { semantic + style }
+    var total: Int { semantic + style + refResidue }
 
     mutating func add(_ other: DiffTally) {
         semantic += other.semantic
         style += other.style
+        refResidue += other.refResidue
         for (k, v) in other.byCategory { byCategory[k, default: 0] += v }
         for (k, v) in other.byPair { byPair[k, default: 0] += v }
         for (k, v) in other.byCanon { byCanon[k, default: 0] += v }
@@ -231,6 +239,7 @@ struct FlaggedRow {
 }
 
 struct HeaderRow {
+    var tag: String
     var song: String
     var candidateID: Int
     var dropped: [String]

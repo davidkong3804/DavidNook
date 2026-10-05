@@ -150,7 +150,7 @@ for song in songs {
 
 // MARK: - 彙總 CSV
 
-var csv = "index,category,title,artist,duration,duration_estimated,outcome,candidates,viable,picked_id,pick_source,ideal_pick_id,pick_differs_from_ideal,duration_diff,picked_script,detected_script,applied_mode,converted,changed_chars,kana_chars,hangul_chars,ab_pair,ab_aligned_chars,ab_semantic,ab_style,ab_semantic_rate,ab_style_rate,rt_aligned_chars,rt_semantic,rt_style,div_median_s,div_frac_over_1s,live_requests,cached_requests,parser_anomalies,header_leak_suspect\n"
+var csv = "index,category,title,artist,duration,duration_estimated,outcome,candidates,viable,picked_id,pick_source,ideal_pick_id,pick_differs_from_ideal,duration_diff,picked_script,detected_script,applied_mode,converted,changed_chars,kana_chars,hangul_chars,ab_pair,ab_aligned_chars,ab_semantic,ab_style,ab_semantic_rate,ab_style_rate,rt_aligned_chars,rt_semantic,rt_style,div_median_s,div_frac_over_1s,live_requests,cached_requests,parser_anomalies,header_leak_suspect,same_timestamp_lines\n"
 for r in reports {
     let l = r.localization
     let ab = r.ab
@@ -172,6 +172,7 @@ for r in reports {
         r.divergence.map { fmt($0.medianLineDeltaSec, 2) } ?? "", r.divergence.map { fmt($0.fractionOver1s, 2) } ?? "",
         String(r.requests.filter { $0.source == "live" }.count), String(r.requests.filter { $0.source == "cache" }.count),
         r.parserAnomalies.joined(separator: "; "), r.header.map { $0.leakSuspect ? "1" : "0" } ?? "",
+        r.picked.map { String($0.sameTimestampLines) } ?? "",
     ]
     csv += row.map(csvField).joined(separator: ",") + "\n"
 }
@@ -186,9 +187,9 @@ for f in flagged {
 }
 writeText(flaggedText, to: outURL.appendingPathComponent("flagged.tsv"))
 
-var headerText = "song\tcandidate_id\tleak_suspect\tdropped\tfirst_kept\n"
+var headerText = "tag\tsong\tcandidate_id\tleak_suspect\tdropped\tfirst_kept\n"
 for h in headers {
-    headerText += [h.song, String(h.candidateID), h.leakSuspect ? "1" : "0", h.dropped.joined(separator: " ⏎ "), h.firstKept.prefix(3).joined(separator: " ⏎ ")]
+    headerText += [h.tag, h.song, String(h.candidateID), h.leakSuspect ? "1" : "0", h.dropped.joined(separator: " ⏎ "), h.firstKept.prefix(3).joined(separator: " ⏎ ")]
         .map(tsvField).joined(separator: "\t") + "\n"
 }
 writeText(headerText, to: outURL.appendingPathComponent("header_audit.tsv"))
@@ -309,9 +310,31 @@ writeJSON(ledger, to: outURL.appendingPathComponent("requests_ledger.json"))
 
 let found = reports.filter { $0.picked != nil }.count
 let converted = reports.filter { $0.localization?.converted ?? false }.count
+// 語意不一致逐條清單（人工複核用）：A/B 與合成對照，同句同字去重。
+var reviewText = "source\tsong\tcategory\tours_vs_ref\tcount\tsource_line\tours_line\tref_line\n"
+var reviewSeen: [String: Int] = [:]
+var reviewRows: [[String]] = []
+func addReview(_ origin: String, _ title: String, _ examples: [DiffExample]) {
+    for e in examples where e.kind == "semantic" {
+        let key = [origin, title, e.ours, e.ref, e.sourceLine].joined(separator: "|")
+        if let at = reviewSeen[key] {
+            reviewRows[at][4] = String((Int(reviewRows[at][4]) ?? 1) + 1)
+        } else {
+            reviewSeen[key] = reviewRows.count
+            reviewRows.append([origin, title, e.category, "\(e.ours)→\(e.ref)", "1", e.sourceLine, e.oursLine, e.refLine])
+        }
+    }
+}
+for r in reports {
+    if let ab = r.ab { addReview("A/B", r.title, ab.examples) }
+    if let rt = r.roundTrip { addReview("roundtrip", r.title, rt.examples) }
+}
+for row in reviewRows { reviewText += row.map(tsvField).joined(separator: "\t") + "\n" }
+writeText(reviewText, to: outURL.appendingPathComponent("semantic_review.tsv"))
+
 print("==== DavidNookProbe 彙總 ====")
 print("歌單 \(songs.count) 首；命中（有挑到同步歌詞）\(found)；被轉換 \(converted)")
-print("A/B 對照 \(abSongs.count) 首；對齊漢字 \(abAligned)；語意不一致 \(abDisplay.semantic)（\(fmt(abSummary.semanticRatePercent, 3))%）；風格差異 \(abDisplay.style)（\(fmt(abSummary.styleRatePercent, 3))%）")
-print("合成對照（繁體原文→t2s→我們的 s2t）\(rtSongs.count) 首；對齊漢字 \(rtAligned)；語意不一致 \(rtDisplay.semantic)（\(fmt(rtSummary.semanticRatePercent, 3))%）；風格差異 \(rtDisplay.style)（\(fmt(rtSummary.styleRatePercent, 3))%）")
+print("A/B 對照 \(abSongs.count) 首；對齊漢字 \(abAligned)；語意不一致 \(abDisplay.semantic)（\(fmt(abSummary.semanticRatePercent, 3))%）；風格差異 \(abDisplay.style)（\(fmt(abSummary.styleRatePercent, 3))%）；對照版殘留簡體 \(abDisplay.refResidue)")
+print("合成對照（繁體原文→t2s→我們的 s2t）\(rtSongs.count) 首；對齊漢字 \(rtAligned)；語意不一致 \(rtDisplay.semantic)（\(fmt(rtSummary.semanticRatePercent, 3))%）；風格差異 \(rtDisplay.style)（\(fmt(rtSummary.styleRatePercent, 3))%）；對照版殘留簡體 \(rtDisplay.refResidue)")
 print("累計連網請求 \(ledger.total)（200：\(ledger.count(status: 200))、404：\(ledger.count(status: 404))、429：\(ledger.count(status: 429))、503：\(ledger.count(status: 503))）")
 print("報告目錄：\(outURL.path)")

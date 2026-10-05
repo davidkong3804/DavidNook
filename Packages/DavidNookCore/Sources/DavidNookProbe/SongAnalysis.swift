@@ -205,6 +205,8 @@ final class SongAnalyzer {
                     duration: v.candidate.duration ?? 0, durationDiff: v.diff, script: v.script.rawValue,
                     firstLineSeconds: Double((v.spoken.first?.timeMs ?? 0) - v.offsetMs) / 1000,
                     spokenLines: v.spoken.count, enhancedTags: v.enhanced, droppedHeaderLines: v.dropped.count,
+                    droppedTexts: v.dropped.map(\.text), sameTimestampLines: Self.sameTimestampCount(v.spoken),
+                    leakSuspect: v.spoken.prefix(5).contains { Self.looksLikeCredit($0.text) },
                     parserAnomalies: v.anomalies
                 )
             },
@@ -237,7 +239,8 @@ final class SongAnalyzer {
                 id: picked.candidateID, trackName: picked.trackName, artistName: picked.artistName,
                 duration: pickedDuration, durationDiff: pickedDuration.map { abs($0 - (duration ?? 0)) },
                 script: picked.script.rawValue, lineCount: picked.lines.count, spokenCount: spoken.count,
-                offsetMs: picked.offsetMs, firstLineSeconds: Double((spoken.first?.timeMs ?? 0) - picked.offsetMs) / 1000
+                offsetMs: picked.offsetMs, firstLineSeconds: Double((spoken.first?.timeMs ?? 0) - picked.offsetMs) / 1000,
+                sameTimestampLines: Self.sameTimestampCount(spoken)
             )
 
             if let raw, let synced = raw.syncedLyrics {
@@ -247,7 +250,7 @@ final class SongAnalyzer {
                 let leak = firstKept.contains { Self.looksLikeCredit($0) }
                 report.header = HeaderInfo(dropped: stripped.dropped.map(\.text), firstKept: firstKept, leakSuspect: leak)
                 headers.append(HeaderRow(
-                    song: songName, candidateID: picked.candidateID, dropped: stripped.dropped.map(\.text),
+                    tag: "picked", song: songName, candidateID: picked.candidateID, dropped: stripped.dropped.map(\.text),
                     firstKept: firstKept, leakSuspect: leak
                 ))
                 report.parserAnomalies = Self.parserAnomalies(raw: synced, document: document)
@@ -266,6 +269,12 @@ final class SongAnalyzer {
         }
 
         // A/B：同曲同時有簡體版與原生繁體版（長度差 ≤ 2 秒）。
+        for v in viables where v.candidate.id != report.picked?.id {
+            headers.append(HeaderRow(
+                tag: "viable", song: songName, candidateID: v.candidate.id, dropped: v.dropped.map(\.text),
+                firstKept: v.spoken.prefix(5).map(\.text), leakSuspect: v.spoken.prefix(5).contains { Self.looksLikeCredit($0.text) }
+            ))
+        }
         var abPool = viables
         for c in survey.altCandidates where !abPool.contains(where: { $0.candidate.id == c.id }) {
             if let v = makeViable(c, query: query) { abPool.append(v) }
@@ -282,8 +291,9 @@ final class SongAnalyzer {
         }
 
         // 合成對照（round-trip）：選中的原生繁體版 → t2s → 我們的 s2t 管線 → 與原版逐字比對。
-        if chinese, let picked, picked.script == .traditional {
-            report.roundTrip = roundTrip(picked: picked)
+        if chinese, let picked, picked.script == .traditional, let rt = roundTrip(picked: picked, songName: songName) {
+            report.roundTrip = rt.result
+            flagged += rt.flagged
         }
 
         return Output(report: report, flagged: flagged, headers: headers)
@@ -291,7 +301,7 @@ final class SongAnalyzer {
 
     // MARK: - 合成對照
 
-    private func roundTrip(picked: PickedLyrics) -> RoundTripResult? {
+    private func roundTrip(picked: PickedLyrics, songName: String) -> (result: RoundTripResult, flagged: [FlaggedRow])? {
         guard let toSimplified = try? LyricsChineseConverter.cached(.traditionalToSimplified),
               let displayAll = try? localizer.localize(lines: picked.lines.map(\.text)).lines else { return nil }
         let simplifiedLines = picked.lines.map { toSimplified.convert($0.text) }
@@ -306,11 +316,14 @@ final class SongAnalyzer {
         }
         let pairs = (0..<ours.count).map { ($0, $0) }
         let eval = ab.evaluate(pairs: pairs, ours: ours, refDisplay: refDisplay, refRaw: refRaw, maxExamples: 300)
-        return RoundTripResult(
+        let rt = RoundTripResult(
             sourceID: picked.candidateID, lines: ours.count, alignedChars: eval.alignedChars,
             detectedAsSimplified: result.script.rawValue, vsDisplayRef: eval.vsDisplay, vsRawRef: eval.vsRaw,
             occurrences: eval.occurrences, examples: eval.examples
         )
+        let simplifiedAsLRC = zip(picked.lines, simplifiedLines).map { LRCLine(timeMs: $0.timeMs, text: $1) }
+        let rows = Self.flaggedRows(song: songName, tag: "roundtrip", id: picked.candidateID, lines: simplifiedAsLRC, output: result.lines)
+        return (rt, rows)
     }
 
     // MARK: - 挑選分歧
@@ -430,6 +443,13 @@ final class SongAnalyzer {
             ))
         }
         return rows
+    }
+
+    /// 與前一個非空白行時間戳相同的行數。
+    static func sameTimestampCount(_ spoken: [LRCLine]) -> Int {
+        var n = 0
+        for (a, b) in zip(spoken, spoken.dropFirst()) where a.timeMs == b.timeMs { n += 1 }
+        return n
     }
 
     private static let creditHint = try! NSRegularExpression(

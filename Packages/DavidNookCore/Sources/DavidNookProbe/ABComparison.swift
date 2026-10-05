@@ -11,6 +11,7 @@ import Foundation
 final class ABComparer {
 
     private let canonConverter: LyricsChineseConverter
+    private let detector = ChineseScriptDetector()
     private var canonCache: [Character: Character] = [:]
 
     init() throws {
@@ -33,9 +34,13 @@ final class ABComparer {
         ["台", "臺"], ["了", "瞭"], ["着", "著"], ["為", "爲"], ["群", "羣"], ["眾", "衆"], ["啟", "啓"],
         ["線", "綫"], ["峰", "峯"], ["說", "説"], ["污", "汙"], ["麼", "麽"], ["才", "纔"], ["並", "并"],
         ["吃", "喫"], ["跡", "蹟", "迹"], ["裡", "裏"],
+        // 異體字：兩種寫法在臺灣都通行（OpenCC 的 twStandard 會選其中一種）。
+        ["悽", "淒"], ["搜", "蒐"], ["嘆", "歎"], ["昇", "升"], ["週", "周"], ["溼", "濕"], ["汙", "污"],
     ]
 
     func classify(ours c1: Character, ref c2: Character) -> (category: String, kind: String) {
+        // 對照版本身殘留簡體專有字（沒轉乾淨）：不是我們的錯，另外統計。
+        if detector.evidence(in: String(c2)).simplified > 0 { return ("對照版殘留簡體", "ref-residue") }
         let pair: Set<Character> = [c1, c2]
         if Self.styleGroups.contains(where: { pair.isSubset(of: $0) }) {
             switch canon(c1) {
@@ -167,7 +172,11 @@ final class ABComparer {
     }
 
     private func tally(_ t: inout DiffTally, _ category: String, _ kind: String, _ pair: String, canon: Character) {
-        if kind == "semantic" { t.semantic += 1 } else { t.style += 1 }
+        switch kind {
+        case "semantic": t.semantic += 1
+        case "style": t.style += 1
+        default: t.refResidue += 1
+        }
         t.byCategory[category, default: 0] += 1
         t.byPair[pair, default: 0] += 1
         t.byCanon[String(canon), default: 0] += 1
