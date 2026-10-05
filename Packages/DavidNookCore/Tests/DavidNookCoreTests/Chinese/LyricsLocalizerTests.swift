@@ -525,6 +525,71 @@ final class LyricsLocalizerTests: XCTestCase {
         }
     }
 
+    // MARK: - 「里→裡」詞級規則（三條路徑的最終輸出；樣本全為自編句子）
+
+    func testWordLevelLiIsFixedOnTheNativeTraditionalPath() throws {
+        // 真實資料裡殘留的「里」後面都接字：心里卻…、家里沒有…、場景里出現…、秋涼里帶…
+        let extra = ["我的心里卻一直下著雨", "家里沒有人等我", "場景里出現了你", "秋涼里帶著微風"]
+        let result = try localize(traditionalDocument(adding: extra))
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(Array(result.lines.suffix(4)), ["我的心裡卻一直下著雨", "家裡沒有人等我", "場景裡出現了你", "秋涼裡帶著微風"])
+    }
+
+    func testWordLevelLiKeepsCorrectWordsOnTheNativeTraditionalPath() throws {
+        let extra = [
+            "相隔千里的我們", "跑了五公里", "阿里山的日出", "斯里蘭卡的海", "去里約看球", "走過里程碑",
+            "他住在鄰里之間", "十里桃花開了", "找里長伯伯", "回到故里去", "萬里無雲的夜",
+        ]
+        let doc = traditionalDocument(adding: extra)
+        let result = try localize(doc)
+        XCTAssertEqual(result.script, .traditional)
+        XCTAssertEqual(result.lines, doc)
+    }
+
+    func testWordLevelLiIsFixedOnTheSimplifiedPath() throws {
+        let result = try localize([
+            "我们躲在汽车里取暖", "你在我心里一直下雨", "家里没有人等我", "试管里找不到答案", "满心里都是你",
+            "阿里山的日出", "斯里兰卡的海", "相隔千里的我们", "走过里程碑", "去里约看球", "跑了五公里",
+        ])
+        XCTAssertEqual(result.script, .simplified)
+        XCTAssertEqual(result.lines, [
+            "我們躲在汽車裡取暖", "你在我心裡一直下雨", "家裡沒有人等我", "試管裡找不到答案", "滿心裡都是你",
+            "阿里山的日出", "斯里蘭卡的海", "相隔千里的我們", "走過里程碑", "去里約看球", "跑了五公里",
+        ])
+    }
+
+    func testWordLevelLiIsFixedOnEveryLineKindInsideAMixedDocument() throws {
+        var doc = Array(repeating: "我们爱红色的花", count: 10)
+        doc += Array(repeating: "我們一起走過這條安靜的街", count: 10)
+        // 簡體行、繁體行、中性行各一；另有三條不得更動的詞。
+        doc += ["我们躲在汽车里取暖", "我的心里卻一直下著雨", "家里沒有人等我", "阿里山", "相隔千里", "跑了五公里"]
+        let result = try localize(doc)
+        XCTAssertEqual(result.script, .mixed)
+        XCTAssertEqual(
+            Array(result.lines.suffix(6)),
+            ["我們躲在汽車裡取暖", "我的心裡卻一直下著雨", "家裡沒有人等我", "阿里山", "相隔千里", "跑了五公里"]
+        )
+    }
+
+    func testWordLevelLiIsNotAppliedToNeutralDocumentsOrJapaneseKoreanLines() throws {
+        let neutral = ["我的心里想著你", "家里沒有人"]
+        XCTAssertEqual(try localize(neutral).lines, neutral)
+        let result = try localize(traditionalDocument(adding: ["心里で会おう", "心里를 사랑해"]))
+        XCTAssertEqual(Array(result.lines.suffix(2)), ["心里で会おう", "心里를 사랑해"])
+    }
+
+    func testWordLevelLiRuleKeepsIdempotence() throws {
+        let documents = [
+            traditionalDocument(adding: ["我的心里卻一直下著雨", "阿里山", "家里"]),
+            ["我们躲在汽车里取暖", "家里没有人，千里"],
+        ]
+        for document in documents {
+            let once = try localize(document)
+            let twice = try localize(once.lines)
+            XCTAssertEqual(twice.lines, once.lines)
+        }
+    }
+
     // MARK: - shared 實例
 
     func testSharedInstanceWorks() throws {
