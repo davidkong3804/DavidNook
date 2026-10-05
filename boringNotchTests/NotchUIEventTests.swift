@@ -27,19 +27,18 @@ final class NotchUIEventTests: XCTestCase {
         let expectation = expectation(description: "event delivered")
         NotchUIEventBus.events
             .sink { event in
-                guard case .sneakPeek(let type, let value, let icon, _, let uuid, _) = event else {
+                guard case .sneakPeek(let type, let uuid, let duration) = event else {
                     XCTFail("unexpected event")
                     return
                 }
-                XCTAssertEqual(type, .volume)
-                XCTAssertEqual(value, 0.5, accuracy: 0.0001)
-                XCTAssertEqual(icon, "speaker.wave.2")
+                XCTAssertEqual(type, .music)
                 XCTAssertNil(uuid)
+                XCTAssertEqual(duration, 1.5, accuracy: 0.0001)
                 expectation.fulfill()
             }
             .store(in: &cancellables)
 
-        NotchUIEventBus.events.send(.sneakPeek(type: .volume, value: 0.5, icon: "speaker.wave.2"))
+        NotchUIEventBus.events.send(.sneakPeek(type: .music))
         waitForExpectations(timeout: 1.0)
     }
 
