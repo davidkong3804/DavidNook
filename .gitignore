@@ -56,3 +56,6 @@ build/
 # DavidNook
 .DS_Store
 xcuserdata/
+
+# 本機打包的試用版壓縮檔（不進版控）
+/dist/
