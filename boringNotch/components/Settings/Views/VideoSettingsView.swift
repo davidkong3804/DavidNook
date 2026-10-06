@@ -2,7 +2,7 @@
 //  VideoSettingsView.swift
 //  DavidNook
 //
-//  設定 → 影片：功能開關與預設寬度。擷取只在你於「影片」分頁挑選視窗後才會開始。
+//  設定 → 影片：功能開關與影片寬度。擷取只在你於「正在播放」面板的封面槽挑選視窗後才會開始。
 //
 
 import Defaults
@@ -16,14 +16,11 @@ struct VideoSettingsView: View {
         Form {
             Section {
                 Defaults.Toggle(key: .videoCapsuleEnabled) {
-                    Text("Show the Video tab")
+                    Text("Show a picked window in the Home panel")
                 }
                 .onChange(of: enabled) { _, isOn in
                     if !isOn {
-                        Task { @MainActor in
-                            VideoCapsuleController.shared.stop()
-                            if BoringViewCoordinator.shared.currentView == .video { BoringViewCoordinator.shared.currentView = .home }
-                        }
+                        Task { @MainActor in VideoCapsuleController.shared.stop() }
                     }
                 }
                 LabeledContent("Video width") {
@@ -46,7 +43,7 @@ struct VideoSettingsView: View {
             } header: {
                 Text("Video")
             } footer: {
-                Text("Shows the live picture of one window you pick, scaled down inside the expanded notch. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead.")
+                Text("Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a capsule outside the notch. The width limits how wide the video can grow in the Home panel and sets the size of the pinned capsule. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

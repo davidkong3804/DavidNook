@@ -7,6 +7,7 @@
 //
 
 import Combine
+import DavidNookCore
 import DavidNookUI
 import Defaults
 import SwiftUI
@@ -23,12 +24,18 @@ struct MusicPlayerView: View {
     let bodyHeight: CGFloat
     @Default(.enableLyrics) private var enableLyrics
     @Default(.showLyricsPanel) private var showLyricsPanel
+    @Default(.videoCapsuleEnabled) private var videoEnabled
+    @Default(.videoCapsuleWidth) private var videoWidth
+    @ObservedObject private var video = VideoCapsuleController.shared
 
+    /// 封面槽在串流中（或顯示影片說明）時加寬；寬度不超過版面容許與設定頁的影片寬度，也不擠壞控制區與歌詞（見 NotchHomeMetrics）。
     private var metrics: NotchHomeMetrics {
         NotchHomeMetrics(
             contentWidth: contentWidth,
             bodyHeight: bodyHeight,
-            showsLyrics: enableLyrics && showLyricsPanel
+            showsLyrics: enableLyrics && showLyricsPanel,
+            artAspectRatio: videoEnabled ? video.state.slotAspectRatio : nil,
+            videoMaximumWidth: videoWidth
         )
     }
 
@@ -42,6 +49,8 @@ struct MusicPlayerView: View {
         } lyrics: {
             LyricsSidePanel(visibleLineCount: metrics.lyricsVisibleLines)
         }
+        // 沿用分頁切換的彈簧（response 0.38、dampingRatio 0.82）讓封面槽加寬／恢復；只改槽內版面，不碰視窗大小。
+        .animation(.spring(response: 0.38, dampingFraction: 0.82), value: metrics.artWidth)
         .contentShape(Rectangle())
         .onHover { hovering in
             isHoveringMusicArea = hovering
@@ -58,11 +67,13 @@ struct AlbumArtView: View {
     let albumArtNamespace: Namespace.ID
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            if Defaults[.lightingEffect] {
-                albumArtBackground
+        VideoArtSlotHost {
+            ZStack(alignment: .bottomTrailing) {
+                if Defaults[.lightingEffect] {
+                    albumArtBackground
+                }
+                albumArtButton
             }
-            albumArtButton
         }
     }
 
@@ -124,6 +135,69 @@ struct AlbumArtView: View {
                 .offset(x: 10, y: 10)
                 .transition(.scale.combined(with: .opacity))
                 .zIndex(2)
+        }
+    }
+}
+
+private enum VideoArtSlotText {
+    static let strings = VideoArtSlotStrings(
+        captureWindow: String(localized: "Show a window as live video", comment: "Album art slot: tooltip of the small button that opens the system window picker."),
+        changeWindow: String(localized: "Change Window", comment: "Video tab: toolbar button to pick a different window."),
+        stop: String(localized: "Stop", comment: "Video tab: toolbar button that stops showing the window."),
+        pinHelp: String(localized: "Click to pin the video outside the notch", comment: "Album art slot: tooltip on the live video; clicking pins it as a capsule under the collapsed notch."),
+        unpinHelp: String(localized: "Click to unpin the video", comment: "Album art slot: tooltip on the live video while it is pinned."),
+        backToCover: String(localized: "Back to cover", comment: "Album art slot: button that stops the video and shows the album cover again."),
+        blackTitle: String(localized: "This source is content-protected", comment: "Video tab: shown over a black picture that looks like protected (DRM) content."),
+        blackHint: String(localized: "The system does not allow capturing it. Try the source's own picture-in-picture, or an unprotected source such as YouTube", comment: "Album art slot: explains protected content and what to try instead."),
+        closedTitle: String(localized: "The window was closed", comment: "Video tab: shown when the picked window no longer exists."),
+        closedHint: String(localized: "Choose another window, or go back to the cover", comment: "Album art slot: hint when the picked window was closed."),
+        permissionTitle: String(localized: "Screen recording permission needed", comment: "Video tab: shown when macOS does not allow capturing."),
+        permissionHint: String(localized: "In System Settings → Privacy & Security → Screen & System Audio Recording, allow DavidNook, then reopen the app", comment: "Video tab: what to do about the missing permission."),
+        openSettings: String(localized: "Open System Settings", comment: "Clipboard panel: button that opens System Settings."),
+        errorTitle: String(localized: "Couldn't show the video", comment: "Video tab: title of a generic error."),
+        pickerFailedHint: String(localized: "The system picker did not open. Please try again", comment: "Video tab: error hint when the system picker failed to open."),
+        streamErrorHint: String(localized: "Capture was interrupted by the system. Choose the window again", comment: "Video tab: error hint when the system stopped the capture."),
+        unknownErrorHint: String(localized: "Something unexpected happened. Choose the window again", comment: "Video tab: error hint for an unknown error."),
+        chooseWindow: String(localized: "Choose Window", comment: "Video tab: button that opens the system window picker.")
+    )
+}
+
+/// 封面槽：沒在擷取時是專輯封面（右上有低調的「擷取視窗」入口）；擷取中改顯示選定視窗的即時畫面。
+/// 點一下影片＝釘選／取消釘選；hover 時才出現「換視窗」「停止」。畫面只在記憶體，不存檔、不上傳。
+struct VideoArtSlotHost<Cover: View>: View {
+    @EnvironmentObject var vm: BoringViewModel
+    @ObservedObject private var controller = VideoCapsuleController.shared
+    @Default(.videoCapsuleEnabled) private var enabled
+    @Default(.videoCapsulePinned) private var pinned
+    @ViewBuilder let cover: () -> Cover
+
+    var body: some View {
+        if enabled {
+            VideoArtSlotView(
+                state: controller.state,
+                isPinned: pinned,
+                strings: VideoArtSlotText.strings,
+                display: controller.display,
+                callbacks: VideoArtSlotCallbacks(
+                    onChoose: { controller.choose() },
+                    onStop: { controller.stop() },
+                    onTogglePin: { controller.togglePin() },
+                    onBackToCover: { controller.stop() },
+                    onOpenSettings: { controller.openSystemSettings() }
+                ),
+                cover: cover
+            )
+            .onAppear { controller.slotDidAppear() }
+            .onDisappear {
+                vm.isPopoverActive = false
+                controller.slotDidDisappear()
+            }
+            // 系統挑選器開著時，滑鼠移到挑選器上不要讓瀏海自動收合。
+            .onChange(of: controller.state) { _, newState in
+                vm.isPopoverActive = (newState == .choosing)
+            }
+        } else {
+            cover()
         }
     }
 }

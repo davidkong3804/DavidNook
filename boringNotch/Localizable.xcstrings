@@ -4399,7 +4399,7 @@
       }
     },
     "Video" : {
-      "comment" : "Notch tab and settings tab: show a picked window as live video.",
+      "comment" : "Settings tab and section: show a picked window as live video.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4411,40 +4411,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "影片"
-          }
-        }
-      }
-    },
-    "Watch a window in the notch" : {
-      "comment" : "Video tab: title of the empty state before any window is picked.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Watch a window in the notch"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在瀏海裡看影片"
-          }
-        }
-      }
-    },
-    "Pick a window and its live picture shows here, scaled down. The picture stays in memory only, and is never saved or uploaded" : {
-      "comment" : "Video tab: hint under the empty state; explains what happens and the privacy guarantee.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick a window and its live picture shows here, scaled down. The picture stays in memory only, and is never saved or uploaded"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "挑一個視窗，它的即時畫面會縮小顯示在這裡。畫面只在記憶體中，不會儲存或上傳"
           }
         }
       }
@@ -4462,40 +4428,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選擇視窗"
-          }
-        }
-      }
-    },
-    "Pick a window in the system picker" : {
-      "comment" : "Video tab: shown while the system window picker is open.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick a window in the system picker"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "請在系統挑選器選一個視窗"
-          }
-        }
-      }
-    },
-    "Only the one window you pick is shown. Press Esc to cancel" : {
-      "comment" : "Video tab: hint while the system window picker is open.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Only the one window you pick is shown. Press Esc to cancel"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "只會顯示你選的那一個視窗；按 Esc 可取消"
           }
         }
       }
@@ -4534,40 +4466,6 @@
         }
       }
     },
-    "Pin it to the collapsed notch (the collapsed capsule is not available yet)" : {
-      "comment" : "Video tab: tooltip of the pin button.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pin it to the collapsed notch (the collapsed capsule is not available yet)"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "釘選到收合的瀏海（收合膠囊尚未提供）"
-          }
-        }
-      }
-    },
-    "Width %lld pt" : {
-      "comment" : "Video tab: label above the width slider. Placeholder is the width in points.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Width %lld pt"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "寬度 %lld pt"
-          }
-        }
-      }
-    },
     "The window was closed" : {
       "comment" : "Video tab: shown when the picked window no longer exists.",
       "localizations" : {
@@ -4581,23 +4479,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "視窗已關閉"
-          }
-        }
-      }
-    },
-    "The window you picked is gone. Choose another window to continue" : {
-      "comment" : "Video tab: hint when the picked window was closed.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The window you picked is gone. Choose another window to continue"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你選的視窗已經關掉了。重新選一個視窗就能繼續"
           }
         }
       }
@@ -4619,23 +4500,6 @@
         }
       }
     },
-    "The system does not allow capturing it. Try the source's own picture-in-picture, or a source without protection such as YouTube or a local video" : {
-      "comment" : "Video tab: explains protected content and what to try instead.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The system does not allow capturing it. Try the source's own picture-in-picture, or a source without protection such as YouTube or a local video"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "系統不允許擷取。可改用來源本身的畫中畫，或沒有保護的來源（例如 YouTube、本機影片）"
-          }
-        }
-      }
-    },
     "Screen recording permission needed" : {
       "comment" : "Video tab: shown when macOS does not allow capturing.",
       "localizations" : {
@@ -4649,23 +4513,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "需要螢幕錄製權限"
-          }
-        }
-      }
-    },
-    "macOS is not allowing DavidNook to capture the picture. The picture is only scaled down in your Mac's memory, and is never saved or uploaded" : {
-      "comment" : "Video tab: explains why permission is needed and the privacy guarantee.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macOS is not allowing DavidNook to capture the picture. The picture is only scaled down in your Mac's memory, and is never saved or uploaded"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "系統不允許 DavidNook 擷取畫面。畫面只在你的 Mac 記憶體中縮小顯示，不會儲存或上傳"
           }
         }
       }
@@ -4755,23 +4602,6 @@
         }
       }
     },
-    "Show the Video tab" : {
-      "comment" : "Video settings: toggle that shows or hides the Video tab.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show the Video tab"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "顯示「影片」分頁"
-          }
-        }
-      }
-    },
     "Video width" : {
       "comment" : "Video settings: slider label for the video width.",
       "localizations" : {
@@ -4789,19 +4619,138 @@
         }
       }
     },
-    "Shows the live picture of one window you pick, scaled down inside the expanded notch. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead." : {
-      "comment" : "Video settings: footer explaining what the feature does, privacy, and the protected-content limit.",
+    "Back to cover" : {
+      "comment" : "Album art slot: button that stops the video and shows the album cover again.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shows the live picture of one window you pick, scaled down inside the expanded notch. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead."
+            "value" : "Back to cover"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在展開的瀏海裡顯示你挑選的那一個視窗的即時縮小畫面。畫面只存在記憶體中：不會儲存、上傳或錄製，也不會擷取聲音。受內容保護的來源（例如 Netflix）無法被 macOS 擷取，會改為顯示說明。"
+            "value" : "回到封面"
+          }
+        }
+      }
+    },
+    "Choose another window, or go back to the cover" : {
+      "comment" : "Album art slot: hint when the picked window was closed.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose another window, or go back to the cover"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新選一個視窗，或回到封面"
+          }
+        }
+      }
+    },
+    "Click to pin the video outside the notch" : {
+      "comment" : "Album art slot: tooltip on the live video; clicking pins it as a capsule under the collapsed notch.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click to pin the video outside the notch"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點一下，把影片釘到瀏海外面"
+          }
+        }
+      }
+    },
+    "Click to unpin the video" : {
+      "comment" : "Album art slot: tooltip on the live video while it is pinned.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click to unpin the video"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點一下取消釘選"
+          }
+        }
+      }
+    },
+    "Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a capsule outside the notch. The width limits how wide the video can grow in the Home panel and sets the size of the pinned capsule. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead." : {
+      "comment" : "Video settings: footer explaining the feature, pinning, width, privacy and the protected-content limit.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a capsule outside the notch. The width limits how wide the video can grow in the Home panel and sets the size of the pinned capsule. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用專輯封面上的小按鈕挑選一個視窗，它的即時畫面就會取代封面；點一下影片，就會把它釘成瀏海外面的膠囊。寬度決定影片在「正在播放」面板裡最多能加寬到多少，也是釘選膠囊的大小。畫面只存在記憶體中：不會儲存、上傳或錄製，也不會擷取聲音。受內容保護的來源（例如 Netflix）無法被 macOS 擷取，會改為顯示說明。"
+          }
+        }
+      }
+    },
+    "Show a picked window in the Home panel" : {
+      "comment" : "Video settings: toggle that enables the live video in the album cover slot.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show a picked window in the Home panel"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在「正在播放」面板顯示挑選的視窗"
+          }
+        }
+      }
+    },
+    "Show a window as live video" : {
+      "comment" : "Album art slot: tooltip of the small button that opens the system window picker.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show a window as live video"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把視窗顯示成即時影片"
+          }
+        }
+      }
+    },
+    "The system does not allow capturing it. Try the source's own picture-in-picture, or an unprotected source such as YouTube" : {
+      "comment" : "Album art slot: explains protected content and what to try instead.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The system does not allow capturing it. Try the source's own picture-in-picture, or an unprotected source such as YouTube"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系統不允許擷取。可改用來源本身的畫中畫，或沒有保護的來源（例如 YouTube）"
           }
         }
       }
