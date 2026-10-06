@@ -8,6 +8,7 @@
 
 import DavidNookCore
 import DavidNookUI
+import Defaults
 import SwiftUI
 
 struct LyricsSidePanel: View {
