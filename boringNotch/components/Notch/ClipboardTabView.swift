@@ -12,6 +12,7 @@ import AppKit
 import Combine
 import DavidNookCore
 import DavidNookUI
+import Defaults
 import SwiftUI
 
 // MARK: - 控制器
@@ -20,6 +21,10 @@ import SwiftUI
 @MainActor
 final class ClipboardPanelController: ObservableObject {
     @Published private(set) var model: ClipboardPanelModel
+    /// 底部操作提示何時顯示／收起（只存次數與是否關閉，不含任何剪貼內容）。
+    @Published private(set) var hints: ClipboardHintPolicy
+    /// 點擊後的回饋（被點的那一列顯示「已複製」或「複製失敗」）。
+    @Published private(set) var feedback = ClipboardCopyFeedback()
 
     /// 縮圖快取（跨分頁切換共用；有張數與總成本上限）。
     static let thumbnails = ClipboardThumbnailCache()
@@ -29,8 +34,14 @@ final class ClipboardPanelController: ObservableObject {
 
     private let service = ClipboardService.shared
     private var cancellables = Set<AnyCancellable>()
+    /// 一次啟動（寫回＋回饋＋收合）進行中；避免連點送出兩次貼上。
+    private var activationInFlight = false
 
     init() {
+        hints = ClipboardHintPolicy(
+            activationCount: Defaults[.clipboardHintActivations],
+            isDismissed: Defaults[.clipboardHintDismissed]
+        )
         let service = ClipboardService.shared
         model = ClipboardPanelModel(items: service.items, isPaused: service.isPaused, needsPermission: service.needsPermission)
         service.$items
@@ -52,14 +63,59 @@ final class ClipboardPanelController: ObservableObject {
         perform(model.handle(key))
     }
 
+    /// 點一下列或在選取列按 Return：寫回剪貼簿（Core 附自身標記，不會重複記錄）。
+    /// 成功：該列先顯示約 0.35 秒的「已複製」勾勾，再收合瀏海，並在已授權且使用者開啟時自動貼上。
+    /// 失敗：該列顯示「複製失敗」，瀏海維持開啟，可以重試。
     func activate(id: UUID) {
+        guard !activationInFlight, !feedback.blocksActivation else { return }
         guard let item = model.allItems.first(where: { $0.id == id }) else { return }
+        activationInFlight = true
         Task {
-            // 寫回剪貼簿（Core 附自身標記，不會重複記錄）；成功後收合瀏海，並在已授權且使用者開啟時自動貼上。
-            guard await service.paste(item) else { return }
+            defer { activationInFlight = false }
+            guard await service.paste(item) else {
+                if let token = feedback.begin(.failed, for: id) {
+                    await expireFeedback(token, after: ClipboardCopyFeedback.failedDuration)
+                }
+                return
+            }
+            recordSuccessfulCopy()
+            if let token = feedback.begin(.copied, for: id) {
+                await expireFeedback(token, after: ClipboardCopyFeedback.copiedDuration)
+            }
             closeNotch()
             service.performAutoPasteIfEnabled()
         }
+    }
+
+    private func expireFeedback(_ token: Int, after seconds: TimeInterval) async {
+        try? await Task.sleep(for: .seconds(seconds))
+        feedback.expire(token: token)
+    }
+
+    private func recordSuccessfulCopy() {
+        var updated = hints
+        updated.recordActivation()
+        setHints(updated)
+    }
+
+    /// 底部提示列的 ✕。
+    func dismissHints() {
+        var updated = hints
+        updated.dismiss()
+        setHints(updated)
+    }
+
+    /// 頂端列的說明按鈕。
+    func toggleHints() {
+        var updated = hints
+        updated.toggle()
+        setHints(updated)
+    }
+
+    private func setHints(_ value: ClipboardHintPolicy) {
+        hints = value
+        Defaults[.clipboardHintActivations] = value.activationCount
+        Defaults[.clipboardHintDismissed] = value.isDismissed
     }
 
     func togglePin(id: UUID) { service.togglePin(id: id) }
@@ -86,6 +142,7 @@ final class ClipboardPanelController: ObservableObject {
 struct ClipboardTabView: View {
     @EnvironmentObject var vm: BoringViewModel
     @StateObject private var controller = ClipboardPanelController()
+    @Default(.clipboardAutoPaste) private var autoPaste
 
     private static let strings = ClipboardPanelStrings(
         searchPlaceholder: String(localized: "Search clipboard", comment: "Clipboard panel: placeholder of the search field."),
@@ -102,15 +159,37 @@ struct ClipboardTabView: View {
         itemCount: { count in
             String(localized: "\(count) items", comment: "Clipboard panel: number of files in a file row. Placeholder is the count.")
         },
+        copyHelp: String(localized: "Copy back to clipboard (Return)", comment: "Clipboard panel: tooltip of the copy button on a row, with its keyboard shortcut."),
+        pinHelp: String(localized: "Pin (⌘P)", comment: "Clipboard panel: tooltip of the pin button on a row, with its keyboard shortcut."),
+        unpinHelp: String(localized: "Unpin (⌘P)", comment: "Clipboard panel: tooltip of the unpin button on a row, with its keyboard shortcut."),
+        deleteHelp: String(localized: "Delete (⌘⌫)", comment: "Clipboard panel: tooltip of the delete button on a row, with its keyboard shortcut."),
+        copied: String(localized: "Copied", comment: "Clipboard panel: brief confirmation shown on a row after it was copied back to the clipboard."),
+        copyFailed: String(localized: "Couldn't copy", comment: "Clipboard panel: brief message shown on a row when copying it back to the clipboard failed."),
         emptyHistory: String(localized: "Clipboard is empty", comment: "Clipboard panel: empty state when there is no history."),
-        emptyHistoryHint: String(localized: "Text, images and files you copy will show up here", comment: "Clipboard panel: hint under the empty state."),
+        emptyHistoryHint: String(localized: "Text, images and files you copy show up here. Click a row to copy it back to the clipboard", comment: "Clipboard panel: hint under the empty state; also teaches the click action."),
         noResults: String(localized: "No matching items", comment: "Clipboard panel: nothing matches the search or filter."),
+        noResultsHint: String(localized: "Try another keyword, or set the filter above to All", comment: "Clipboard panel: hint under the no-results state."),
         pausedTitle: String(localized: "Recording paused", comment: "Clipboard panel: banner shown while recording is paused."),
-        pausedHint: String(localized: "Anything you copy while paused is not recorded afterwards", comment: "Clipboard panel: hint under the paused state."),
+        pausedHint: String(localized: "Anything you copy while paused is not recorded, and is not added after you resume. Press Resume to keep recording", comment: "Clipboard panel: explains why nothing is recorded while paused and what to do."),
+        pausedBannerDetail: String(localized: "Anything you copy while paused is not recorded", comment: "Clipboard panel: one-line detail on the paused banner."),
         resume: String(localized: "Resume", comment: "Clipboard panel: button that resumes recording."),
         permissionTitle: String(localized: "Paste permission needed", comment: "Clipboard panel: banner shown when macOS requires the user to allow pasting from other apps."),
+        permissionWhy: String(localized: "macOS is blocking DavidNook from reading the clipboard (set to ask every time, or denied), so nothing can be recorded for now", comment: "Clipboard panel: explains why recording is stopped when the paste permission is not Allow."),
         permissionDetail: String(localized: "In System Settings → Privacy & Security → Paste from Other Apps, set DavidNook to Allow", comment: "Clipboard panel: instructions under the permission banner."),
-        openSettings: String(localized: "Open System Settings", comment: "Clipboard panel: button that opens System Settings.")
+        openSettings: String(localized: "Open System Settings", comment: "Clipboard panel: button that opens System Settings."),
+        hintClick: { mode in
+            switch mode {
+            case .off:
+                return String(localized: "Click a row: copy it back to the clipboard (turn on auto-paste in Settings to also paste)", comment: "Clipboard panel tip line, auto-paste switched off in Settings.")
+            case .needsPermission:
+                return String(localized: "Click a row: copy it back to the clipboard (auto-paste is not authorized yet)", comment: "Clipboard panel tip line, auto-paste is on but the Accessibility permission is missing.")
+            case .on:
+                return String(localized: "Click a row: copy it and paste automatically", comment: "Clipboard panel tip line, auto-paste is on and authorized.")
+            }
+        },
+        hintKeys: String(localized: "↑↓ Select  ↩ Copy  ⌘P Pin  ⌘⌫ Delete  Just type to search", comment: "Clipboard panel tip line: keyboard shortcuts."),
+        showHintsHelp: String(localized: "Show tips", comment: "Clipboard panel: tooltip of the help button when the tip line is hidden."),
+        hideHintsHelp: String(localized: "Hide tips", comment: "Clipboard panel: tooltip of the help button and of the close button on the tip line.")
     )
 
     var body: some View {
@@ -127,8 +206,13 @@ struct ClipboardTabView: View {
                 onTogglePin: { controller.togglePin(id: $0) },
                 onDelete: { controller.delete(id: $0) },
                 onTogglePause: { controller.togglePause() },
-                onOpenPermissionSettings: { controller.openPermissionSettings() }
-            )
+                onOpenPermissionSettings: { controller.openPermissionSettings() },
+                onDismissHints: { controller.dismissHints() },
+                onToggleHints: { controller.toggleHints() }
+            ),
+            showsHints: controller.hints.isVisible,
+            autoPasteMode: ClipboardAutoPasteMode.resolve(enabled: autoPaste, authorized: ClipboardService.shared.isAutoPasteAuthorized),
+            feedback: controller.feedback
         )
         .frame(maxHeight: .infinity)
         .background(ClipboardKeyboardHost(viewModel: vm) { controller.handle($0) })
