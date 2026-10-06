@@ -2,30 +2,20 @@ import CoreGraphics
 import DavidNookCore
 import Foundation
 
-/// 展開瀏海「影片」分頁的尺寸與版面夾限（純邏輯）。
+/// 影片尺寸的夾限（純邏輯）。
 ///
-/// **硬限制**：視窗已固定為涵蓋尺寸（見 `NotchSizing.coveringWindowSize`），影片區塊與面板形體只在其中畫；
+/// **硬限制**：視窗已固定（收合＝`NotchSizing.legacyClosedWindowSize`、展開＝涵蓋尺寸），影片只在其中畫；
 /// 這裡只算尺寸，絕不碰 NSWindow（動畫期間 setFrame 會讓 NSHostingView 版面更新迴圈而閃退，見 git log c30828f）。
 public enum VideoCapsuleMetrics {
-    // MARK: 範圍與預設
-
     public static let widthRange: ClosedRange<Double> = VideoCapsuleSettings.widthRange
     public static let defaultWidth: Double = VideoCapsuleSettings.defaultWidth
     /// 來源長寬比（寬 ÷ 高）夾在 1:2 … 2:1；異常值（NaN、≤ 0）當 16:9。
     public static let aspectRatioRange: ClosedRange<Double> = 0.5...2
     public static let fallbackAspectRatio: Double = 16.0 / 9.0
-    /// 影片區塊最小寬（pt）。
+    /// 影片最小寬（pt）；縮到比這個小就不顯示。
     public static let minimumWidth: CGFloat = 96
-    /// 右側工具列（換視窗、停止、釘選、寬度滑桿）的寬度與它跟影片的間距。
-    public static let controlsWidth: CGFloat = 132
-    public static let controlsSpacing: CGFloat = 12
-
-    /// 影片區塊最大高度：放得進「最高的面板」（所有可調上限下的最大形體高 − 最小表頭 − 底部內縮）。
-    public static var maximumHeight: CGFloat {
-        NotchSizing.maximumOpenSize.height - NotchSizing.minimumHeaderHeight - NotchSizing.bottomInset
-    }
-
-    // MARK: 夾限
+    /// 影片最大高度（pt）：最大寬 480 的 16:9。
+    public static let maximumHeight: CGFloat = 270
 
     public static func clampedAspectRatio(_ ratio: Double) -> Double {
         guard !ratio.isNaN, ratio > 0 else { return fallbackAspectRatio }
@@ -54,28 +44,65 @@ public enum VideoCapsuleMetrics {
         let scale = min(1, available.width / size.width, available.height / size.height)
         return CGSize(width: size.width * scale, height: size.height * scale)
     }
+}
 
-    // MARK: 展開面板內的版面
+/// 收合瀏海下方「影片膠囊」與「歌詞膠囊」的垂直堆疊版面（純邏輯；M-C 的視圖直接用）。
+///
+/// 座標：原點在視窗左上角、y 向下、水平置中。預設歌詞膠囊在上（緊貼瀏海下方、維持現有位置），影片膠囊在其下，間距 6 pt；
+/// 歌詞膠囊不顯示時影片膠囊上移到歌詞膠囊的位置。影片可用高度 = 收合視窗高 − 底部內縮 − 上緣 −（歌詞＋間距）；
+/// 超過就等比縮小，縮到寬 < `VideoCapsuleMetrics.minimumWidth` 則不顯示（`video` 為 nil），絕不溢出視窗。
+public enum VideoCapsuleStack {
+    public enum Order: Sendable {
+        case lyricsAbove
+        case videoAbove
+    }
+
+    public static let gap: CGFloat = 6
 
     public struct Layout: Equatable, Sendable {
-        /// 影片區塊（等比、已夾限）。
-        public var videoSize: CGSize
-        /// 影片可用的寬度（內容寬扣掉右側工具列與間距）。
-        public var availableWidth: CGFloat
-        /// 面板內容區高度。
-        public var bodyHeight: CGFloat
-        /// 面板形體尺寸（會隨影片加高，但不超過涵蓋視窗內的最大面板）。
-        public var panelSize: CGSize
+        public var video: CGRect?
+        public var lyrics: CGRect?
     }
 
     public static func layout(
-        width: Double, aspectRatio: Double, sizing: NotchSizing, headerHeight: CGFloat, earInset: CGFloat
+        window: CGSize = NotchSizing.legacyClosedWindowSize,
+        notchBottom: CGFloat,
+        dropDistance: CGFloat,
+        lyricsVisible: Bool,
+        lyricsWidth: CGFloat,
+        videoWidth: Double,
+        aspectRatio: Double,
+        order: Order = .lyricsAbove
     ) -> Layout {
-        let requested = requestedSize(width: width, aspectRatio: aspectRatio)
-        let panel = sizing.openSize(for: .video, headerHeight: headerHeight, videoContentHeight: requested.height)
-        let body = panel.height - headerHeight - NotchSizing.bottomInset
-        let availableWidth = max(sizing.contentWidth(earInset: earInset) - controlsWidth - controlsSpacing, 0)
-        let video = fit(requested, into: CGSize(width: availableWidth, height: body))
-        return Layout(videoSize: video, availableWidth: availableWidth, bodyHeight: body, panelSize: panel)
+        let top = LyricsPillMetrics.topOffset(notchBottom: notchBottom.isFinite ? notchBottom : 0, dropDistance: dropDistance)
+        let lyricsHeight = LyricsPillMetrics.height
+        let lyricsBlock = lyricsVisible ? lyricsHeight + gap : 0
+        let availableHeight = window.height - LyricsPillMetrics.windowBottomPadding - top - lyricsBlock
+        let requested = VideoCapsuleMetrics.requestedSize(width: videoWidth, aspectRatio: aspectRatio)
+        var size = VideoCapsuleMetrics.fit(requested, into: CGSize(width: window.width, height: availableHeight))
+        if size.width < VideoCapsuleMetrics.minimumWidth { size = .zero }
+
+        var lyricsRect: CGRect?
+        if lyricsVisible {
+            let w = min(max(lyricsWidth.isFinite ? lyricsWidth : LyricsPillMetrics.minimumWidth, LyricsPillMetrics.minimumWidth), min(LyricsPillMetrics.maxWidthRange.upperBound, window.width))
+            lyricsRect = CGRect(x: (window.width - w) / 2, y: 0, width: w, height: lyricsHeight)
+        }
+        var videoRect: CGRect?
+        if size != .zero {
+            videoRect = CGRect(x: (window.width - size.width) / 2, y: 0, width: size.width, height: size.height)
+        }
+
+        // 垂直擺放。影片被隱藏時，歌詞回到最上面的位置。
+        switch order {
+        case .lyricsAbove:
+            var y = top
+            if lyricsRect != nil { lyricsRect?.origin.y = y; y += lyricsHeight + gap }
+            videoRect?.origin.y = y
+        case .videoAbove:
+            var y = top
+            if videoRect != nil { videoRect?.origin.y = y; y += (videoRect?.height ?? 0) + gap }
+            lyricsRect?.origin.y = y
+        }
+        return Layout(video: videoRect, lyrics: lyricsRect)
     }
 }
