@@ -364,9 +364,11 @@ public final class FloatingVideoView: NSView {
         let opacityItem = NSMenuItem(title: strings.opacity, action: nil, keyEquivalent: "")
         let sub = NSMenu()
         for step in FloatingVideoOpacity.steps {
-            let item = NSMenuItem(title: "\(Int((step * 100).rounded()))%", action: #selector(opacityMenuItemChosen(_:)), keyEquivalent: "")
+            let percent = Int((step * 100).rounded())
+            let label = String(format: "%d%%", percent)   // 純數字，不需在地化
+            let item = NSMenuItem(title: label, action: #selector(opacityMenuItemChosen(_:)), keyEquivalent: "")
             item.target = self
-            item.tag = Int((step * 100).rounded())
+            item.tag = percent
             item.state = abs(step - opacity) < 0.05 ? .on : .off
             sub.addItem(item)
         }

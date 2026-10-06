@@ -20,12 +20,15 @@ final class VideoCapsuleController: ObservableObject {
     @Published private(set) var state: VideoCapsuleState = .idle
     /// 目前的裁切（正規化；nil＝整個視窗）。給封面槽決定要不要顯示「重設裁切」。
     @Published private(set) var crop: NormalizedCropRect?
+    /// 目前的釘選樣式（無／收合膠囊／桌面浮動視窗；同一時間只會有一種，規則在 Core 的狀態機）。
+    @Published private(set) var pinStyle: VideoPinStyle = .none
 
     let display = VideoFrameDisplay()
     private let source: ScreenCaptureKitVideoSource
     private var machine = VideoCapsuleStateMachine()
     private var isSlotVisible = false
     private var cropWindow: VideoCropWindowController?
+    private var floatingWindow: FloatingVideoWindowController?
     private var isCropEditing: Bool { cropWindow != nil }
     private var eventTask: Task<Void, Never>?
     private let log = Logger(subsystem: "io.github.davidkong3804.DavidNook", category: "video")
@@ -53,6 +56,7 @@ final class VideoCapsuleController: ObservableObject {
         // 釘選狀態只在執行期有意義（沒有串流就沒有膠囊），所以每次變化就同步到 Defaults，App 啟動時重設為 false（見 init）。
         if Defaults[.videoCapsulePinned] != machine.isPinned { Defaults[.videoCapsulePinned] = machine.isPinned }
         if before != state { log.info("state \(String(describing: self.state), privacy: .public)") }
+        if pinStyle != machine.pinStyle { pinStyle = machine.pinStyle }
         switch state {
         case .idle, .sourceClosed, .error: display.clear()
         case .choosing, .streaming, .blackContent: break
@@ -67,7 +71,36 @@ final class VideoCapsuleController: ObservableObject {
             default: break
             }
         }
+        syncFloatingWindow()
         reconcileStreaming()
+    }
+
+    /// 依 Core 的 `FloatingVideoPolicy` 開／關／更新桌面浮動視窗：串流結束一律關；黑畫面維持並在視窗內顯示說明。
+    private func syncFloatingWindow() {
+        switch FloatingVideoPolicy.content(style: machine.pinStyle, state: state) {
+        case .hidden:
+            // 換視窗（系統挑選器開著）期間狀態機維持浮動樣式，視窗留著不閃；取消或選好後繼續使用。
+            if case .choosing = state, machine.isFloating { return }
+            closeFloatingWindow()
+        case .live, .protectedNotice:
+            let ratio = state.slotAspectRatio ?? VideoCapsuleStateMachine.fallbackAspectRatio
+            if let floatingWindow {
+                floatingWindow.setAspectRatio(ratio)
+            } else {
+                let window = FloatingVideoWindowController(display: display, aspectRatio: ratio)
+                window.onClose = { [weak self] in self?.closeFloating() }
+                window.onReturnToNotch = { [weak self] in self?.closeFloating() }
+                window.onPinToNotch = { [weak self] in self?.pinFloatingToCapsule() }
+                floatingWindow = window
+                window.show()
+            }
+            floatingWindow?.setContent(FloatingVideoPolicy.content(style: machine.pinStyle, state: state) == .live ? .live : .protectedNotice)
+        }
+    }
+
+    private func closeFloatingWindow() {
+        floatingWindow?.close()
+        floatingWindow = nil
     }
 
     /// 同一條串流供封面槽與釘選膠囊共用：槽在畫面上要串流；槽不可見時，已釘選就持續串流（給收合膠囊），未釘選才 pause。
@@ -76,7 +109,7 @@ final class VideoCapsuleController: ObservableObject {
     private func reconcileStreaming() {
         guard state.needsSource else { return }
         // 裁切視窗開著時瀏海可能已收合（滑鼠移到裁切視窗）；編輯期間要繼續串流。
-        if VideoStreamPolicy.shouldPause(isSlotVisible: isSlotVisible || isCropEditing, isPinned: machine.isPinned) {
+        if VideoStreamPolicy.shouldPause(isSlotVisible: isSlotVisible || isCropEditing, isPinned: machine.isPinned, isFloating: machine.isFloating) {
             source.pause()
         } else {
             source.resume()
@@ -100,6 +133,21 @@ final class VideoCapsuleController: ObservableObject {
     /// 點一下影片：釘選／取消釘選（釘成收合瀏海外面的影片膠囊，見 `VideoCapsuleHost`）。
     func togglePin() {
         apply(.togglePin)
+    }
+
+    /// 封面槽的浮動視窗按鈕：沒開就開桌面浮動視窗（收合膠囊同時隱藏）；已開就收回。
+    func toggleFloating() {
+        apply(machine.isFloating ? .closeFloating : .openFloating)
+    }
+
+    /// 關閉浮動視窗（✕、收回瀏海、雙擊都是這個）：影片回到展開瀏海的封面槽；串流依 pause 規則（槽不可見且沒釘就 pause，已選視窗保留）。
+    func closeFloating() {
+        apply(.closeFloating)
+    }
+
+    /// 浮動視窗的「釘選到瀏海」：改成收合膠囊樣式（浮動視窗關閉）。
+    func pinFloatingToCapsule() {
+        apply(.pinToCapsule)
     }
 
     /// 設定頁的「影片大小」：決定 Home 封面槽加寬後的上限，以及釘選膠囊的大小。

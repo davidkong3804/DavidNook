@@ -4907,6 +4907,125 @@
           }
         }
       }
+    },
+    "Close" : {
+      "comment" : "Floating video window: tooltip of the close button.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉"
+          }
+        }
+      }
+    },
+    "Return to Notch" : {
+      "comment" : "Floating video window: button that closes the floating window and shows the video in the notch again.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return to Notch"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收回瀏海"
+          }
+        }
+      }
+    },
+    "Pin to Notch" : {
+      "comment" : "Floating video window: button that turns the floating window into the capsule under the collapsed notch.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pin to Notch"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "釘選到瀏海"
+          }
+        }
+      }
+    },
+    "Opacity" : {
+      "comment" : "Floating video window: tooltip of the button (and menu title) that changes the window opacity.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opacity"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透明度"
+          }
+        }
+      }
+    },
+    "Show as a floating window" : {
+      "comment" : "Album art slot: tooltip of the button that opens the video as a free-floating window on the desktop.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show as a floating window"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以浮動視窗顯示"
+          }
+        }
+      }
+    },
+    "Return the floating window to the notch" : {
+      "comment" : "Album art slot: tooltip of the same button while the floating window is open.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return the floating window to the notch"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把浮動視窗收回瀏海"
+          }
+        }
+      }
+    },
+    "The floating-window button on the video opens it as a free-floating window on your desktop: drag it anywhere, drag a corner to resize, and use the buttons that appear on hover to change its opacity. It is your own window, so screenshots and screen sharing may show it." : {
+      "comment" : "Video settings footer: explains the floating window.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The floating-window button on the video opens it as a free-floating window on your desktop: drag it anywhere, drag a corner to resize, and use the buttons that appear on hover to change its opacity. It is your own window, so screenshots and screen sharing may show it."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影片上的「浮動視窗」按鈕會把影片變成桌面上可自由擺放的視窗：按住任意處拖曳、拖四角縮放，滑鼠移上去會出現可調整透明度的按鈕。它是你自己桌面上的視窗，所以截圖或螢幕分享可能會拍到它。"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

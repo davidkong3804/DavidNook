@@ -160,7 +160,9 @@ private enum VideoArtSlotText {
         unknownErrorHint: String(localized: "Something unexpected happened. Choose the window again", comment: "Video tab: error hint for an unknown error."),
         chooseWindow: String(localized: "Choose Window", comment: "Video tab: button that opens the system window picker."),
         crop: String(localized: "Crop", comment: "Album art slot: tooltip of the button that opens the crop window to show only part of the picked window."),
-        resetCrop: String(localized: "Reset crop", comment: "Album art slot: tooltip of the button that goes back to showing the whole window.")
+        resetCrop: String(localized: "Reset crop", comment: "Album art slot: tooltip of the button that goes back to showing the whole window."),
+        floatHelp: String(localized: "Show as a floating window", comment: "Album art slot: tooltip of the button that opens the video as a free-floating window on the desktop."),
+        unfloatHelp: String(localized: "Return the floating window to the notch", comment: "Album art slot: tooltip of the same button while the floating window is open.")
     )
 }
 
@@ -179,6 +181,7 @@ struct VideoArtSlotHost<Cover: View>: View {
                 state: controller.state,
                 isPinned: pinned,
                 hasCrop: controller.crop != nil,
+                isFloating: controller.pinStyle == .floating,
                 strings: VideoArtSlotText.strings,
                 display: controller.display,
                 callbacks: VideoArtSlotCallbacks(
@@ -188,7 +191,8 @@ struct VideoArtSlotHost<Cover: View>: View {
                     onBackToCover: { controller.stop() },
                     onOpenSettings: { controller.openSystemSettings() },
                     onCrop: { controller.openCropEditor() },
-                    onResetCrop: { controller.resetCrop() }
+                    onResetCrop: { controller.resetCrop() },
+                    onToggleFloating: { controller.toggleFloating() }
                 ),
                 cover: cover
             )

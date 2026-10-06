@@ -43,9 +43,14 @@ struct VideoSettingsView: View {
             } header: {
                 Text("Video")
             } footer: {
+                VStack(alignment: .leading, spacing: 6) {
                 Text("Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a capsule outside the notch. The video size sets how wide the video can grow in the Home panel and how big the pinned capsule is. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                Text("The floating-window button on the video opens it as a free-floating window on your desktop: drag it anywhere, drag a corner to resize, and use the buttons that appear on hover to change its opacity. It is your own window, so screenshots and screen sharing may show it.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
             }
         }
         .accentColor(.effectiveAccent)

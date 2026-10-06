@@ -248,6 +248,10 @@ extension Defaults.Keys {
     static let videoCapsulePinned = Key<Bool>(VideoCapsuleSettings.pinnedKey, default: VideoCapsuleSettings.defaultPinned)
     /// 記住的影片裁切（依來源 App 的 bundle id；只含 bundle id 與正規化矩形，JSON）。
     static let videoCropMemory = Key<Data?>(VideoCropMemory.defaultsKey, default: nil)
+    /// 記住的桌面浮動視窗位置與寬度（x／y／width 三個數字，JSON；不含任何標題或內容）。
+    static let videoFloatingPlacement = Key<Data?>(FloatingVideoPlacement.defaultsKey, default: nil)
+    /// 浮動視窗透明度（0.4…1.0，預設 1.0）。
+    static let videoFloatingOpacity = Key<Double>(FloatingVideoOpacity.defaultsKey, default: FloatingVideoOpacity.defaultValue)
     static let showLyricsPanel = Key<Bool>("showLyricsPanel", default: true)
     static let showRemainingTime = Key<Bool>("showRemainingTime", default: false)
     static let musicControlSlots = Key<[MusicControlButton]>(
