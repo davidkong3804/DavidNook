@@ -97,4 +97,42 @@ final class BlackFrameDetectorTests: XCTestCase {
         XCTAssertEqual(BlackFrameDetector.averageBrightness(bgra: white, width: w, height: h, bytesPerRow: w * 4, grid: 4) ?? -1, 255, accuracy: 0.01)
         XCTAssertNil(BlackFrameDetector.averageBrightness(bgra: [], width: 0, height: 0, bytesPerRow: 0, grid: 4))
     }
+
+    // MARK: 只看裁切區域的亮度
+
+    /// 左半黑、右半亮的 BGRA 影像。
+    private func halfBlackImage(width w: Int = 64, height h: Int = 36) -> [UInt8] {
+        var px = [UInt8](repeating: 255, count: w * h * 4)
+        for y in 0..<h { for x in 0..<(w / 2) { let i = (y * w + x) * 4; px[i] = 0; px[i + 1] = 0; px[i + 2] = 0 } }
+        return px
+    }
+
+    func testRegionBrightnessOnlyLooksInsideTheCrop() {
+        let w = 64, h = 36
+        let img = halfBlackImage()
+        let left = NormalizedCropRect(x: 0, y: 0, width: 0.4, height: 1)
+        let right = NormalizedCropRect(x: 0.6, y: 0, width: 0.4, height: 1)
+        let whole = BlackFrameDetector.averageBrightness(bgra: img, width: w, height: h, bytesPerRow: w * 4, grid: 8) ?? -1
+        let l = BlackFrameDetector.averageBrightness(bgra: img, width: w, height: h, bytesPerRow: w * 4, grid: 8, region: left) ?? -1
+        let r = BlackFrameDetector.averageBrightness(bgra: img, width: w, height: h, bytesPerRow: w * 4, grid: 8, region: right) ?? -1
+        XCTAssertEqual(l, 0, accuracy: 0.01, "裁切區域全黑 → 黑")
+        XCTAssertEqual(r, 255, accuracy: 0.01, "裁切區域全亮 → 不黑（整張一半是黑的也不誤判）")
+        XCTAssertEqual(whole, 127.5, accuracy: 20)
+    }
+
+    func testNilOrFullRegionEqualsWholeFrame() {
+        let w = 64, h = 36
+        let img = halfBlackImage()
+        let whole = BlackFrameDetector.averageBrightness(bgra: img, width: w, height: h, bytesPerRow: w * 4, grid: 8)
+        XCTAssertEqual(BlackFrameDetector.averageBrightness(bgra: img, width: w, height: h, bytesPerRow: w * 4, grid: 8, region: nil), whole)
+        XCTAssertEqual(BlackFrameDetector.averageBrightness(bgra: img, width: w, height: h, bytesPerRow: w * 4, grid: 8, region: .full), whole)
+    }
+
+    func testTinyRegionStillSamplesInsideBounds() {
+        let w = 64, h = 36
+        let img = halfBlackImage()
+        let edge = NormalizedCropRect(x: 0.95, y: 0.95, width: 0.05, height: 0.05)
+        let v = BlackFrameDetector.averageBrightness(bgra: img, width: w, height: h, bytesPerRow: w * 4, grid: 32, region: edge)
+        XCTAssertEqual(v ?? -1, 255, accuracy: 0.01)
+    }
 }

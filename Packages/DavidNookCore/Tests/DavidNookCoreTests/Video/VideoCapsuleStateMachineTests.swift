@@ -277,5 +277,39 @@ final class VideoCapsuleStateMachineTests: XCTestCase {
         XCTAssertEqual(VideoCapsuleState.sourceClosed.slotAspectRatio ?? 0, 16.0 / 9.0, accuracy: 1e-12)
         XCTAssertEqual(VideoCapsuleState.error(.unknown).slotAspectRatio ?? 0, 16.0 / 9.0, accuracy: 1e-12)
     }
-}
 
+    // MARK: 裁切
+
+    func testCropChangedUpdatesTheRatioKeepsPinAndResetsTheBlackClock() {
+        startStreaming(at: 0)
+        m.handle(.togglePin, at: 0)
+        m.handle(.source(.brightness(0)), at: 1)
+        m.handle(.source(.brightness(0)), at: 2)
+        m.handle(.source(.cropChanged(aspectRatio: 1.0)), at: 2.5)
+        XCTAssertEqual(m.state, .streaming(aspectRatio: 1.0))
+        XCTAssertTrue(m.isPinned)
+        // 重新計時：裁切後要再連續黑 3 秒才判黑，不會被裁切前的黑樣本影響。
+        m.handle(.source(.brightness(0)), at: 3)
+        m.handle(.source(.brightness(0)), at: 4)
+        m.handle(.source(.brightness(0)), at: 5)
+        XCTAssertEqual(m.state, .streaming(aspectRatio: 1.0), "從 3 秒起算，到 5 秒只有 2 秒")
+        m.handle(.source(.brightness(0)), at: 6)
+        XCTAssertEqual(m.state, .blackContent(aspectRatio: 1.0))
+    }
+
+    func testCropChangedWhileBlackReturnsToStreamingAndInvalidRatiosFallBack() {
+        startStreaming(at: 0)
+        goBlack()
+        XCTAssertEqual(m.state, .blackContent(aspectRatio: 16.0 / 9.0))
+        m.handle(.source(.cropChanged(aspectRatio: .nan)), at: 6)
+        XCTAssertEqual(m.state, .streaming(aspectRatio: 16.0 / 9.0), "異常比例退回 16:9")
+    }
+
+    func testCropChangedIsIgnoredWithoutAStream() {
+        m.handle(.source(.cropChanged(aspectRatio: 1.5)), at: 0)
+        XCTAssertEqual(m.state, .idle)
+        m.handle(.source(.sourceClosed), at: 0)
+        m.handle(.source(.cropChanged(aspectRatio: 1.5)), at: 1)
+        XCTAssertEqual(m.state, .idle)
+    }
+}
