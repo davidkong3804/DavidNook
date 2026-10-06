@@ -38,7 +38,7 @@ final class LyricsPillMetricsTests: XCTestCase {
         XCTAssertEqual(M.pillWidth(textWidth: 900, maxWidth: 360), 360)
         XCTAssertEqual(M.pillWidth(textWidth: 0, maxWidth: 360), M.minimumWidth)
         XCTAssertEqual(M.pillWidth(textWidth: .nan, maxWidth: 360), M.minimumWidth)
-        XCTAssertEqual(M.pillWidth(textWidth: 100, maxWidth: 10), 240, "最大寬度先夾到 240")
+        XCTAssertEqual(M.pillWidth(textWidth: 900, maxWidth: 10), 240, "最大寬度先夾到 240")
         XCTAssertEqual(M.textContainerWidth(pillWidth: 360), 360 - 2 * M.horizontalPadding)
     }
 
