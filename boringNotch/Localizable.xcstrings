@@ -161,22 +161,6 @@
         }
       }
     },
-    "Advance lyrics by 0.5 s" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Advance lyrics by 0.5 s"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "歌詞提早 0.5 秒"
-          }
-        }
-      }
-    },
     "Album Art" : {
       "comment" : "Accessibility description of the placeholder album art.",
       "localizations" : {
@@ -907,22 +891,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "預設"
-          }
-        }
-      }
-    },
-    "Delay lyrics by 0.5 s" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delay lyrics by 0.5 s"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "歌詞延後 0.5 秒"
           }
         }
       }
@@ -3990,6 +3958,346 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "隱藏操作提示"
+          }
+        }
+      }
+    },
+    "Sync" : {
+      "comment" : "Lyrics panel: small always-visible button that opens the lyrics timing controls.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "對時"
+          }
+        }
+      }
+    },
+    "%@ s early" : {
+      "comment" : "Lyrics panel: the badge when this song's lyrics are shown earlier. Placeholder is the seconds, e.g. 1.2.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ s early"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提早 %@ 秒"
+          }
+        }
+      }
+    },
+    "%@ s late" : {
+      "comment" : "Lyrics panel: the badge when this song's lyrics are shown later. Placeholder is the seconds, e.g. 0.4.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ s late"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "延後 %@ 秒"
+          }
+        }
+      }
+    },
+    "Adjust lyrics timing. Click to open the controls. Double-click the line being sung to sync to it. Scroll here to nudge by 0.1 s." : {
+      "comment" : "Tooltip of the small Sync button in the lyrics panel.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adjust lyrics timing. Click to open the controls. Double-click the line being sung to sync to it. Scroll here to nudge by 0.1 s."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "調整歌詞對時：點一下展開微調；連點兩下正在唱的那一句，可直接對齊；在這裡滾動滾輪，每格 0.1 秒"
+          }
+        }
+      }
+    },
+    "Now: no offset" : {
+      "comment" : "Lyrics timing controls: status line when the lyrics are not shifted.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now: no offset"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前：無偏移"
+          }
+        }
+      }
+    },
+    "Now: lyrics %@ s early" : {
+      "comment" : "Lyrics timing controls: status line when lyrics are shown earlier. Placeholder is the seconds, e.g. 1.2.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now: lyrics %@ s early"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前：歌詞提早 %@ 秒"
+          }
+        }
+      }
+    },
+    "Now: lyrics %@ s late" : {
+      "comment" : "Lyrics timing controls: status line when lyrics are shown later. Placeholder is the seconds, e.g. 0.4.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now: lyrics %@ s late"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前：歌詞延後 %@ 秒"
+          }
+        }
+      }
+    },
+    "Click the line being sung to sync" : {
+      "comment" : "Lyrics timing controls: hint shown while there is no offset. Fits one short line.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click the line being sung to sync"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點正在唱的那一句，直接對齊"
+          }
+        }
+      }
+    },
+    "Close sync controls" : {
+      "comment" : "Tooltip of the button that collapses the lyrics timing controls.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close sync controls"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收合對時"
+          }
+        }
+      }
+    },
+    "Lyrics too late" : {
+      "comment" : "Lyrics timing controls: small caption above the Earlier button (the lyrics show up after the singing).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyrics too late"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歌詞太晚"
+          }
+        }
+      }
+    },
+    "Show earlier" : {
+      "comment" : "Lyrics timing controls: button that shows the lyrics earlier.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show earlier"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提早"
+          }
+        }
+      }
+    },
+    "Lyrics show up after the singing? Show them earlier. Hold Option or Shift for 0.5 s steps; hold the button to repeat; scrolling down also shows them earlier." : {
+      "comment" : "Tooltip of the Earlier button.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyrics show up after the singing? Show them earlier. Hold Option or Shift for 0.5 s steps; hold the button to repeat; scrolling down also shows them earlier."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歌詞比聲音晚出現？按此提早（按住 Option 或 Shift 點按：每次 0.5 秒；按住不放可連續調整；滾輪向下也是提早）"
+          }
+        }
+      }
+    },
+    "Lyrics too early" : {
+      "comment" : "Lyrics timing controls: small caption above the Later button (the lyrics show up before the singing).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyrics too early"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歌詞太早"
+          }
+        }
+      }
+    },
+    "Show later" : {
+      "comment" : "Lyrics timing controls: button that shows the lyrics later.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show later"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "延後"
+          }
+        }
+      }
+    },
+    "Lyrics show up before the singing? Show them later. Hold Option or Shift for 0.5 s steps; hold the button to repeat; scrolling up also shows them later." : {
+      "comment" : "Tooltip of the Later button.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyrics show up before the singing? Show them later. Hold Option or Shift for 0.5 s steps; hold the button to repeat; scrolling up also shows them later."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歌詞比聲音早出現？按此延後（按住 Option 或 Shift 點按：每次 0.5 秒；按住不放可連續調整；滾輪向上也是延後）"
+          }
+        }
+      }
+    },
+    "Coarse" : {
+      "comment" : "Lyrics timing controls: toggle that makes each step 0.5 s instead of 0.1 s.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coarse"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粗調"
+          }
+        }
+      }
+    },
+    "Each step is 0.5 s instead of 0.1 s" : {
+      "comment" : "Tooltip of the Coarse toggle.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each step is 0.5 s instead of 0.1 s"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟後每次調整 0.5 秒（預設 0.1 秒）"
+          }
+        }
+      }
+    },
+    "Synced. Remembered for this song" : {
+      "comment" : "Toast shown after the user clicked a lyric line to sync the timing.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synced. Remembered for this song"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已對齊，並記住這首歌"
+          }
+        }
+      }
+    },
+    "Offset limit reached (±60 s)" : {
+      "comment" : "Toast shown when syncing to a lyric line would need more than ±60 seconds of offset.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offset limit reached (±60 s)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "偏移已達上限（±60 秒）"
+          }
+        }
+      }
+    },
+    "Click this line to sync it to the current playback position" : {
+      "comment" : "Tooltip of a lyric line while the timing controls are open.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click this line to sync it to the current playback position"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點這一行：把它對齊到現在播放的位置"
           }
         }
       }

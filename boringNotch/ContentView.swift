@@ -802,6 +802,8 @@ extension ContentView {
 
     private func handleDownGesture(translation: CGFloat, phase: NSEvent.Phase) {
         guard vm.notchState == .closed else { return }
+        // 滑鼠在歌詞對時控制上：滾輪是拿來微調偏移的，不當成手勢（結束事件照常處理，避免進度卡住）。
+        guard phase == .ended || !LyricsSyncPointer.isOverControl else { return }
 
         if phase == .ended {
             withAnimation(animationSpring) { gestureProgress = .zero }
@@ -825,6 +827,8 @@ extension ContentView {
 
     private func handleUpGesture(translation: CGFloat, phase: NSEvent.Phase) {
         guard vm.notchState == .open else { return }
+        // 滑鼠在歌詞對時控制上：滾輪往上捲是微調偏移，不能把瀏海關掉。
+        guard phase == .ended || !LyricsSyncPointer.isOverControl else { return }
 
         withAnimation(animationSpring) {
             gestureProgress = (translation / Defaults[.gestureSensitivity]) * -20
@@ -867,7 +871,7 @@ extension ContentView {
         feedback: CGFloat,
         action: () -> Void
     ) {
-        guard isHorizontalMediaGestureContext else {
+        guard isHorizontalMediaGestureContext, phase == .ended || !LyricsSyncPointer.isOverControl else {
             resetHorizontalMediaGesture()
             return
         }
