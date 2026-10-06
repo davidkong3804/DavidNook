@@ -19,11 +19,12 @@ final class FakeVideoFrameSourceTests: XCTestCase {
         XCTAssertEqual(machine.state, .sourceClosed)
     }
 
-    func testStopFinishesTheStreamAndCounts() async {
+    func testStopCountsAndFinishEndsTheStream() async {
         let source = FakeVideoFrameSource()
         var it = source.events.makeAsyncIterator()
         source.stop()
         XCTAssertEqual(source.stopCount, 1)
+        source.finish()
         let next = await it.next()
         XCTAssertNil(next)
     }

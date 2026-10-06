@@ -42,9 +42,12 @@ final class BlackFrameDetectorTests: XCTestCase {
 
     func testRecoversAsSoonAsAFrameIsNotBlack() {
         var d = BlackFrameDetector()
-        _ = d.ingest(brightness: 0, at: 0)
-        XCTAssertTrue(d.ingest(brightness: 0, at: 5))
-        XCTAssertFalse(d.ingest(brightness: 40, at: 6))
+        for t in 0...3 { _ = d.ingest(brightness: 0, at: Double(t)) }
+        XCTAssertTrue(d.isBlack)
+        XCTAssertFalse(d.ingest(brightness: 40, at: 4))
+        XCTAssertFalse(d.ingest(brightness: 0, at: 5))
+        XCTAssertFalse(d.ingest(brightness: 0, at: 6))
+        XCTAssertFalse(d.ingest(brightness: 40, at: 6.5))
         XCTAssertFalse(d.ingest(brightness: 0, at: 7), "恢復後重新計時")
     }
 
@@ -61,7 +64,8 @@ final class BlackFrameDetectorTests: XCTestCase {
     func testInvalidBrightnessIsIgnored() {
         var d = BlackFrameDetector()
         _ = d.ingest(brightness: 0, at: 0)
-        XCTAssertFalse(d.ingest(brightness: .nan, at: 1))
+        _ = d.ingest(brightness: 0, at: 1)
+        XCTAssertFalse(d.ingest(brightness: .nan, at: 1.5))
         XCTAssertFalse(d.ingest(brightness: -1, at: 2))
         XCTAssertFalse(d.ingest(brightness: .infinity, at: 2.5), "無窮大不是合法亮度，忽略")
         XCTAssertTrue(d.ingest(brightness: 0, at: 3), "無效樣本不打斷、也不推進黑場計時")
@@ -75,10 +79,11 @@ final class BlackFrameDetectorTests: XCTestCase {
 
     func testResetClearsState() {
         var d = BlackFrameDetector()
-        _ = d.ingest(brightness: 0, at: 0)
-        XCTAssertTrue(d.ingest(brightness: 0, at: 4))
+        for t in 0...3 { _ = d.ingest(brightness: 0, at: Double(t)) }
+        XCTAssertTrue(d.isBlack)
         d.reset()
         XCTAssertFalse(d.isBlack)
+        XCTAssertFalse(d.ingest(brightness: 0, at: 4))
         XCTAssertFalse(d.ingest(brightness: 0, at: 5))
     }
 
@@ -87,9 +92,9 @@ final class BlackFrameDetectorTests: XCTestCase {
         let w = 8, h = 8
         var black = [UInt8](repeating: 0, count: w * h * 4)
         for i in stride(from: 3, to: black.count, by: 4) { black[i] = 255 }
-        XCTAssertEqual(BlackFrameDetector.averageBrightness(bgra: black, width: w, height: h, bytesPerRow: w * 4, grid: 4), 0, accuracy: 1e-9)
+        XCTAssertEqual(BlackFrameDetector.averageBrightness(bgra: black, width: w, height: h, bytesPerRow: w * 4, grid: 4) ?? -1, 0, accuracy: 1e-9)
         let white = [UInt8](repeating: 255, count: w * h * 4)
-        XCTAssertEqual(BlackFrameDetector.averageBrightness(bgra: white, width: w, height: h, bytesPerRow: w * 4, grid: 4), 255, accuracy: 0.01)
+        XCTAssertEqual(BlackFrameDetector.averageBrightness(bgra: white, width: w, height: h, bytesPerRow: w * 4, grid: 4) ?? -1, 255, accuracy: 0.01)
         XCTAssertNil(BlackFrameDetector.averageBrightness(bgra: [], width: 0, height: 0, bytesPerRow: 0, grid: 4))
     }
 }
