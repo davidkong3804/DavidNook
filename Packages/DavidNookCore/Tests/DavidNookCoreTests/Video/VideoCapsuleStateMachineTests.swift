@@ -224,15 +224,18 @@ final class VideoCapsuleStateMachineTests: XCTestCase {
         XCTAssertTrue(m.isPinned, "換視窗後釘選維持")
     }
 
-    func testPinSurvivesBlackAndRecovery() {
+    /// M-C 決議：已釘選時偵測到持續黑畫面（疑似受保護）→ 膠囊不顯示黑塊，改為自動取消釘選；恢復非黑後不會自己再釘。
+    func testBlackContentAutoUnpinsAndDoesNotRepinOnRecovery() {
         startStreaming(at: 0)
         m.handle(.togglePin, at: 0)
         goBlack()
         XCTAssertEqual(m.state, .blackContent(aspectRatio: 16.0 / 9.0))
-        XCTAssertTrue(m.isPinned)
+        XCTAssertFalse(m.isPinned)
         m.handle(.source(.brightness(80)), at: 6)
         XCTAssertEqual(m.state, .streaming(aspectRatio: 16.0 / 9.0))
-        XCTAssertTrue(m.isPinned)
+        XCTAssertFalse(m.isPinned)
+        m.handle(.togglePin, at: 7)
+        XCTAssertTrue(m.isPinned, "恢復後可以重新釘選")
     }
 
     func testStopSourceClosedAndErrorsAutoUnpin() {
