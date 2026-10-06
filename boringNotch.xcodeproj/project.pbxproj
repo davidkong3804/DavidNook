@@ -54,6 +54,7 @@
 		9A0887322C7A693000C160EA /* TabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0887312C7A693000C160EA /* TabButton.swift */; };
 		9A0887352C7AFF8E00C160EA /* TabSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0887342C7AFF8E00C160EA /* TabSelectionView.swift */; };
 		9AB0C6BD2C73C9CB00F7CD30 /* NotchHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AB0C6BB2C73C9CB00F7CD30 /* NotchHomeView.swift */; };
+		DA71D0C0DE00000000C50002 /* VideoCapsuleHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000C50001 /* VideoCapsuleHost.swift */; };
 		A1B2C3D4E5F60718293A4B5D /* NowPlayingStreamSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* NowPlayingStreamSupport.swift */; };
 		A7F4A06476BC4B029B6BECEA /* NotchUIEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80E354C7D712441284085CEA /* NotchUIEvent.swift */; };
 		AA04LAS12E7A0001 /* LiveActivityStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA04LAS22E7A0001 /* LiveActivityStack.swift */; };
@@ -148,6 +149,7 @@
 		9A0887312C7A693000C160EA /* TabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabButton.swift; sourceTree = "<group>"; };
 		9A0887342C7AFF8E00C160EA /* TabSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabSelectionView.swift; sourceTree = "<group>"; };
 		9AB0C6BB2C73C9CB00F7CD30 /* NotchHomeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotchHomeView.swift; sourceTree = "<group>"; };
+		DA71D0C0DE00000000C50001 /* VideoCapsuleHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCapsuleHost.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718293A4B5C /* NowPlayingStreamSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingStreamSupport.swift; sourceTree = "<group>"; };
 		A5167212301F85B40018095A /* boringNotchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = boringNotchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA04LAS22E7A0001 /* LiveActivityStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityStack.swift; sourceTree = "<group>"; };
@@ -419,6 +421,7 @@
 				AA04LAS22E7A0001 /* LiveActivityStack.swift */,
 				1194E8862EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift */,
 				9AB0C6BB2C73C9CB00F7CD30 /* NotchHomeView.swift */,
+				DA71D0C0DE00000000C50001 /* VideoCapsuleHost.swift */,
 				14D570C52C5F38210011E668 /* BoringHeader.swift */,
 			);
 			path = Notch;
@@ -599,6 +602,7 @@
 				14A7E5882C64A89C008C1BE9 /* HelloAnimation.swift in Sources */,
 				1153BD8F2D986B1F00979FB0 /* MediaControllerProtocol.swift in Sources */,
 				9AB0C6BD2C73C9CB00F7CD30 /* NotchHomeView.swift in Sources */,
+				DA71D0C0DE00000000C50002 /* VideoCapsuleHost.swift in Sources */,
 				1153BD912D986DB300979FB0 /* PlaybackState.swift in Sources */,
 				B1A78C822C8BA08100BD51B0 /* FullscreenMediaDetection.swift in Sources */,
 				14D570C92C5F38890011E668 /* BoringViewModel.swift in Sources */,
