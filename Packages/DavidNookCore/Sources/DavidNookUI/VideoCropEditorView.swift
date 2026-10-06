@@ -27,9 +27,9 @@ public final class VideoCropEditorModel: ObservableObject {
     /// 自動偵測找不到時顯示說明。
     @Published public var detectionFailed = false
 
-    public var onAutoDetect: () -> Void = {}
-    public var onConfirm: () -> Void = {}
-    public var onCancel: () -> Void = {}
+    public var onAutoDetect: @MainActor () -> Void = {}
+    public var onConfirm: @MainActor () -> Void = {}
+    public var onCancel: @MainActor () -> Void = {}
 
     public init(selection: NormalizedCropRect? = nil) { self.selection = selection }
 

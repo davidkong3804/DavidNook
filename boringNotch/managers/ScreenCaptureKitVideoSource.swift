@@ -6,7 +6,10 @@
 //
 //  隱私：
 //  - 畫面只在記憶體：IOSurface 直接交給顯示層（VideoFrameDisplay），不存檔、不上傳、不快取、不截圖、不寫入剪貼簿。
-//  - 每秒只算一次平均亮度（32×32 格點）餵給 Core 的黑畫面偵測，像素不保留。
+//  - 每秒只算一次平均亮度（32×32 格點，只看裁切區域）餵給 Core 的黑畫面偵測，像素不保留。
+//  - 裁切（只擷取視窗內一塊區域）：`SCStreamConfiguration.sourceRect`（單位 pt、視窗擷取時相對視窗；SDK 標頭未明說原點，採左上、y 向下，
+//    需真機驗證）。裁切範圍以相對視窗的正規化矩形保存。編輯裁切時暫時串整個視窗（同一條串流改設定，不開第二條），
+//    自動偵測只在記憶體裡保留約 12 張 64×36 的亮度小圖，偵測完即丟。
 //  - log 只記狀態與錯誤碼，不含視窗標題、App 名稱或任何畫面內容。
 //  - 不擷取音訊、不顯示游標；不呼叫 CGRequestScreenCaptureAccess（授權由系統挑選器處理）。
 //
@@ -25,6 +28,14 @@ final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked 
     static let maximumCaptureWidth = 480
     static let minimumCaptureWidth = 160
     static let frameInterval = CMTime(value: 1, timescale: 20)
+    /// 編輯裁切時的擷取寬度（px）：裁切視窗顯示較大的畫面。
+    static let editorCaptureWidth = 1200
+    /// 自動偵測的取樣：間隔與小圖大小。
+    static let regionSampleInterval: CFAbsoluteTime = 0.25
+    static let regionSampleSize = (width: 64, height: 36)
+
+    /// 新挑選視窗時，依來源 App 的 bundle id 取回記住的裁切（由控制器提供；可從任何執行緒呼叫）。
+    var cropResolver: (@Sendable (String?) -> NormalizedCropRect?)?
 
     let events: AsyncStream<VideoSourceEvent>
     private let continuation: AsyncStream<VideoSourceEvent>.Continuation
@@ -38,9 +49,14 @@ final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked 
     private var stream: SCStream?
     private var stoppingByUs = false
     private var generation = 0
-    private var lastRatio: Double = 0
     private var lastBrightnessAt: CFAbsoluteTime = 0
-    private var lastReportedSize = CGSize.zero
+    /// 來源視窗大小（pt）。有裁切（且不在編輯）時不再追蹤（框內畫面的 contentRect 不代表視窗大小）。
+    private var windowSize = CGSize.zero
+    private var currentCrop: NormalizedCropRect?
+    private var isEditingCrop = false
+    private var sourceBundleID: String?
+    private var regionFrames: [LumaFrame]?
+    private var lastRegionSampleAt: CFAbsoluteTime = 0
     private var pickerConfigured = false
     private var captureWidth = ScreenCaptureKitVideoSource.maximumCaptureWidth
 
@@ -59,10 +75,10 @@ final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked 
         let changed = w != captureWidth
         captureWidth = w
         let stream = self.stream
-        let ratio = lastRatio
+        let known = windowSize.width > 0 && windowSize.height > 0
         lock.unlock()
-        guard changed, let stream, ratio > 0 else { return }
-        let config = makeConfiguration(ratio: ratio)
+        guard changed, let stream, known else { return }
+        let config = makeConfiguration()
         stream.updateConfiguration(config) { [log] error in
             if let error { log.error("updateConfiguration failed code=\((error as NSError).code)") }
         }
@@ -89,6 +105,12 @@ final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked 
     }
 
     func stop() {
+        lock.lock()
+        currentCrop = nil
+        isEditingCrop = false
+        regionFrames = nil
+        sourceBundleID = nil
+        lock.unlock()
         teardownStream(keepFilter: false)
         display.clear()
         DispatchQueue.main.async { SCContentSharingPicker.shared.isActive = false }
@@ -107,17 +129,38 @@ final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked 
         let alreadyRunning = stream != nil
         lock.unlock()
         guard let filter, !alreadyRunning else { return }
-        startStream(filter: filter)
+        startStream(filter: filter, resolveCrop: false)   // 同一個視窗恢復串流：沿用目前的裁切
         log.info("resumed")
     }
 
     // MARK: 串流
 
-    private func makeConfiguration(ratio: Double) -> SCStreamConfiguration {
-        lock.lock(); let width = captureWidth; lock.unlock()
+    /// 目前輸出畫面的長寬比：有裁切（且不在編輯）＝裁切區域的比例，否則＝視窗比例。
+    private func currentRatio() -> Double {
+        lock.lock(); defer { lock.unlock() }
+        return ratioLocked()
+    }
+
+    private func ratioLocked() -> Double {
+        let window = windowSize
+        if !isEditingCrop, let crop = currentCrop, let ratio = crop.aspectRatio(windowSize: window) { return ratio }
+        guard window.width > 0, window.height > 0 else { return VideoCapsuleStateMachine.fallbackAspectRatio }
+        return Double(window.width / window.height)
+    }
+
+    private func makeConfiguration() -> SCStreamConfiguration {
+        lock.lock()
+        let editing = isEditingCrop
+        let width = editing ? Self.editorCaptureWidth : captureWidth
+        let crop = editing ? nil : currentCrop
+        let window = windowSize
+        let ratio = ratioLocked()
+        lock.unlock()
         let config = SCStreamConfiguration()
         config.width = width
         config.height = max(1, Int((Double(width) / max(ratio, 0.01)).rounded()))
+        // 裁切：只擷取視窗內這一塊（單位 pt，相對視窗；原點假設見上方說明，未經真機驗證）。
+        if let crop, window.width > 0, window.height > 0 { config.sourceRect = crop.sourceRect(in: window) }
         config.minimumFrameInterval = Self.frameInterval
         config.capturesAudio = false
         config.showsCursor = false
@@ -126,22 +169,29 @@ final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked 
         return config
     }
 
-    private func startStream(filter: SCContentFilter) {
+    private func startStream(filter: SCContentFilter, resolveCrop: Bool) {
         let rect = filter.contentRect
-        let ratio = rect.height > 0 && rect.width > 0 ? Double(rect.width / rect.height) : VideoCapsuleStateMachine.fallbackAspectRatio
+        let bundleID = Self.bundleIdentifier(of: filter)
+        // 記住的裁切依 bundle id 取回（只在新挑選視窗時；恢復串流沿用目前的）。
+        let remembered = resolveCrop ? cropResolver?(bundleID) : nil
 
         teardownStream(keepFilter: true)
         lock.lock()
         self.filter = filter
         generation += 1
         let myGeneration = generation
-        lastRatio = ratio
         lastBrightnessAt = 0
-        lastReportedSize = rect.size
+        windowSize = rect.size
+        if resolveCrop {
+            sourceBundleID = bundleID
+            currentCrop = remembered
+            isEditingCrop = false
+        }
         stoppingByUs = false
         lock.unlock()
+        let ratio = currentRatio()
 
-        let newStream = SCStream(filter: filter, configuration: makeConfiguration(ratio: ratio), delegate: self)
+        let newStream = SCStream(filter: filter, configuration: makeConfiguration(), delegate: self)
         do {
             try newStream.addStreamOutput(self, type: .screen, sampleHandlerQueue: queue)
         } catch {
@@ -198,7 +248,7 @@ final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked 
 extension ScreenCaptureKitVideoSource: SCContentSharingPickerObserver {
     func contentSharingPicker(_ picker: SCContentSharingPicker, didUpdateWith filter: SCContentFilter, for stream: SCStream?) {
         log.info("picker selected")
-        startStream(filter: filter)
+        startStream(filter: filter, resolveCrop: true)
     }
 
     func contentSharingPicker(_ picker: SCContentSharingPicker, didCancelFor stream: SCStream?) {
@@ -246,22 +296,34 @@ extension ScreenCaptureKitVideoSource: SCStreamDelegate, SCStreamOutput {
             reportSizeIfChanged(rect.size)
         }
 
-        // 每秒一次的平均亮度。
+        // 每秒一次的平均亮度（只看裁切區域）；自動偵測期間另外每 0.25 秒取一張小圖。
         let now = CFAbsoluteTimeGetCurrent()
         lock.lock()
         let due = now - lastBrightnessAt >= 1.0
         if due { lastBrightnessAt = now }
+        let collecting = regionFrames != nil && now - lastRegionSampleAt >= Self.regionSampleInterval
+        if collecting { lastRegionSampleAt = now }
+        // 沒在編輯時，輸出畫面本身就是裁切區域（sourceRect 已套用），整張都看；編輯中輸出整個視窗，只看目前的裁切區域。
+        let region: NormalizedCropRect? = isEditingCrop ? currentCrop : nil
         lock.unlock()
-        guard due else { return }
+        guard due || collecting else { return }
         CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
         guard let base = CVPixelBufferGetBaseAddress(pixelBuffer) else { return }
         let width = CVPixelBufferGetWidth(pixelBuffer)
         let height = CVPixelBufferGetHeight(pixelBuffer)
         let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        if collecting,
+           let frame = LumaFrame.fromBGRA(
+               baseAddress: UnsafeRawPointer(base), byteCount: bytesPerRow * height, width: width, height: height, bytesPerRow: bytesPerRow,
+               targetWidth: Self.regionSampleSize.width, targetHeight: Self.regionSampleSize.height
+           ) {
+            lock.lock(); regionFrames?.append(frame); lock.unlock()
+        }
+        guard due else { return }
         if let value = BlackFrameDetector.averageBrightness(
             baseAddress: UnsafeRawPointer(base), byteCount: bytesPerRow * height,
-            width: width, height: height, bytesPerRow: bytesPerRow, grid: 32
+            width: width, height: height, bytesPerRow: bytesPerRow, grid: 32, region: region
         ) {
             continuation.yield(.brightness(value))
         }
@@ -269,17 +331,82 @@ extension ScreenCaptureKitVideoSource: SCStreamDelegate, SCStreamOutput {
 
     private func reportSizeIfChanged(_ size: CGSize) {
         lock.lock()
-        let previous = lastReportedSize
+        // 有裁切（且不在編輯）時，框內畫面的 contentRect 不代表視窗大小：不追蹤視窗縮放（需要時請重新裁切）。
+        if currentCrop != nil, !isEditingCrop { lock.unlock(); return }
+        let previous = windowSize
         let changed = abs(size.width - previous.width) > 1 || abs(size.height - previous.height) > 1
-        if changed {
-            lastReportedSize = size
-            lastRatio = Double(size.width / size.height)
-        }
-        let ratio = lastRatio
+        if changed { windowSize = size }
+        let editing = isEditingCrop
         let stream = self.stream
         lock.unlock()
         guard changed else { return }
-        continuation.yield(.frameSize(width: Int(size.width.rounded()), height: Int(size.height.rounded())))
-        stream?.updateConfiguration(makeConfiguration(ratio: ratio)) { _ in }
+        if !editing { continuation.yield(.frameSize(width: Int(size.width.rounded()), height: Int(size.height.rounded()))) }
+        stream?.updateConfiguration(makeConfiguration()) { _ in }
+    }
+}
+
+// MARK: - 裁切（只擷取視窗內一塊區域）
+
+extension ScreenCaptureKitVideoSource {
+    /// 目前的裁切（正規化）；沒有＝整個視窗。
+    var crop: NormalizedCropRect? { lock.lock(); defer { lock.unlock() }; return currentCrop }
+    /// 來源 App 的 bundle id（macOS 15.2 以下取不到＝nil；只用來記住裁切，不含視窗標題）。
+    var currentBundleID: String? { lock.lock(); defer { lock.unlock() }; return sourceBundleID }
+    /// 來源視窗的長寬比（編輯裁切時畫面區的形狀）。
+    var windowAspectRatio: Double {
+        lock.lock(); defer { lock.unlock() }
+        return windowSize.width > 0 && windowSize.height > 0 ? Double(windowSize.width / windowSize.height) : VideoCapsuleStateMachine.fallbackAspectRatio
+    }
+
+    /// 開始編輯：同一條串流改成串整個視窗（較大尺寸），讓裁切視窗看得到全貌。
+    func beginCropEditing() {
+        lock.lock()
+        isEditingCrop = true
+        let stream = self.stream
+        lock.unlock()
+        stream?.updateConfiguration(makeConfiguration()) { [log] error in
+            if let error { log.error("updateConfiguration failed code=\((error as NSError).code)") }
+        }
+        log.info("crop editing began")
+    }
+
+    /// 結束編輯。`apply` 為 true 時套用 `selection`（nil／整個視窗＝不裁切）；false 時維持原本的裁切。回傳實際生效的裁切。
+    @discardableResult
+    func finishCropEditing(selection: NormalizedCropRect?, apply: Bool) -> NormalizedCropRect? {
+        lock.lock()
+        isEditingCrop = false
+        regionFrames = nil
+        if apply {
+            if let selection, !selection.isFullWindow { currentCrop = selection.sanitized } else { currentCrop = nil }
+        }
+        let result = currentCrop
+        let ratio = ratioLocked()
+        let stream = self.stream
+        lock.unlock()
+        stream?.updateConfiguration(makeConfiguration()) { [log] error in
+            if let error { log.error("updateConfiguration failed code=\((error as NSError).code)") }
+        }
+        continuation.yield(.cropChanged(aspectRatio: ratio))
+        log.info("crop editing finished")
+        return result
+    }
+
+    /// 自動偵測：串流約 `duration` 秒，期間每 0.25 秒取一張 64×36 的亮度小圖（只在記憶體），回傳後即丟。需在編輯中（輸出整個視窗）呼叫。
+    func collectRegionFrames(duration: TimeInterval) async -> [LumaFrame] {
+        lock.lock(); regionFrames = []; lastRegionSampleAt = 0; lock.unlock()
+        try? await Task.sleep(for: .seconds(duration))
+        lock.lock()
+        let frames = regionFrames ?? []
+        regionFrames = nil
+        lock.unlock()
+        return frames
+    }
+
+    /// 來源 App 的 bundle id（`SCContentFilter.includedWindows` 需要 macOS 15.2；更舊的系統取不到）。
+    static func bundleIdentifier(of filter: SCContentFilter) -> String? {
+        if #available(macOS 15.2, *) {
+            return filter.includedWindows.first?.owningApplication?.bundleIdentifier
+        }
+        return nil
     }
 }

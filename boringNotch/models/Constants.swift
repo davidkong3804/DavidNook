@@ -246,6 +246,8 @@ extension Defaults.Keys {
     static let videoCapsuleWidth = Key<Double>(VideoCapsuleSettings.widthKey, default: VideoCapsuleSettings.defaultWidth)
     /// 影片是否釘選（M-C 的收合膠囊才會使用；目前只存狀態）。
     static let videoCapsulePinned = Key<Bool>(VideoCapsuleSettings.pinnedKey, default: VideoCapsuleSettings.defaultPinned)
+    /// 記住的影片裁切（依來源 App 的 bundle id；只含 bundle id 與正規化矩形，JSON）。
+    static let videoCropMemory = Key<Data?>(VideoCropMemory.defaultsKey, default: nil)
     static let showLyricsPanel = Key<Bool>("showLyricsPanel", default: true)
     static let showRemainingTime = Key<Bool>("showRemainingTime", default: false)
     static let musicControlSlots = Key<[MusicControlButton]>(
