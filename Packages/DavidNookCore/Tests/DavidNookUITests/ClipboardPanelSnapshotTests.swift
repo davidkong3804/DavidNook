@@ -81,7 +81,9 @@ final class ClipboardPanelSnapshotTests: XCTestCase {
     // MARK: - 渲染
 
     private func panel(
-        _ model: ClipboardPanelModel, height: CGFloat? = nil
+        _ model: ClipboardPanelModel, height: CGFloat? = nil,
+        showsHints: Bool = false, autoPasteMode: ClipboardAutoPasteMode = .off,
+        feedback: ClipboardCopyFeedback = ClipboardCopyFeedback(), hoverIndex: Int? = nil
     ) -> some View {
         ClipboardPanelView(
             model: model,
@@ -89,9 +91,13 @@ final class ClipboardPanelSnapshotTests: XCTestCase {
             thumbnails: thumbnails,
             imageURL: { [imageURLs] in imageURLs[$0.id] },
             appName: { [appNames] in $0.flatMap { appNames[$0] } },
-            autoFocusSearch: false
+            autoFocusSearch: false,
+            showsHints: showsHints,
+            autoPasteMode: autoPasteMode,
+            feedback: feedback
         )
         .environment(\.clipboardStaticRender, true)
+        .environment(\.clipboardPreviewHoverIndex, hoverIndex)
         .frame(width: panelSize.width, height: height ?? panelSize.height)
     }
 
@@ -123,8 +129,15 @@ final class ClipboardPanelSnapshotTests: XCTestCase {
     }
 
     @discardableResult
-    private func snapshot(_ name: String, _ model: ClipboardPanelModel, height: CGFloat? = nil) throws -> CGImage {
-        let view = notch(panel(model, height: height), panelHeight: height)
+    private func snapshot(
+        _ name: String, _ model: ClipboardPanelModel, height: CGFloat? = nil,
+        showsHints: Bool = false, autoPasteMode: ClipboardAutoPasteMode = .off,
+        feedback: ClipboardCopyFeedback = ClipboardCopyFeedback(), hoverIndex: Int? = nil
+    ) throws -> CGImage {
+        let view = notch(
+            panel(model, height: height, showsHints: showsHints, autoPasteMode: autoPasteMode, feedback: feedback, hoverIndex: hoverIndex),
+            panelHeight: height
+        )
         let image = try renderImage(view)
         let url = try writeSnapshot(image, named: name)
         XCTAssertGreaterThan((try? Data(contentsOf: url).count) ?? 0, 5_000, "PNG 太小：\(name)")
@@ -292,6 +305,130 @@ final class ClipboardPanelSnapshotTests: XCTestCase {
         files.setFilter(.files)
         XCTAssertEqual(files.visibleItems.count, 2)
         try snapshot("clipboard-10b-files-filter", files)
+    }
+
+    // MARK: - 可發現性（提示、hover 動作、點擊回饋、狀態文案）
+
+    /// 真實展開瀏海的內容區高度（clipboardBaseHeight 232 − 表頭 38 − 底部 12）。
+    private let realHeight: CGFloat = 182
+
+    private func lit(_ px: Pixels, rows: ClosedRange<Int>, xs: Range<Int>? = nil, above: Double = 0.25) -> Int {
+        var n = 0
+        for y in max(rows.lowerBound, 0)...min(rows.upperBound, px.height - 1) {
+            for x in (xs ?? 0..<px.width) where px.luminance(x: x, y: y) > above { n += 1 }
+        }
+        return n
+    }
+
+    private func greenCount(_ px: Pixels, rows: ClosedRange<Int>) -> Int {
+        var n = 0
+        for y in max(rows.lowerBound, 0)...min(rows.upperBound, px.height - 1) {
+            for x in 0..<px.width {
+                let c = px.rgb(x: x, y: y)
+                if c.g > 0.5, c.g - c.r > 0.2, c.g - c.b > 0.15 { n += 1 }
+            }
+        }
+        return n
+    }
+
+    private func redCount(_ px: Pixels, rows: ClosedRange<Int>) -> Int {
+        var n = 0
+        for y in max(rows.lowerBound, 0)...min(rows.upperBound, px.height - 1) {
+            for x in 0..<px.width {
+                let c = px.rgb(x: x, y: y)
+                if c.r > 0.6, c.r - c.g > 0.3, c.r - c.b > 0.25, c.g < 0.55 { n += 1 }
+            }
+        }
+        return n
+    }
+
+    func testHintFooterShowsAndHides() async throws {
+        let one = ClipboardPanelModel(items: [text("只有一筆的測試文字", at: 10)])
+        for (name, mode) in [("off", ClipboardAutoPasteMode.off), ("on", .on), ("needs-permission", .needsPermission)] {
+            try snapshot("clipboard-11-hint-footer-\(name)", one, height: realHeight, showsHints: true, autoPasteMode: mode)
+        }
+        try snapshot("clipboard-11b-hint-footer-mixed", ClipboardPanelModel(items: try await mixedItems()), height: realHeight, showsHints: true)
+
+        // 底部 16pt 的帶子：有提示就有字，收起後是空的（只有一列資料，底部不會有列內容）。
+        func bottomBand(_ showsHints: Bool) throws -> Int {
+            let px = Pixels(try renderImage(panel(one, height: realHeight, showsHints: showsHints).background(Color.black)))
+            return lit(px, rows: Int((realHeight - 16) * 2)...Int(realHeight * 2 - 1))
+        }
+        XCTAssertGreaterThan(try bottomBand(true), 150, "提示列應該有字")
+        XCTAssertEqual(try bottomBand(false), 0, "收起後底部不留白字")
+    }
+
+    func testHintFooterIsHiddenWhenListIsEmptyOrBannerShows() throws {
+        // 空狀態用空狀態文案教學；橫幅出現時不再疊一條提示（面板高度有限）。
+        let empty = ClipboardPanelModel(items: [])
+        let px = Pixels(try renderImage(panel(empty, height: realHeight, showsHints: true).background(Color.black)))
+        XCTAssertEqual(lit(px, rows: Int((realHeight - 16) * 2)...Int(realHeight * 2 - 1)), 0, "空狀態不重複顯示底部提示")
+    }
+
+    func testHoveredRowRevealsCopyPinDeleteActions() async throws {
+        let model = ClipboardPanelModel(items: [
+            text("第一列（預設被選取）", at: 30),
+            text("第二列（滑鼠停在這一列）", at: 20),
+            text("第三列", at: 10),
+        ])
+        try snapshot("clipboard-12-hover-row", model, height: realHeight, hoverIndex: 1)
+        try snapshot("clipboard-12b-no-hover", model, height: realHeight, hoverIndex: nil)
+
+        // 第二列（index 1）：頂端列 26＋6，列高 36＋間距 2 → top = 32 + 38 = 70。取右側 100pt 內的亮點。
+        func actionPixels(_ hover: Int?) throws -> Int {
+            let px = Pixels(try renderImage(panel(model, height: realHeight, hoverIndex: hover).background(Color.black)))
+            return lit(px, rows: (70 + 4) * 2...(70 + 32) * 2, xs: (px.width - 100 * 2)..<px.width, above: 0.4)
+        }
+        let hovered = try actionPixels(1)
+        let plain = try actionPixels(nil)
+        XCTAssertGreaterThan(hovered, plain + 60, "hover 時右側應出現複製／釘選／刪除三個圖示")
+    }
+
+    func testCopiedFeedbackShowsCheckmarkOnThatRowOnly() throws {
+        let items = [text("要複製的這一列", at: 30), text("旁邊的另一列", at: 20)]
+        let model = ClipboardPanelModel(items: items)
+        var feedback = ClipboardCopyFeedback()
+        _ = feedback.begin(.copied, for: model.visibleItems[0].id)
+        try snapshot("clipboard-13-copied-feedback", model, height: realHeight, feedback: feedback)
+
+        func green(_ fb: ClipboardCopyFeedback) throws -> (first: Int, second: Int) {
+            let px = Pixels(try renderImage(panel(model, height: realHeight, feedback: fb).background(Color.black)))
+            return (greenCount(px, rows: 32 * 2...(32 + 36) * 2), greenCount(px, rows: (32 + 38) * 2...(32 + 74) * 2))
+        }
+        let with = try green(feedback)
+        let without = try green(ClipboardCopyFeedback())
+        XCTAssertGreaterThan(with.first, 40, "被點的列要有綠色勾勾與『已複製』")
+        XCTAssertEqual(with.second, 0, "其他列不受影響")
+        XCTAssertEqual(without.first, 0)
+    }
+
+    func testFailedFeedbackShowsRedNotice() throws {
+        let model = ClipboardPanelModel(items: [text("複製會失敗的一列", at: 30), text("另一列", at: 20)])
+        var feedback = ClipboardCopyFeedback()
+        _ = feedback.begin(.failed, for: model.visibleItems[0].id)
+        try snapshot("clipboard-14-failed-feedback", model, height: realHeight, feedback: feedback)
+        let px = Pixels(try renderImage(panel(model, height: realHeight, feedback: feedback).background(Color.black)))
+        XCTAssertGreaterThan(redCount(px, rows: 32 * 2...(32 + 36) * 2), 30, "失敗要有紅色提示")
+    }
+
+    func testStateScreensAtRealHeight() async throws {
+        let items = try await mixedItems()
+        try snapshot("clipboard-15-empty-real", ClipboardPanelModel(items: []), height: realHeight)
+        try snapshot("clipboard-15b-paused-empty-real", ClipboardPanelModel(items: [], isPaused: true), height: realHeight)
+        try snapshot("clipboard-15c-permission-empty-real", ClipboardPanelModel(items: [], needsPermission: true), height: realHeight)
+        try snapshot("clipboard-15d-paused-list-real", ClipboardPanelModel(items: items, isPaused: true), height: realHeight)
+        try snapshot("clipboard-15e-permission-list-real", ClipboardPanelModel(items: items, needsPermission: true), height: realHeight)
+        var none = ClipboardPanelModel(items: items)
+        none.setQuery("找不到的字串")
+        try snapshot("clipboard-15f-no-results-real", none, height: realHeight)
+        try snapshot("clipboard-15g-list-with-hints-real", ClipboardPanelModel(items: items), height: realHeight, showsHints: true)
+
+        // 橘色狀態畫面在真實高度下不能把內容擠出面板：最下方 4pt 不應有橘色按鈕像素被切到。
+        for model in [ClipboardPanelModel(items: [], isPaused: true), ClipboardPanelModel(items: [], needsPermission: true)] {
+            let px = Pixels(try renderImage(panel(model, height: realHeight).background(Color.black)))
+            XCTAssertGreaterThan(orangeCount(px, rows: 0...(Int(realHeight * 2) - 1)), 200, "要有橘色圖示與按鈕")
+            XCTAssertEqual(orangeCount(px, rows: Int((realHeight - 4) * 2)...(Int(realHeight * 2) - 1)), 0, "按鈕不得被面板底緣切掉")
+        }
     }
 
     // MARK: - 純邏輯
