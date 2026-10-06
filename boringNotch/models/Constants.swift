@@ -5,6 +5,7 @@
 //  Created by Richard Kunkli on 2024. 10. 17..
 //
 
+import DavidNookCore
 import DavidNookUI
 import SwiftUI
 import Defaults
@@ -239,6 +240,12 @@ extension Defaults.Keys {
     /// 跑馬燈速度倍率（0.5…2，預設 1）。
     static let lyricsPillSpeed = Key<Double>("lyricsPillSpeed", default: 1)
     /// 展開的播放器是否顯示右側歌詞面板（歌名旁的按鈕切換）。
+    /// 影片功能（在展開瀏海顯示你挑選的單一視窗的即時畫面）。預設開；沒挑視窗時完全不擷取。
+    static let videoCapsuleEnabled = Key<Bool>(VideoCapsuleSettings.enabledKey, default: VideoCapsuleSettings.defaultEnabled)
+    /// 影片寬度（pt；160…480，預設 320）。
+    static let videoCapsuleWidth = Key<Double>(VideoCapsuleSettings.widthKey, default: VideoCapsuleSettings.defaultWidth)
+    /// 影片是否釘選（M-C 的收合膠囊才會使用；目前只存狀態）。
+    static let videoCapsulePinned = Key<Bool>(VideoCapsuleSettings.pinnedKey, default: VideoCapsuleSettings.defaultPinned)
     static let showLyricsPanel = Key<Bool>("showLyricsPanel", default: true)
     static let showRemainingTime = Key<Bool>("showRemainingTime", default: false)
     static let musicControlSlots = Key<[MusicControlButton]>(

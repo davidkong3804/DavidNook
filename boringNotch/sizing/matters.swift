@@ -29,6 +29,7 @@ extension NotchViews {
         switch self {
         case .home: .home
         case .clipboard: .clipboard
+        case .video: .video
         }
     }
 }

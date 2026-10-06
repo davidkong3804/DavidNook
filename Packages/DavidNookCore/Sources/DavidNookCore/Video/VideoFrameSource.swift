@@ -43,8 +43,12 @@ public protocol VideoFrameSource: AnyObject, Sendable {
     var events: AsyncStream<VideoSourceEvent> { get }
     /// 開始：彈出（系統）挑選器；使用者選定後以 `.started` 回報。
     func start()
-    /// 停止擷取並釋放所有畫面緩衝（不結束 `events`，之後可再 `start()`）。
+    /// 停止擷取並釋放所有畫面緩衝與已選的視窗（不結束 `events`，之後可再 `start()`）。
     func stop()
+    /// 暫停：影片分頁不在畫面上時停止串流（省電），但記住已選的視窗。沒有選過就什麼都不做。
+    func pause()
+    /// 從 `pause()` 恢復：以原來選的視窗重新開始串流。
+    func resume()
 }
 
 /// 測試與離屏渲染用的假來源：由測試呼叫 `emit` 推事件；記錄 start／stop 次數。
@@ -54,6 +58,8 @@ public final class FakeVideoFrameSource: VideoFrameSource, @unchecked Sendable {
     private let lock = NSLock()
     private var _startCount = 0
     private var _stopCount = 0
+    private var _pauseCount = 0
+    private var _resumeCount = 0
 
     public init() {
         var c: AsyncStream<VideoSourceEvent>.Continuation!
@@ -66,6 +72,10 @@ public final class FakeVideoFrameSource: VideoFrameSource, @unchecked Sendable {
 
     public func start() { lock.lock(); _startCount += 1; lock.unlock() }
     public func stop() { lock.lock(); _stopCount += 1; lock.unlock() }
+    public var pauseCount: Int { lock.lock(); defer { lock.unlock() }; return _pauseCount }
+    public var resumeCount: Int { lock.lock(); defer { lock.unlock() }; return _resumeCount }
+    public func pause() { lock.lock(); _pauseCount += 1; lock.unlock() }
+    public func resume() { lock.lock(); _resumeCount += 1; lock.unlock() }
 
     public func emit(_ event: VideoSourceEvent) { continuation.yield(event) }
     public func finish() { continuation.finish() }

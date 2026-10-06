@@ -17,6 +17,23 @@
           }
         }
       }
+    },
+    "NSScreenCaptureUsageDescription" : {
+      "comment" : "Shown by macOS when DavidNook is allowed to show a picked window as live video.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook shows a live, scaled-down picture of the one window you pick inside the notch. The picture stays in memory only; it is never saved or uploaded, and no sound is captured."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook 會在瀏海裡顯示你挑選的那一個視窗的即時縮小畫面。畫面只存在記憶體中，不會儲存或上傳，也不會擷取聲音。"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

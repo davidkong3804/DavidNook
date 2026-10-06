@@ -4397,6 +4397,414 @@
           }
         }
       }
+    },
+    "Video" : {
+      "comment" : "Notch tab and settings tab: show a picked window as live video.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影片"
+          }
+        }
+      }
+    },
+    "Watch a window in the notch" : {
+      "comment" : "Video tab: title of the empty state before any window is picked.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch a window in the notch"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在瀏海裡看影片"
+          }
+        }
+      }
+    },
+    "Pick a window and its live picture shows here, scaled down. The picture stays in memory only, and is never saved or uploaded" : {
+      "comment" : "Video tab: hint under the empty state; explains what happens and the privacy guarantee.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a window and its live picture shows here, scaled down. The picture stays in memory only, and is never saved or uploaded"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "挑一個視窗，它的即時畫面會縮小顯示在這裡。畫面只在記憶體中，不會儲存或上傳"
+          }
+        }
+      }
+    },
+    "Choose Window" : {
+      "comment" : "Video tab: button that opens the system window picker.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Window"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇視窗"
+          }
+        }
+      }
+    },
+    "Pick a window in the system picker" : {
+      "comment" : "Video tab: shown while the system window picker is open.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a window in the system picker"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請在系統挑選器選一個視窗"
+          }
+        }
+      }
+    },
+    "Only the one window you pick is shown. Press Esc to cancel" : {
+      "comment" : "Video tab: hint while the system window picker is open.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only the one window you pick is shown. Press Esc to cancel"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只會顯示你選的那一個視窗；按 Esc 可取消"
+          }
+        }
+      }
+    },
+    "Change Window" : {
+      "comment" : "Video tab: toolbar button to pick a different window.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change Window"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "換視窗"
+          }
+        }
+      }
+    },
+    "Stop" : {
+      "comment" : "Video tab: toolbar button that stops showing the window.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止"
+          }
+        }
+      }
+    },
+    "Pin it to the collapsed notch (the collapsed capsule is not available yet)" : {
+      "comment" : "Video tab: tooltip of the pin button.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pin it to the collapsed notch (the collapsed capsule is not available yet)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "釘選到收合的瀏海（收合膠囊尚未提供）"
+          }
+        }
+      }
+    },
+    "Width %lld pt" : {
+      "comment" : "Video tab: label above the width slider. Placeholder is the width in points.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Width %lld pt"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "寬度 %lld pt"
+          }
+        }
+      }
+    },
+    "The window was closed" : {
+      "comment" : "Video tab: shown when the picked window no longer exists.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window was closed"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "視窗已關閉"
+          }
+        }
+      }
+    },
+    "The window you picked is gone. Choose another window to continue" : {
+      "comment" : "Video tab: hint when the picked window was closed.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window you picked is gone. Choose another window to continue"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你選的視窗已經關掉了。重新選一個視窗就能繼續"
+          }
+        }
+      }
+    },
+    "This source is content-protected" : {
+      "comment" : "Video tab: shown over a black picture that looks like protected (DRM) content.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This source is content-protected"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這個來源受內容保護"
+          }
+        }
+      }
+    },
+    "The system does not allow capturing it. Try the source's own picture-in-picture, or a source without protection such as YouTube or a local video" : {
+      "comment" : "Video tab: explains protected content and what to try instead.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The system does not allow capturing it. Try the source's own picture-in-picture, or a source without protection such as YouTube or a local video"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系統不允許擷取。可改用來源本身的畫中畫，或沒有保護的來源（例如 YouTube、本機影片）"
+          }
+        }
+      }
+    },
+    "Screen recording permission needed" : {
+      "comment" : "Video tab: shown when macOS does not allow capturing.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screen recording permission needed"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要螢幕錄製權限"
+          }
+        }
+      }
+    },
+    "macOS is not allowing DavidNook to capture the picture. The picture is only scaled down in your Mac's memory, and is never saved or uploaded" : {
+      "comment" : "Video tab: explains why permission is needed and the privacy guarantee.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS is not allowing DavidNook to capture the picture. The picture is only scaled down in your Mac's memory, and is never saved or uploaded"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系統不允許 DavidNook 擷取畫面。畫面只在你的 Mac 記憶體中縮小顯示，不會儲存或上傳"
+          }
+        }
+      }
+    },
+    "In System Settings → Privacy & Security → Screen & System Audio Recording, allow DavidNook, then reopen the app" : {
+      "comment" : "Video tab: what to do about the missing permission.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In System Settings → Privacy & Security → Screen & System Audio Recording, allow DavidNook, then reopen the app"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請到「系統設定 → 隱私權與安全性 → 螢幕與系統錄音」允許 DavidNook，然後重新開啟 App"
+          }
+        }
+      }
+    },
+    "Couldn't show the video" : {
+      "comment" : "Video tab: title of a generic error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't show the video"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法顯示影片"
+          }
+        }
+      }
+    },
+    "The system picker did not open. Please try again" : {
+      "comment" : "Video tab: error hint when the system picker failed to open.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The system picker did not open. Please try again"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系統挑選器沒有開啟。請再試一次"
+          }
+        }
+      }
+    },
+    "Capture was interrupted by the system. Choose the window again" : {
+      "comment" : "Video tab: error hint when the system stopped the capture.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capture was interrupted by the system. Choose the window again"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "擷取被系統中斷。請重新選擇視窗"
+          }
+        }
+      }
+    },
+    "Something unexpected happened. Choose the window again" : {
+      "comment" : "Video tab: error hint for an unknown error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something unexpected happened. Choose the window again"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "發生未知的錯誤。請重新選擇視窗"
+          }
+        }
+      }
+    },
+    "Show the Video tab" : {
+      "comment" : "Video settings: toggle that shows or hides the Video tab.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show the Video tab"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示「影片」分頁"
+          }
+        }
+      }
+    },
+    "Video width" : {
+      "comment" : "Video settings: slider label for the video width.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video width"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影片寬度"
+          }
+        }
+      }
+    },
+    "Shows the live picture of one window you pick, scaled down inside the expanded notch. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead." : {
+      "comment" : "Video settings: footer explaining what the feature does, privacy, and the protected-content limit.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the live picture of one window you pick, scaled down inside the expanded notch. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在展開的瀏海裡顯示你挑選的那一個視窗的即時縮小畫面。畫面只存在記憶體中：不會儲存、上傳或錄製，也不會擷取聲音。受內容保護的來源（例如 Netflix）無法被 macOS 擷取，會改為顯示說明。"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

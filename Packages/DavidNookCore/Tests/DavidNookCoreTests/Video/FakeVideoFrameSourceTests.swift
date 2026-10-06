@@ -28,4 +28,11 @@ final class FakeVideoFrameSourceTests: XCTestCase {
         let next = await it.next()
         XCTAssertNil(next)
     }
+
+    func testPauseAndResumeAreCounted() {
+        let source = FakeVideoFrameSource()
+        source.pause(); source.pause(); source.resume()
+        XCTAssertEqual(source.pauseCount, 2)
+        XCTAssertEqual(source.resumeCount, 1)
+    }
 }

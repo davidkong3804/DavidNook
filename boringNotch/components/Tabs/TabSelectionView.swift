@@ -6,6 +6,7 @@
 //
 
 import DavidNookUI
+import Defaults
 import SwiftUI
 
 struct TabModel: Identifiable {
@@ -20,14 +21,19 @@ struct TabModel: Identifiable {
 let tabs = [
     TabModel(label: String(localized: "Home", comment: "Notch tab: music player home."), icon: "house.fill", view: .home),
     TabModel(label: String(localized: "Clipboard", comment: "Notch tab and settings tab: clipboard history."), icon: "doc.on.clipboard", view: .clipboard),
+    TabModel(label: String(localized: "Video", comment: "Notch tab and settings tab: show a picked window as live video."), icon: "play.rectangle", view: .video),
 ]
 
 struct TabSelectionView: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @Namespace var animation
+    @Default(.videoCapsuleEnabled) private var videoEnabled
+    private var visibleTabs: [TabModel] {
+        tabs.filter { $0.view != .video || videoEnabled }
+    }
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(tabs) { tab in
+            ForEach(visibleTabs) { tab in
                     TabButton(label: tab.label, icon: tab.icon, selected: coordinator.currentView == tab.view) {
                         // 形體在兩個分頁尺寸之間以彈簧變形（response 0.38、dampingRatio 0.82），內容交叉淡入。
                         withAnimation(NotchMotion.current.animation(.tabSwitch)) {

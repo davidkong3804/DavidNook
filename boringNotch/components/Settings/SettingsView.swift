@@ -13,6 +13,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case appearance
     case media
     case clipboard
+    case video
     case shortcuts
     case about
 
@@ -30,6 +31,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .appearance: LocalizedStringKey("Appearance")
         case .media: LocalizedStringKey("Media")
         case .clipboard: LocalizedStringKey("Clipboard")
+        case .video: LocalizedStringKey("Video")
         case .shortcuts: LocalizedStringKey("Shortcuts")
         case .about: LocalizedStringKey("About")
         }
@@ -42,6 +44,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .appearance: .system("paintbrush")
         case .media: .system("play.rectangle")
         case .clipboard: .system("doc.on.clipboard")
+        case .video: .system("play.rectangle")
         case .shortcuts: .system("keyboard")
         case .about: .system("info.circle")
         }
@@ -76,6 +79,8 @@ struct SettingsView: View {
                     MediaSettingsView()
                 case .clipboard:
                     ClipboardSettingsView()
+                case .video:
+                    VideoSettingsView()
                 case .shortcuts:
                     ShortcutsSettingsView()
                 case .about:

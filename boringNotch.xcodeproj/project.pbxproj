@@ -73,6 +73,9 @@
 		DA71D0C0DE00000000E10002 /* THIRD_PARTY_NOTICES.md in Resources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000E10001 /* THIRD_PARTY_NOTICES.md */; };
 		DA71D0C0DE00000000E20002 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000E20001 /* InfoPlist.xcstrings */; };
 		DA71D0C0DE00000000E30002 /* LICENSES in Resources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000E30001 /* LICENSES */; };
+		DA71D0C0DE00000000C30002 /* ScreenCaptureKitVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000C30001 /* ScreenCaptureKitVideoSource.swift */; };
+		DA71D0C0DE00000000C40002 /* VideoCapsuleController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000C40001 /* VideoCapsuleController.swift */; };
+		DA71D0C0DE00000000C50002 /* VideoTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA71D0C0DE00000000C50001 /* VideoTabView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -163,6 +166,9 @@
 		DA71D0C0DE00000000E10001 /* THIRD_PARTY_NOTICES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = THIRD_PARTY_NOTICES.md; sourceTree = "<group>"; };
 		DA71D0C0DE00000000E20001 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		DA71D0C0DE00000000E30001 /* LICENSES */ = {isa = PBXFileReference; lastKnownFileType = folder; path = LICENSES; sourceTree = "<group>"; };
+		DA71D0C0DE00000000C30001 /* ScreenCaptureKitVideoSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureKitVideoSource.swift; sourceTree = "<group>"; };
+		DA71D0C0DE00000000C40001 /* VideoCapsuleController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCapsuleController.swift; sourceTree = "<group>"; };
+		DA71D0C0DE00000000C50001 /* VideoTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoTabView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -270,6 +276,8 @@
 			isa = PBXGroup;
 			children = (
 				DA71D0C0DE00000000C10001 /* ClipboardService.swift */,
+				DA71D0C0DE00000000C40001 /* VideoCapsuleController.swift */,
+				DA71D0C0DE00000000C30001 /* ScreenCaptureKitVideoSource.swift */,
 				11DB26652EDD0BE1001EA0CF /* LyricsService.swift */,
 				112FB7342CCF16F70015238C /* NotchSpaceManager.swift */,
 				EAB1C3E8B149445A9E57C6AF /* NotchWindowManager.swift */,
@@ -409,6 +417,7 @@
 			isa = PBXGroup;
 			children = (
 				DA71D0C0DE00000000C20001 /* ClipboardTabView.swift */,
+				DA71D0C0DE00000000C50001 /* VideoTabView.swift */,
 				AA06CHV22E7A0001 /* CompactHomeView.swift */,
 				AA04LAS22E7A0001 /* LiveActivityStack.swift */,
 				1194E8862EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift */,
@@ -568,6 +577,9 @@
 			files = (
 				DA71D0C0DE0000000D000002 /* OnboardingOverviewView.swift in Sources */,
 				DA71D0C0DE00000000C20002 /* ClipboardTabView.swift in Sources */,
+				DA71D0C0DE00000000C50002 /* VideoTabView.swift in Sources */,
+				DA71D0C0DE00000000C40002 /* VideoCapsuleController.swift in Sources */,
+				DA71D0C0DE00000000C30002 /* ScreenCaptureKitVideoSource.swift in Sources */,
 				DA71D0C0DE00000000C10002 /* ClipboardService.swift in Sources */,
 				5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */,
 				147163982C5D35B70068B555 /* MusicVisualizer.swift in Sources */,
@@ -794,6 +806,7 @@
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "DavidNook uses Apple events to read the current track, favorite state and volume of the Music app and to control its playback. This only happens when Now Playing information is unavailable, or when the Music app is the one playing.";
+				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "DavidNook shows a live, scaled-down picture of the one window you pick inside the notch. The picture stays in memory only; it is never saved or uploaded, and no sound is captured.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024-2026 The Bored Team and contributors (boring.notch); DavidNook modifications © 2026 davidkong3804. Licensed under GPL-3.0.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -854,6 +867,7 @@
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "DavidNook uses Apple events to read the current track, favorite state and volume of the Music app and to control its playback. This only happens when Now Playing information is unavailable, or when the Music app is the one playing.";
+				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "DavidNook shows a live, scaled-down picture of the one window you pick inside the notch. The picture stays in memory only; it is never saved or uploaded, and no sound is captured.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024-2026 The Bored Team and contributors (boring.notch); DavidNook modifications © 2026 davidkong3804. Licensed under GPL-3.0.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
