@@ -271,4 +271,34 @@ final class TrackTitleExtractorTests: XCTestCase {
         XCTAssertFalse(TrackTitleExtractor.isVideoSource(bundleID: nil, title: "Video Games"))
         XCTAssertFalse(TrackTitleExtractor.isVideoSource(bundleID: "", title: "Shape of You"))
     }
+
+    // MARK: - 實測回報：Comet（ai.perplexity.comet）播 YouTube 找不到歌詞
+
+    func testCometIsABrowser() {
+        XCTAssertTrue(TrackTitleExtractor.isBrowserBundleID("ai.perplexity.comet"))
+        XCTAssertTrue(TrackTitleExtractor.isBrowserBundleID("ai.perplexity.comet.helper"))
+        XCTAssertTrue(TrackTitleExtractor.isVideoSource(bundleID: "ai.perplexity.comet", title: "Clean Title"))
+    }
+
+    func testUnknownBundleIDWithVideoLikeTitleIsAVideoSource() {
+        // 清單外的瀏覽器／網頁 App：bundle id 不認得時，不能一律當成乾淨來源。
+        XCTAssertTrue(TrackTitleExtractor.isVideoSource(
+            bundleID: "com.example.newbrowser", title: "陳綺貞 Cheer Chen - 旅行的意義 Travel is Meaningful (Official Music Video)"))
+        XCTAssertFalse(TrackTitleExtractor.isVideoSource(bundleID: "com.example.newbrowser", title: "旅行的意義"))
+    }
+
+    func testUnknownBundleIDWithVideoTitleStillExtractsCandidates() {
+        let c = TrackTitleExtractor.candidates(
+            title: "周杰倫 Jay Chou【妳聽得到 You Hear Me】Official MV [ 4K ]", artist: "杰威爾音樂 JVR Music",
+            durationSeconds: 240, sourceBundleID: "com.example.newbrowser")
+        XCTAssertEqual(c.first, TrackTitleCandidate("妳聽得到", "周杰倫"))
+    }
+
+    func testKnownMusicAppsStayCleanEvenWithVideoLikeTitles() {
+        for id in ["com.apple.Music", "com.apple.iTunes", "com.spotify.client", "com.netease.163music"] {
+            let c = TrackTitleExtractor.candidates(
+                title: "周杰倫【告白氣球】Official MV", artist: "周杰倫", durationSeconds: 215, sourceBundleID: id)
+            XCTAssertEqual(c, [TrackTitleCandidate("周杰倫【告白氣球】Official MV", "周杰倫")], id)
+        }
+    }
 }
