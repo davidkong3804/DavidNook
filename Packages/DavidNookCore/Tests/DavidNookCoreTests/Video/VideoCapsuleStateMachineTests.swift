@@ -178,6 +178,11 @@ final class VideoCapsuleStateMachineTests: XCTestCase {
         XCTAssertEqual(VideoFailure.permissionDenied.logDescription, "permissionDenied")
     }
 
+    /// 串流中連續 4 秒全黑（每秒一個樣本，t = 1…4）→ blackContent。
+    private func goBlack() {
+        for t in 1...4 { m.handle(.source(.brightness(0)), at: Double(t)) }
+    }
+
     // MARK: - 釘選（點一下影片＝把影片釘成瀏海外面的膠囊）
 
     func testStartsUnpinned() {
@@ -200,8 +205,7 @@ final class VideoCapsuleStateMachineTests: XCTestCase {
         XCTAssertFalse(m.isPinned)
         m.handle(.source(.selectionCancelled), at: 0)
         startStreaming(at: 0)
-        m.handle(.source(.brightness(0)), at: 1)
-        m.handle(.source(.brightness(0)), at: 5)
+        goBlack()
         XCTAssertEqual(m.state, .blackContent(aspectRatio: 16.0 / 9.0))
         m.handle(.togglePin, at: 6)
         XCTAssertFalse(m.isPinned, "黑畫面（疑似受保護）沒有東西可釘")
@@ -223,10 +227,11 @@ final class VideoCapsuleStateMachineTests: XCTestCase {
     func testPinSurvivesBlackAndRecovery() {
         startStreaming(at: 0)
         m.handle(.togglePin, at: 0)
-        m.handle(.source(.brightness(0)), at: 1)
-        m.handle(.source(.brightness(0)), at: 5)
+        goBlack()
+        XCTAssertEqual(m.state, .blackContent(aspectRatio: 16.0 / 9.0))
         XCTAssertTrue(m.isPinned)
         m.handle(.source(.brightness(80)), at: 6)
+        XCTAssertEqual(m.state, .streaming(aspectRatio: 16.0 / 9.0))
         XCTAssertTrue(m.isPinned)
     }
 
@@ -245,10 +250,10 @@ final class VideoCapsuleStateMachineTests: XCTestCase {
     func testPinnedThenBlackThenClosedUnpins() {
         startStreaming(at: 0)
         m.handle(.togglePin, at: 0)
-        m.handle(.source(.brightness(0)), at: 1)
-        m.handle(.source(.brightness(0)), at: 5)
+        goBlack()
         m.handle(.source(.sourceClosed), at: 6)
         XCTAssertFalse(m.isPinned)
+        XCTAssertEqual(m.state, .sourceClosed)
     }
 
     func testClosedWhileRepickingUnpins() {
@@ -259,6 +264,15 @@ final class VideoCapsuleStateMachineTests: XCTestCase {
         XCTAssertFalse(m.isPinned)
         m.handle(.source(.selectionCancelled), at: 4)
         XCTAssertEqual(m.state, .sourceClosed)
+    }
+
+    func testSlotAspectRatio() {
+        XCTAssertNil(VideoCapsuleState.idle.slotAspectRatio)
+        XCTAssertNil(VideoCapsuleState.choosing.slotAspectRatio)
+        XCTAssertEqual(VideoCapsuleState.streaming(aspectRatio: 1.5).slotAspectRatio, 1.5)
+        XCTAssertEqual(VideoCapsuleState.blackContent(aspectRatio: 2).slotAspectRatio, 2)
+        XCTAssertEqual(VideoCapsuleState.sourceClosed.slotAspectRatio ?? 0, 16.0 / 9.0, accuracy: 1e-12)
+        XCTAssertEqual(VideoCapsuleState.error(.unknown).slotAspectRatio ?? 0, 16.0 / 9.0, accuracy: 1e-12)
     }
 }
 

@@ -14,6 +14,16 @@ public enum VideoCapsuleState: Equatable, Sendable {
     case blackContent(aspectRatio: Double)
     case error(VideoFailure)
 
+    /// Home 封面槽要用的長寬比：nil＝顯示專輯封面（方形）；串流中／黑畫面＝來源長寬比；
+    /// 來源關閉與錯誤的說明也放進加寬的槽（16:9），才放得下完整的說明文字。
+    public var slotAspectRatio: Double? {
+        switch self {
+        case .idle, .choosing: return nil
+        case .streaming(let ratio), .blackContent(let ratio): return ratio
+        case .sourceClosed, .error: return VideoCapsuleStateMachine.fallbackAspectRatio
+        }
+    }
+
     /// 是否需要來源在跑（要不要保持串流；idle／sourceClosed／error／choosing 都不需要）。
     public var needsSource: Bool {
         switch self {
