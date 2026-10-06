@@ -5,6 +5,7 @@
 //  Created by Richard Kunkli on 07/08/2024.
 //
 
+import DavidNookUI
 import Defaults
 import SwiftUI
 
@@ -17,6 +18,11 @@ struct MediaSettingsView: View {
     @Default(.sliderColor) var sliderColor
 
     @Default(.enableLyrics) var enableLyrics
+    @Default(.lyricsPillEnabled) var lyricsPillEnabled
+    @Default(.lyricsPillDropDistance) var lyricsPillDropDistance
+    @Default(.lyricsPillMaxWidth) var lyricsPillMaxWidth
+    @Default(.lyricsPillFontSize) var lyricsPillFontSize
+    @Default(.lyricsPillSpeed) var lyricsPillSpeed
     @State private var lyricsCacheCleared = false
     @ObservedObject private var musicManager = MusicManager.shared
 
@@ -115,6 +121,49 @@ struct MediaSettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                 .disabled(!enableLyrics)
+                VStack(alignment: .leading, spacing: 4) {
+                    Defaults.Toggle(key: .lyricsPillEnabled) {
+                        Text("Show lyrics under the closed notch")
+                    }
+                    Text("A slim capsule below the notch shows the current line while music plays. It uses a little display space on Macs with a physical notch.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .disabled(!enableLyrics)
+                if enableLyrics && lyricsPillEnabled {
+                    Slider(value: $lyricsPillDropDistance, in: Double(LyricsPillMetrics.dropDistanceRange.lowerBound)...Double(LyricsPillMetrics.dropDistanceRange.upperBound), step: 1) {
+                        HStack {
+                            Text("Distance below the notch")
+                            Spacer()
+                            Text(verbatim: "\(Int(lyricsPillDropDistance)) pt")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Slider(value: $lyricsPillMaxWidth, in: Double(LyricsPillMetrics.maxWidthRange.lowerBound)...Double(LyricsPillMetrics.maxWidthRange.upperBound), step: 10) {
+                        HStack {
+                            Text("Maximum width")
+                            Spacer()
+                            Text(verbatim: "\(Int(lyricsPillMaxWidth)) pt")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Slider(value: $lyricsPillFontSize, in: Double(LyricsPillMetrics.fontSizeRange.lowerBound)...Double(LyricsPillMetrics.fontSizeRange.upperBound), step: 1) {
+                        HStack {
+                            Text("Lyrics font size")
+                            Spacer()
+                            Text(verbatim: "\(Int(lyricsPillFontSize)) pt")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Slider(value: $lyricsPillSpeed, in: LyricsPillMetrics.speedRange, step: 0.1) {
+                        HStack {
+                            Text("Lyrics scroll speed")
+                            Spacer()
+                            Text(verbatim: String(format: "%.1fx", lyricsPillSpeed))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
                 Button {
                     LyricsService.shared.clearCache()
                     lyricsCacheCleared = true

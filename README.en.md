@@ -16,6 +16,9 @@ DavidNook is an independent implementation and is **not affiliated with NotchNoo
 - Now Playing with line-by-line synced lyrics from [LRCLIB](https://lrclib.net). Simplified Chinese lyrics are converted to
   Traditional Chinese (OpenCC `s2tw` plus an override table; native Traditional lyrics are left alone; Taiwan idiom
   conversion is off by default).
+- A slim lyrics capsule under the closed notch: while music plays, the current line scrolls in it one line at a time (static and centered if it fits;
+  otherwise it scrolls and finishes before the next line). On by default; Settings → Media turns it off and adjusts distance, maximum width, font size and speed.
+  It shares the lyrics, offset and Simplified→Traditional result with the expanded panel; with Reduce Motion it does not scroll and fades out at the end instead.
 - Clipboard history (text, images, file paths): search, filter, pin, click to paste back, item limit and retention, pause.
 - Playback controls (previous / play-pause / next, shuffle, repeat, seek, volume; favorites for the Music app).
 - UI languages: Traditional Chinese when the system language is Traditional Chinese, English otherwise.
@@ -113,6 +116,7 @@ MacroVisionKit, SkyLightWindow, DynamicNotchKit and Parrot (MPL-2.0).
 - Instrumental tracks currently show "no lyrics" (LRCLIB lookups cannot tell them apart from "not found").
 - Style issues such as 台→臺 are not handled; one-to-many characters (髮/發) rely on an override table and can still be wrong at the edges.
 - Auto-paste is experimental (sandboxed app; depends on macOS accepting the synthesized ⌘V).
+- The lyrics capsule has only been checked with offscreen renders and unit tests: not with real playback, and not on a display with a physical notch. On such a display it is drawn inside the visible area and uses a little space below the notch (distance adjustable, default 6 pt). Hovering or clicking it behaves like the notch (expands it); swipe gestures are not handled on the capsule.
 - Never tested on a physical display with a notch. Behavior with real Apple Music/Spotify/browser playback is based on limited
   testing; Now Playing relies on private Apple behavior that may change.
 - Only Traditional Chinese and English UIs.

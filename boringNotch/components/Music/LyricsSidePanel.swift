@@ -174,3 +174,108 @@ struct LyricsToggleButton: View {
         .accessibilityLabel(isShowing ? String(localized: "Hide lyrics") : String(localized: "Show lyrics"))
     }
 }
+
+// MARK: - 收合瀏海下方的歌詞膠囊
+
+/// 收合瀏海下方的歌詞膠囊（一句一句跑馬燈）：由 ContentView 放在瀏海正下方，位置＝瀏海底緣＋「下拉距離」。
+///
+/// - 資料沿用 `LyricsService`（目前行、偏移、簡轉繁）與 `MusicManager` 的播放時鐘；不新增網路請求、不寫 log。
+/// - 可見性走 Core 的 `LyricsPillVisibility`（收合＋播放中＋歌詞已載入＋當前句非空＋功能開啟；暫停延遲 1.5 秒才收起）。
+/// - 效能：10 Hz 的 `TimelineView` 只在「功能開啟＋收合＋播放中＋歌詞已載入」時跑；其餘時間暫停（零逐幀成本）。
+///   逐幀（`.animation`）更新只發生在 `LyricsPillView` 內「這一句放不下、正在捲動」的那幾秒。
+/// - 互動：膠囊本身不接收點擊（`allowsHitTesting(false)`）；膠囊可見時，另放一塊與膠囊同寬同高的透明區域，
+///   hover 與點擊轉接給瀏海的 `handleHover` 與開啟動作，所以滑鼠移到膠囊上等同移到瀏海。
+struct LyricsPillHost: View {
+    /// 瀏海目前是收合狀態，且沒有被隱藏／歡迎動畫／提示佔用。
+    var isNotchClosed: Bool
+    /// 瀏海底緣離視窗上緣的距離（pt）。
+    var notchBottom: CGFloat
+    var onHover: (Bool) -> Void
+    var onTap: () -> Void
+
+    @ObservedObject private var service = LyricsService.shared
+    @ObservedObject private var musicManager = MusicManager.shared
+    @Default(.enableLyrics) private var enableLyrics
+    @Default(.lyricsPillEnabled) private var pillEnabled
+    @Default(.lyricsPillDropDistance) private var dropDistance
+    @Default(.lyricsPillMaxWidth) private var maxWidth
+    @Default(.lyricsPillFontSize) private var fontSize
+    @Default(.lyricsPillSpeed) private var speed
+
+    @State private var visibility = LyricsPillVisibility()
+    @State private var graceTask: Task<Void, Never>?
+    @State private var heldText = ""
+
+    private var style: LyricsPillStyle {
+        LyricsPillStyle(
+            fontSize: CGFloat(fontSize), maxWidth: CGFloat(maxWidth), speedMultiplier: speed,
+            reduceMotion: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        )
+    }
+
+    var body: some View {
+        let enabled = enableLyrics && pillEnabled
+        let eligible = enabled && isNotchClosed && service.status == .loaded
+        let style = style
+        let width = heldText.isEmpty ? 0 : LyricsPillSizing.pillWidth(text: heldText, style: style)
+        ZStack(alignment: .top) {
+            TimelineView(.animation(minimumInterval: 0.1, paused: !(eligible && musicManager.isPlaying))) { context in
+                let sample = eligible ? service.pillSample(at: musicManager.estimatedPlaybackPosition(at: context.date)) : nil
+                LyricsPillGate(
+                    input: LyricsPillVisibility.Input(
+                        isEnabled: enabled, isNotchClosed: isNotchClosed, isPlaying: musicManager.isPlaying,
+                        hasLyrics: service.status == .loaded, hasCurrentText: sample != nil
+                    ),
+                    heldText: sample?.line.text,
+                    apply: apply
+                ) {
+                    LyricsPillView(
+                        sample: sample, isVisible: visibility.isVisible, isTicking: eligible && musicManager.isPlaying,
+                        style: style, motion: NotchMotion.current,
+                        positionAt: { musicManager.estimatedPlaybackPosition(at: $0) }
+                    )
+                }
+            }
+            .frame(width: CGFloat(maxWidth), height: LyricsPillMetrics.height)
+
+            if visibility.isVisible, isNotchClosed, width > 0 {
+                Color.clear
+                    .frame(width: width, height: LyricsPillMetrics.height)
+                    .contentShape(Rectangle())
+                    .onHover { onHover($0) }
+                    .onTapGesture { onTap() }
+            }
+        }
+        .frame(width: CGFloat(maxWidth), height: LyricsPillMetrics.height, alignment: .top)
+        .offset(y: LyricsPillMetrics.topOffset(notchBottom: notchBottom, dropDistance: CGFloat(dropDistance)))
+    }
+
+    private func apply(_ input: LyricsPillVisibility.Input, text: String?) {
+        if let text { heldText = text }
+        let now = Date.timeIntervalSinceReferenceDate
+        visibility.update(input, at: now)
+        graceTask?.cancel()
+        graceTask = nil
+        if let deadline = visibility.hideDeadline {
+            graceTask = Task { @MainActor in
+                try? await Task.sleep(for: .seconds(max(deadline - Date.timeIntervalSinceReferenceDate, 0)))
+                guard !Task.isCancelled else { return }
+                visibility.tick(at: Date.timeIntervalSinceReferenceDate)
+            }
+        }
+    }
+}
+
+/// 把「輸入變了」從 TimelineView 的內容閉包轉成狀態更新（body 裡不能直接改 @State）。
+private struct LyricsPillGate<Content: View>: View {
+    var input: LyricsPillVisibility.Input
+    var heldText: String?
+    var apply: (LyricsPillVisibility.Input, String?) -> Void
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        content()
+            .onChange(of: input, initial: true) { _, new in apply(new, heldText) }
+            .onChange(of: heldText) { _, new in if let new { apply(input, new) } }
+    }
+}

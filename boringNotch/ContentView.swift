@@ -354,6 +354,16 @@ struct ContentView: View {
                 }
             }
         }
+        .overlay(alignment: .top) {
+            // 收合瀏海下方的歌詞膠囊：畫在既有視窗範圍內（不改視窗大小）；hover／點擊轉接給瀏海。
+            LyricsPillHost(
+                isNotchClosed: vm.notchState == .closed && !vm.hideOnClosed
+                    && !coordinator.helloAnimationRunning && !shouldDisplayNowPlayingFallbackNotice,
+                notchBottom: displayClosedNotchHeight,
+                onHover: { handleHover($0) },
+                onTap: { if vm.notchState == .closed && !shouldDisplayNowPlayingFallbackNotice { doOpen() } }
+            )
+        }
         .padding(.bottom, 8)
         .frame(
             maxWidth: NotchSizing.coveringWindowSize.width,

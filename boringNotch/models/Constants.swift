@@ -228,6 +228,16 @@ extension Defaults.Keys {
     static let enableLyrics = Key<Bool>("enableLyrics", default: true)
     /// 簡體歌詞轉繁體時是否套用台灣慣用詞（軟件→軟體…）。預設關：慣用詞層對歌詞有風險（支持→支援、打开→開啟）。
     static let lyricsTaiwanIdioms = Key<Bool>("lyricsTaiwanIdioms", default: false)
+    /// 收合瀏海下方的歌詞膠囊（一句一句跑馬燈）。預設開；沒有歌詞或沒在播放時不顯示。
+    static let lyricsPillEnabled = Key<Bool>("lyricsPillEnabled", default: true)
+    /// 膠囊離瀏海底緣的距離（pt；−8…40，預設 6）。有實體瀏海的螢幕上膠囊會佔用一點顯示空間。
+    static let lyricsPillDropDistance = Key<Double>("lyricsPillDropDistance", default: 6)
+    /// 膠囊最大寬度（pt；240…520，預設 360）。
+    static let lyricsPillMaxWidth = Key<Double>("lyricsPillMaxWidth", default: 360)
+    /// 膠囊字級（pt；11…16，預設 12）。
+    static let lyricsPillFontSize = Key<Double>("lyricsPillFontSize", default: 12)
+    /// 跑馬燈速度倍率（0.5…2，預設 1）。
+    static let lyricsPillSpeed = Key<Double>("lyricsPillSpeed", default: 1)
     /// 展開的播放器是否顯示右側歌詞面板（歌名旁的按鈕切換）。
     static let showLyricsPanel = Key<Bool>("showLyricsPanel", default: true)
     static let showRemainingTime = Key<Bool>("showRemainingTime", default: false)

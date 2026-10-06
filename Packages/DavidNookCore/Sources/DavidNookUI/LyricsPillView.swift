@@ -152,36 +152,43 @@ public struct LyricsPillContent: View {
     }
 }
 
+/// 膠囊（含換句動畫）的寬度；App 用它讓點擊／hover 的透明區域與畫面上的膠囊同寬。
+public enum LyricsPillSizing {
+    public static func pillWidth(text: String, style: LyricsPillStyle) -> CGFloat {
+        LyricsPillLayout(text: text, lineDuration: nil, style: style).pillWidth
+    }
+}
+
 /// 即時的歌詞膠囊（App 用）。
 ///
-/// 兩層更新：外層 `TimelineView` 10 Hz 取樣「目前行」（不播放／不顯示時暫停＝零成本）；只有「這一句放不下、
-/// 正在捲動」時，內層才逐幀（`.animation`）更新位移，捲完或靜止就停。換句以 `id` 做交叉淡入＋微小上移，
-/// 底（膠囊）不跟著淡，所以換句時外形穩定、只有寬度平順變化。
+/// 取樣（目前行）由呼叫端的 `TimelineView`（10 Hz，不播放／不顯示時暫停＝零成本）提供；只有「這一句放不下、
+/// 正在捲動」時，這裡的內層 `TimelineView(.animation)` 才逐幀更新位移，捲完或靜止就停。換句以 `id` 做交叉淡入＋
+/// 微小上移，底（膠囊）不跟著淡，所以換句時外形穩定、只有寬度平順變化。
 public struct LyricsPillView: View {
+    var sample: LyricsPillSample?
     var isVisible: Bool
     var isTicking: Bool
-    var sampleAt: (Date) -> LyricsPillSample?
     var style: LyricsPillStyle
     var motion: NotchMotion
+    var positionAt: (Date) -> TimeInterval
 
     public init(
-        isVisible: Bool, isTicking: Bool, style: LyricsPillStyle, motion: NotchMotion,
-        sampleAt: @escaping (Date) -> LyricsPillSample?
+        sample: LyricsPillSample?, isVisible: Bool, isTicking: Bool, style: LyricsPillStyle, motion: NotchMotion,
+        positionAt: @escaping (Date) -> TimeInterval
     ) {
+        self.sample = sample
         self.isVisible = isVisible
         self.isTicking = isTicking
         self.style = style
         self.motion = motion
-        self.sampleAt = sampleAt
+        self.positionAt = positionAt
     }
 
     public var body: some View {
-        TimelineView(.animation(minimumInterval: 0.1, paused: !isTicking)) { context in
-            LyricsPillBody(
-                sample: sampleAt(context.date), isVisible: isVisible, isTicking: isTicking,
-                style: style, motion: motion, sampleAt: sampleAt
-            )
-        }
+        LyricsPillBody(
+            sample: sample, isVisible: isVisible, isTicking: isTicking,
+            style: style, motion: motion, positionAt: positionAt
+        )
     }
 }
 
@@ -191,7 +198,7 @@ private struct LyricsPillBody: View {
     var isTicking: Bool
     var style: LyricsPillStyle
     var motion: NotchMotion
-    var sampleAt: (Date) -> LyricsPillSample?
+    var positionAt: (Date) -> TimeInterval
 
     /// 最後一句非空的歌詞：淡出期間（間奏、暫停、展開）沿用它，膠囊不會在淡出途中變空。
     @State private var held: LyricsPillSample?
@@ -227,7 +234,7 @@ private struct LyricsPillBody: View {
         let moving = isTicking && !style.reduceMotion && layout.marquee.isScrolling(at: shown.elapsed)
         TimelineView(.animation(paused: !moving)) { context in
             let elapsed = moving
-                ? max((sampleAt(context.date)?.position ?? shown.position) - shown.line.start, 0)
+                ? max(positionAt(context.date) - shown.line.start, 0)
                 : shown.elapsed
             LyricsPillTextLayer(text: shown.line.text, elapsed: elapsed, layout: layout, style: style)
         }

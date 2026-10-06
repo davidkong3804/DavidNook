@@ -4301,6 +4301,102 @@
           }
         }
       }
+    },
+    "Show lyrics under the closed notch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show lyrics under the closed notch"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在收合的瀏海下方顯示歌詞"
+          }
+        }
+      }
+    },
+    "A slim capsule below the notch shows the current line while music plays. It uses a little display space on Macs with a physical notch." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A slim capsule below the notch shows the current line while music plays. It uses a little display space on Macs with a physical notch."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音樂播放時，瀏海正下方會長出一顆細膠囊，顯示目前這一句。在有實體瀏海的 Mac 上，它會佔用一點螢幕顯示空間。"
+          }
+        }
+      }
+    },
+    "Distance below the notch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Distance below the notch"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "與瀏海的距離"
+          }
+        }
+      }
+    },
+    "Maximum width" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maximum width"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最大寬度"
+          }
+        }
+      }
+    },
+    "Lyrics font size" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyrics font size"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歌詞字級"
+          }
+        }
+      }
+    },
+    "Lyrics scroll speed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyrics scroll speed"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歌詞捲動速度"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

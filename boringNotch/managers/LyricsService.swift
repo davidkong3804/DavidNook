@@ -12,6 +12,7 @@
 //
 
 import DavidNookCore
+import DavidNookUI
 import Defaults
 import Foundation
 
@@ -117,6 +118,20 @@ final class LyricsService: ObservableObject {
     func currentIndex(at position: TimeInterval) -> Int? {
         guard status == .loaded else { return nil }
         return timeline.currentIndex(at: position, userOffsetMs: offsetMs)
+    }
+
+    /// 收合瀏海歌詞膠囊用的取樣：目前行（已簡轉繁、已含偏移）＋它的起訖時間。
+    /// 沒載入、尚未開始、或目前是間奏（空白行）回傳 nil。時間軸與偏移與展開面板同一份資料，所以調整偏移會一起生效。
+    func pillSample(at position: TimeInterval) -> LyricsPillSample? {
+        guard let index = currentIndex(at: position),
+              lines.indices.contains(index), timeline.lines.indices.contains(index) else { return nil }
+        let text = lines[index].trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return nil }
+        let start = Double(timeline.lines[index].timeMs - timeline.lrcOffsetMs - offsetMs) / 1000
+        let end = timeline.nextLineTime(at: position, userOffsetMs: offsetMs)
+        return LyricsPillSample(
+            line: LyricsPillLine(index: index, text: text, start: start, end: end), position: position
+        )
     }
 
     /// 逐曲偏移：增減 `deltaMs` 毫秒（正值＝歌詞提早；細調 ±100、粗調 ±500），夾在 ±60 秒內並依曲目記住。
