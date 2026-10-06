@@ -26,7 +26,12 @@ DavidNook is an independent implementation and is **not affiliated with NotchNoo
   video capsule outside the notch (collapsed state, right under the notch); click again to unpin. "Change window" and "Stop" appear only on hover and are
   separate from pinning, so they never trigger each other. Only the window you pick is captured; no audio, no cursor; nothing is captured while no window is
   picked or the panel is off screen. Settings → Video turns the feature off and sets the "Video size" (it caps how wide the slot can grow when expanded
-  and sets the pinned capsule's size). **Pinned capsule (M-C)**: while the notch is collapsed, the video shows live in a rounded capsule right under the notch,
+  and sets the pinned capsule's size). **Show only the player (crop)**: you may not want the whole browser window (address bar, comments, recommendations). Hover the video and press Crop to open a small separate window
+  showing that window's current picture; drag a rectangle over the part to keep (drag a corner or edge to adjust; Reset to Whole Window, OK, Cancel). After OK both the cover slot and the pinned capsule
+  show only that area and their aspect ratio follows it. Auto-detect watches the picture for about 3 seconds and proposes the largest connected moving area (you can still adjust it; if nothing clear is found it only
+  shows a note and does not guess). The crop is remembered per source app by bundle id (only the bundle id and a window-relative rectangle are stored, never window titles) and applied the next time you pick a window of
+  that app; hover also offers Reset crop. Cropping does not change DRM behavior: protected sources still go black with a notice, and the app does not try to bypass it.
+  **Pinned capsule (M-C)**: while the notch is collapsed, the video shows live in a rounded capsule right under the notch,
   stacked vertically with the lyrics capsule (lyrics on top, video below; with no lyrics the video moves up, and it makes room smoothly when lyrics appear).
   When the notch expands the video goes back into the cover slot and the outside capsule fades out, so it is never shown twice. Hovering the capsule counts as hovering the notch
   (click to expand; unpin from the cover slot once expanded), and a small pin appears at its top right on hover. The capsule is clamped to the collapsed window's
@@ -148,6 +153,11 @@ MacroVisionKit, SkyLightWindow, DynamicNotchKit and Parrot (MPL-2.0).
   cannot be operated; the picture pauses while the window is minimized; the cover slot only widens when the layout has room (at the smallest panel size it
   stays square and the video is scaled down; notices shrink to a title and buttons, with the full text in a tooltip); pinning is cleared automatically when the
   stream ends (stop, source window closed, error) or when the picture stays black (likely protected) and never survives a relaunch.
+- **Crop limits**: **cropping (`sourceRect`) is not verified on real hardware**. The SDK header does not state the origin of `sourceRect` for window capture; the app assumes window-relative, top-left origin, points,
+  and the direction may need a fix after real testing. While a crop is active the app does not track the source window being resized (the cropped picture does not reveal the window size), so re-crop or reset after resizing;
+  on macOS 15.2 and earlier the source app's bundle id is unavailable, so the crop only applies to the current stream and is not remembered; auto-detect is heuristic: it cannot detect a paused/still video, returns
+  nothing when the whole page moves (scrolling) or the window is full-screen video, and may pick a large animated ad instead, so adjust by hand; while editing, the whole window is streamed temporarily (larger size) and
+  the stream shrinks back to the cropped area on OK; black-picture detection looks only at the cropped area.
 - **Pinned capsule limits (M-C)**: while pinned, the stream keeps running even when the notch is collapsed (about 20 fps, no audio), so it **keeps using some GPU/CPU; actual usage is not measured**;
   DRM/black sources never show the capsule (detected black unpins it and the capsule fades out; no black block); with several displays each display's collapsed notch shows the same capsule
   (same approach as the lyrics capsule); **not verified on a display with a physical notch**, and the capsule's feel and animation are untested on real hardware.

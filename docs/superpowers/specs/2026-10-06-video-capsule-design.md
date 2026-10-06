@@ -144,3 +144,21 @@
 **程式**：`DavidNookCore/Video/VideoCapsulePolicy.swift`、`DavidNookUI/VideoCapsuleView.swift`、`VideoCapsuleMetrics.swift`（`cornerRadius`、`VideoCapsulePlacement`）、App 端 `components/Notch/VideoCapsuleHost.swift`、`ContentView`、`VideoCapsuleController`。entitlements、Hardened Runtime 未改；不呼叫 `CGRequestScreenCaptureAccess`；畫面不存檔不上傳，log 不含畫面與視窗標題。
 
 **已知限制**：釘選期間收合瀏海也持續串流（約 20 fps），會持續吃一點 GPU／CPU（**未量測**，§8 預算未驗證）；DRM／黑畫面來源不會顯示膠囊；窄直向影片（寬高比 < 約 0.59）在收合視窗內會縮到寬 < 96 而不顯示（釘選仍在）；多螢幕每個收合瀏海都會顯示同一顆膠囊；**未在有實體瀏海的螢幕、未在真機驗證**（含膠囊手感、hover 轉接、動畫、與歌詞膠囊的實際堆疊、串流在收合時持續的穩定度）。
+
+## 裁切：只擷取視窗內一塊區域（2026-10-06，使用者實測後追加）
+
+**動機**：使用者實測發現擷取的是整個瀏覽器視窗（網址列、分頁、YouTube 留言／推薦都在裡面），只想看播放器。
+
+**API 核對（SDK 標頭 `ScreenCaptureKit.framework/Headers/SCStream.h`，Xcode 27 SDK）**：`SCStreamConfiguration.sourceRect`（`CGRect`）——「stream only samples a subset of the frame input；display 串流不設則串整個 display；**independent window 串流不設則串整個視窗**；The rectangle is specified in points in the display's logical coordinate system」。`destinationRect` 單位為 pixel（我們不用）。**標頭未明說視窗擷取時 sourceRect 的原點**；我們採「相對視窗、左上為原點、y 向下、單位 pt」，視窗大小取 `SCContentFilter.contentRect`（macOS 14+）。這個假設集中在 `NormalizedCropRect.sourceRect(in:)` 一處（有測試），**未經真機驗證**——若實測方向或單位不對，只需改這個函式。bundle id 取自 `SCContentFilter.includedWindows.first?.owningApplication?.bundleIdentifier`（標頭標示 macOS 15.2+）；更舊的系統取不到。
+
+**資料與儲存**：`NormalizedCropRect`（Core）＝相對視窗的 0…1 矩形（原點左上），夾限邊長 ≥ 0.05、完全在視窗內；幾乎整個視窗（寬高 ≥ 0.99）視為沒裁切。記憶 `VideoCropMemory`（Core，Codable，最多 64 筆、最近使用在後）只存 **bundle id 與矩形**（有測試確認不含 title），以 JSON 放在 Defaults（`videoCropMemory`）。取不到 bundle id 就不存、只套用於本次串流。
+
+**UX**：封面槽 hover 按鈕群＝「換視窗」「裁切」（`crop` 圖示）、有裁切時多一顆「重設裁切」（`arrow.counterclockwise`）、「停止」。按「裁切」開**獨立的一般 NSWindow**（`VideoCropWindowController`：titled＋closable、`.floating`、建立時依來源長寬比定好大小、`hosting.sizingOptions = []`，之後不改大小；**不是瀏海視窗，不對瀏海視窗 setFrame**）。視窗內畫面用同一個 `VideoFrameDisplay`（多個 CALayer 掛同一個 IOSurface）顯示同一條串流的最新幀，**不另開第二條 SCStream**。編輯期間同一條串流以 `updateConfiguration` 暫時改串整個視窗（寬 1200 px），結束後改回「裁切區域＋設定寬度」。拖曳邏輯在 Core 的 `CropDragModel`（邊角／邊緣縮放、框內移動、框外新框、夾在視窗內、不翻轉、有測試）。「確定」套用並記住、「取消」（含關閉鈕）維持原狀、「重設為整個視窗」清掉選取。確定後立即套用到封面槽與釘選膠囊：串流輸出長寬比＝裁切區域的比例，經 `.cropChanged` 事件進狀態機（重置黑畫面計時、保留釘選），之後走既有 `VideoCapsuleMetrics`／`VideoCapsuleStack` 夾限（補了窮舉測試：任意裁切比例下膠囊仍在視窗內、比例在 1:2…2:1）。串流結束（來源關閉等）會自動關掉裁切視窗。裁切視窗開著時瀏海即使收合也維持串流（`reconcileStreaming` 把「編輯中」視為槽可見）。
+
+**自動偵測**（`VideoRegionDetector`，Core 純函式，TDD）：裁切視窗內按「自動偵測」，串流約 3 秒、每 0.25 秒把整張輸出縮成 64×36 的亮度小圖（只在記憶體，偵測完即丟）→ 逐像素累積「相鄰幀亮度差 > 12」的次數 → 次數 ≥ 幀對數 40% 的像素為活躍 → 活躍遮罩膨脹 1 格後做 4 連通標記 → 取活躍像素最多的區域，外接矩形（用原始活躍像素算）當建議框。拒絕：活躍像素 < 畫面 2% 或邊長 < 10%、外接矩形寬高都 ≥ 92%（整頁捲動／全螢幕）。找不到回 nil，視窗顯示說明、不亂框。測試用合成資料：靜態背景＋中央方塊→框到方塊；偏置方塊＋較小的另一個閃爍→只框主要區域；整頁都在動→nil；全靜止→nil；低於門檻的雜訊→nil；稀疏亂點→nil；太小的區域→nil；幀數不足或尺寸不一致→nil。**限制**：暫停／靜止的影片偵測不到；旁邊有大面積動畫廣告可能框到別處；局部在動的影片可能框不全——一律可手動微調。
+
+**黑畫面偵測**：`BlackFrameDetector.averageBrightness(..., region:)` 只在裁切區域內取 32×32 格點。正常串流時輸出畫面本身就是裁切區域（sourceRect 已套用），整張都看；編輯期間輸出整個視窗，傳入目前裁切當 region。裁切／重設會經 `.cropChanged` 重置黑畫面計時，所以裁切後不會被裁切前的樣本誤判。
+
+**DRM**：裁切**不影響** DRM 行為。受保護來源裁切後仍是黑畫面並顯示說明、釘選自動取消；本功能不嘗試繞過，也不因為裁切而改變偵測規則。
+
+**已知限制／未驗證**：(1) `sourceRect` 原點與單位的假設（見上）未真機驗證；(2) 有裁切且不在編輯時，框內畫面的 `contentRect` 不代表視窗大小，所以**不追蹤視窗被縮放**（框的比例以套用當下的視窗大小換算），縮放後請重新裁切或重設；(3) 編輯期間暫時串整個視窗，實際切換是否順暢未驗證；(4) 裁切視窗在 accessory App、多 Space、全螢幕 App 上的行為未驗證；(5) 自動偵測在真實 YouTube／影片上的準確度未驗證（只有合成資料測試）；(6) 記憶依 bundle id：同一個 App 的不同視窗（例如瀏覽器的影片分頁與一般分頁）共用同一個裁切。
