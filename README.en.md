@@ -103,6 +103,13 @@ MacroVisionKit, SkyLightWindow, DynamicNotchKit and Parrot (MPL-2.0).
 
 ## Known limitations
 
+- **YouTube and other video in a browser**: the app guesses the song and artist from the video title (brackets, `Official MV`, `Artist - Title`,
+  `feat.`, bilingual titles) and the channel name, then queries LRCLIB. A video is accepted only if it is at most 60 s longer or 5 s shorter than the
+  LRCLIB track and the title and artist match the LRCLIB record; otherwise it shows "no lyrics" rather than risk the wrong song. Known limits: lyrics are
+  timed to the studio audio, so an intro or spoken part in a music video shifts them early (use the ±0.5 s buttons); title parsing is heuristic;
+  live/remix/cover versions and videos longer than 15 minutes are mostly not found; label channels are not used as the artist. Only browser sources
+  (by bundle id, or title features when the id is unknown) get this treatment; Apple Music and other clean sources are unchanged. Only the extracted
+  title and artist are sent (no raw video title, channel, or duration). **Not verified with real YouTube playback**; the bundle ids browsers actually report need real-world testing.
 - Instrumental tracks currently show "no lyrics" (LRCLIB lookups cannot tell them apart from "not found").
 - Style issues such as 台→臺 are not handled; one-to-many characters (髮/發) rely on an override table and can still be wrong at the edges.
 - Auto-paste is experimental (sandboxed app; depends on macOS accepting the synthesized ⌘V).

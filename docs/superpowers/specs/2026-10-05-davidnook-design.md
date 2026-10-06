@@ -195,3 +195,55 @@ M1 瀏海殼（匯入上游、裁剪、改名、多螢幕）→ M2 Now Playing�
 - **漏改取捨**（保守：寧可不改）：後綴「長／正／民／加／德」使「家里長大」「心里正在」之類少數句子漏改；前綴「福／安」使「幸福里」「平安里」也保留（任務指定的排除集）；行首的「里面」「里邊」不改（真實資料 0 行）。
 - 「回复」「恢复」「答复」未加（歧義）；「只→隻」「想象→想像」等風格問題仍不處理。
 - 未驗證：簡體來源的真實樣本偏少（轉換歌曲僅 9 首），簡體路徑的「里」仍主要靠 OpenCC 本身；辭典掃描只涵蓋 OpenCC 收錄的詞，歌詞裡的新造詞、人名（歌手名、地名）沒有覆蓋。
+
+## YouTube／瀏覽器影片來源支援（2026-10-06）
+
+### 1. 問題
+瀏覽器播 YouTube 時，MediaRemote 的 title 是**影片標題**（`周杰倫 Jay Chou【告白氣球 Balloon】Official MV`）、artist 常是**頻道名**
+（唱片公司、`xxx - Topic`、VEVO、空白）、duration 是**影片長度**（含前奏、片尾，常比歌長）。原管線假設三者都是乾淨的曲目資料，
+所以直接顯示「找不到歌詞」。
+
+### 2. 來源怎麼判斷（已查證與未查證）
+- 已查證（程式碼與二進位）：adapter 的 JSON 有 `bundleIdentifier` 與 `parentApplicationBundleIdentifier` 兩個欄位
+  （`MediaRemoteAdapter.framework` 二進位內含這兩個字串；App 端 `NowPlayingPayload` 解碼，`NowPlayingStreamSupport.swift:257`）。
+  `NowPlayingController.handleAdapterUpdate` 以 `parentApplicationBundleIdentifier ?? bundleIdentifier` 解出 `PlaybackState.bundleIdentifier`，
+  `MusicManager` 每次狀態更新把它傳給 `LyricsService`（`LyricsTrack.sourceBundleID`）。
+- **未驗證**：各瀏覽器實際回報的值（Safari 可能是 `com.apple.Safari` 或 `com.apple.WebKit.*` helper；Chrome 系可能是主程式或 `.helper`；網頁 App／PWA 是 `…app.<id>`）。
+  所以比對採「`.` 邊界前綴」（`TrackTitleExtractor.isBrowserBundleID`），清單含 Safari／WebKit、Chrome／Chromium、Firefox、Arc／Dia、Edge、Brave、Opera、Vivaldi、Orion、DuckDuckGo、Yandex、Zen、Tor、SigmaOS。
+- bundle id **已知且不是瀏覽器**（Apple Music、Spotify…）→ 一律乾淨來源，即使標題長得像影片標題。
+  bundle id **未知（nil／空字串）** → 退回標題特徵（含 `【】｜|` 或 Official MV／Lyrics／歌詞／官方／HD 等裝飾詞片語）。
+
+### 3. 管線
+`LyricsRepository`（快取鍵＝**原始**曲目鍵，同一支影片不重複查；負快取同理）→ `VideoAwareLyricsFetcher` → `LrclibClient`。
+- **乾淨來源**：`VideoAwareLyricsFetcher` 直通，請求與原本逐一相同（`testAppleMusicQueryProducesExactlyTheSameRequestsAsTheBareClient`）。
+- **影片來源**：`TrackTitleExtractor`（純函式）產生有序候選 [(歌名, 歌手?)]，最多 6 筆；依序以 `isVideoDerived` 查詢交給 `LrclibClient`
+  （先 `/api/get` 再 `/api/search`，沿用簡繁變體、節流、429／503 處理、多版本共識）；第一個有歌詞者勝出，全部沒有＝找不到。
+  底層錯誤（網路、限流）原樣拋出，不當成「找不到」。
+- **隱私不變**：唯一對外連線仍是 `lrclib.net`；送出的是**萃取後**的歌名與歌手（影片來源不帶 duration），不送原始影片標題與頻道名；沒有任何新 log。
+
+### 4. 標題萃取規則（`TrackTitleExtractor`）
+括號（`【】《》「」『』[]()`）、裝飾詞（Official MV／Music Video／Lyrics／歌詞／動態歌詞／完整版／HD／4K／官方／高音質／字幕…）、
+分隔符（` - `、`–`、`—`、`|`、`｜`、`:`／`：`、` / `、CJK 間的 `-`）、`feat.`／`ft.`／`with` 客串（丟棄）、合作歌手（`&`、`,`、`、`、`x`：主歌手優先，全名次之）、
+雙語（中文為主、英文為次候選）。頻道名去掉 ` - Topic`／VEVO／Official；唱片公司與歌詞頻道（Records、Music、Entertainment、唱片、音樂、Lyrics、Channel…）視為不可靠而丟棄，
+可靠時只當弱提示（決定「A - B」的方向、補歌手）。方向不明時兩種方向都輸出（歌手在前優先）；猜錯只會查不到，不會放錯歌（見下節）。
+Latin 裝飾詞只認片語，不吃單字 `video`／`audio`（`Video Games` 不被弄壞）。影片長度 > 15 分鐘（合輯、直播、整張專輯）不查。
+
+### 5. 寧缺勿錯：長度與相符規則（`LyricsCandidatePicker`，只對影片查詢生效）
+- **長度**（影片長度 − 歌長）：影片可比歌長最多 **60 秒**（前奏、片尾、對白）、比歌短最多 **5 秒**；歌手未知、只靠歌名時影片最多長 **20 秒**。
+  非影片查詢仍是對稱 2 秒。排序規則不變（長度差小者優先 → 繁體優先 → 時間軸共識 …）。
+- **歌名／歌手必須相符**（長度放寬後只有它把關）：折疊（簡繁、大小寫、標點不敏感）後相同，或較短者夠長且被包含
+  （歌名較短者 ≥ 4 字；歌手 ≥ 2 字，容許合作歌手）。歌手未知時歌名要求完全相同。
+- `/api/get` 對影片查詢不帶 duration（影片長度≠歌長；LRCLIB 的 get 會以它比對而 404）。
+
+### 6. 測試
+`TrackTitleExtractorTests`（43）、`LyricsCandidatePickerVideoTests`（16）、`VideoAwareLyricsFetcherTests`（17，stub transport 整合：
+影片標題→正確 (歌名,歌手) 查詢→歌詞；第二候選／英文別名命中；影片過長、同名不同歌手、全部找不到→nil；網路錯誤不被吞；
+快取與負快取鍵是原始曲目鍵；乾淨 Apple Music 請求與裸 client 完全相同）。Core 847 → 923。
+
+### 7. 已知限制與沒有處理
+- **時間軸對的是歌曲音訊、不是影片**：MV 開頭的前奏／對白／片頭會讓歌詞整體提早（歌詞比影片早走），需用面板的 ±0.5 秒按鈕調整（依原始曲目鍵記住）。
+  影片比歌長多少無從得知，**不做自動補償**。
+- 標題格式千變萬化，萃取是啟發式：沒收錄的裝飾詞、`歌手 歌名` 沒有分隔且頻道不可靠、歌名本身含 ` - ` 等會失敗（顯示「這首歌沒有歌詞」，不會放錯歌）。
+- Live／Remix／Acoustic／Cover／Slowed 版本：裝飾詞被剝掉後查原曲，但長度與版本通常對不上，多半找不到（這是預期行為）。
+- 同一頻道的混剪、歌單、整張專輯、直播、Podcast、非歌曲影片：> 15 分鐘直接不查；較短者靠相符規則擋。
+- 未驗證：**真實的 YouTube 播放**（各瀏覽器實際回報的 bundle id、title／artist／duration 實際內容、LRCLIB 對各首歌的實際收錄）。
