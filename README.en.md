@@ -20,6 +20,10 @@ DavidNook is an independent implementation and is **not affiliated with NotchNoo
   otherwise it scrolls and finishes before the next line). On by default; Settings → Media turns it off and adjusts distance, maximum width, font size and speed.
   It shares the lyrics, offset and Simplified→Traditional result with the expanded panel; with Reduce Motion it does not scroll and fades out at the end instead.
 - Clipboard history (text, images, file paths): search, filter, pin, click to paste back, item limit and retention, pause.
+- **Video (new, not verified on real hardware)**: the expanded notch gains a Video tab. Pick **one window** with the macOS system picker and its live,
+  scaled-down picture is shown in the notch (width 160-480 pt, adjustable, default 320; change window, stop, pin). Only the window you pick is captured; no
+  audio, no cursor; nothing is captured while no window is picked or the tab is off screen. Settings → Video turns the whole feature off. "Pin" only remembers
+  its state for now; the collapsed video capsule is not available yet.
 - Playback controls (previous / play-pause / next, shuffle, repeat, seek, volume; favorites for the Music app).
 - UI languages: Traditional Chinese when the system language is Traditional Chinese, English otherwise.
 
@@ -32,6 +36,11 @@ DavidNook is an independent implementation and is **not affiliated with NotchNoo
   `User-Agent: DavidNook/<version> (project URL)`. It does **not** receive the album, clipboard content, file paths or any
   identifier. (The server sees your IP address, as with any request.) Turn lyrics off in Settings → Media to disable it.
 - No telemetry, no update server, no content in logs.
+- **Video picture**: lives only in memory (handed straight to the display layer and recycled with the stream queue). It is **never saved, uploaded, cached,
+  screenshotted or written to the clipboard**, adds no network request, and no audio is captured. Logs contain only states and error codes, never picture
+  content, window titles or source app names. Once a second the app samples the picture's average brightness (only to tell whether it is all black); the value
+  is not kept. macOS shows its own recording/sharing indicator while capturing.
+- **No new entitlements**: Video uses the system window picker, not whole-screen recording permission; Hardened Runtime and entitlements are unchanged.
 - Clipboard: items marked as passwords or one-time content (`org.nspasteboard.ConcealedType` and friends) are skipped;
   text over 1 MB and images over 20 MB are not recorded.
 
@@ -75,6 +84,9 @@ permission prompt.**
 - Automation for the Music app: fallback when system Now Playing is unavailable, and favorites/volume while the Music app is
   playing. macOS asks the first time it is needed.
 - Paste from Other Apps (macOS 15.4+): needed by clipboard history; asked the first time the clipboard is read.
+- Screen recording (Video): shows the live picture of the one window you pick. It is **expected** to go through the system picker, where you choose one window
+  each time, without pre-authorizing the whole screen. It is only used after you press "Choose Window" in the Video tab; if macOS asks for authorization it asks
+  then (**this behavior is not verified on real hardware**).
 - Accessibility / post events: only for the experimental "paste automatically after choosing" option (off by default), requested
   only when you press the button in Settings → Clipboard.
 
@@ -119,4 +131,13 @@ MacroVisionKit, SkyLightWindow, DynamicNotchKit and Parrot (MPL-2.0).
 - The lyrics capsule has only been checked with offscreen renders and unit tests: not with real playback, and not on a display with a physical notch. On such a display it is drawn inside the visible area and uses a little space below the notch (distance adjustable, default 6 pt). Hovering or clicking it behaves like the notch (expands it); swipe gestures are not handled on the capsule.
 - Never tested on a physical display with a notch. Behavior with real Apple Music/Spotify/browser playback is based on limited
   testing; Now Playing relies on private Apple behavior that may change.
+- **Video is not verified on real hardware.** Only one minimal hardware trial was done (system picker appears under sandbox + ad-hoc + Hardened Runtime; stream
+  about 20 fps at 480 wide; non-black picture). Everything else (real usage feel, browser windows and picture-in-picture windows, windows on other Spaces,
+  minimize/close detection, whether a rebuild invalidates authorization, CPU/memory measurements) is **unverified**.
+- **Content-protected (DRM) sources are not shown** (for example Netflix, Apple TV): that is the system's protection and this app does **not** and should not try
+  to bypass it. When the picture stays black (average brightness below 2/255 for about 3 seconds) it shows a "content-protected" notice; try the source's own
+  picture-in-picture or an unprotected source (YouTube, local video). This is a heuristic: a genuinely black scene could be misjudged and recovers as soon as the picture brightens.
+- **Other Video limits**: you pick the window again after every launch (the selection is not saved); one window at a time; clicks are not forwarded and the source
+  cannot be operated; the picture pauses while the window is minimized; a large video makes the expanded panel taller (never above the existing maximum panel
+  height; beyond that it is scaled down proportionally).
 - Only Traditional Chinese and English UIs.

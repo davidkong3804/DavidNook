@@ -101,3 +101,19 @@
 - **尺寸由使用者決定**：不只 S／M／L 三檔；提供連續的寬度滑桿（預設約 320 pt，16:9），並夾限在視窗涵蓋範圍內（948×346，見硬限制）。展開瀏海內與釘選後的收合膠囊可各自記住尺寸。
 - **DRM（Netflix 等）明確列為非目標**：本功能**不會**也不應嘗試繞過或規避 DRM／內容保護。受保護內容被系統擷取成黑畫面是平台的保護機制，不是我們要「解掉」的 bug。處理方式：偵測到持續全黑畫面時顯示說明（「這個來源受內容保護，系統不允許擷取」），並建議改用來源本身提供的畫中畫或無 DRM 的來源（例如 YouTube、無保護的直播、本機影片）。
 - 進度：目前只有本設計文件；下一步是在實機做「挑選器在沙盒＋ad-hoc 下能否運作」的小實測（需使用者在畫面上操作），通過才開發。使用者表示「晚點再來」。
+
+## M-A／M-B 實作紀錄（2026-10-06）
+
+**已完成（離屏與單元測試層級；真機未驗證）**
+- 實機 spike（已於上方「進度」所述的小實測）：沙盒＋ad-hoc＋Hardened Runtime 下，`SCContentSharingPicker`（singleWindow）能彈出、`SCStream` 20 fps／480 寬收到畫面且非黑。因此 §3 決策閘的 (ii) 沙盒下可用、(i)（至少在這次實測中）可串流成立；(iii) 重建後授權是否失效仍**未驗證**。
+- Core（`Packages/DavidNookCore/Sources/DavidNookCore/Video/`）：`VideoFrameSource` protocol（`start`／`stop`／`pause`／`resume`＋事件串流）與 `FakeVideoFrameSource`；`VideoCapsuleStateMachine`（idle／choosing／streaming／sourceClosed／blackContent／error）；`BlackFrameDetector`（連續 3 秒平均亮度 < 2/255 才判黑，樣本間隔 > 2 秒重新計時，轉場的短暫黑場不誤判）；`VideoCapsuleSettings`（鍵名與預設：功能開關預設開、寬度 160…480 預設 320、釘選狀態預設關）。畫面像素不經過 Core。
+- UI（`DavidNookUI`）：`NotchSizing` 新增 `.video` 分頁（預設高度與剪貼簿相同；影片較大時面板加高但不超過原有最大面板高度 302，**涵蓋視窗仍為 948×346、不改任何視窗大小**）；`VideoCapsuleMetrics`（寬度夾限、長寬比夾在 1:2…2:1、影片區塊等比縮進內容區並保留右側 132 pt 工具列）；`VideoPanelView`（空狀態／挑選中／串流中＋工具列／黑畫面說明／錯誤與權限說明）；`VideoFrameDisplay`（IOSurface 直接當 layer.contents，零拷貝）。窮舉測試鎖定：各面板寬、高度係數、表頭高度、影片寬與長寬比（含 NaN、極端值）下，影片區塊必在內容區內、面板形體必在 948×346 涵蓋視窗內。
+- App 端：`ScreenCaptureKitVideoSource`（只有它碰 ScreenCaptureKit；挑選器只允許單一視窗並排除自己的 bundle ID；寬依使用者尺寸最多 480、20 fps、無音訊、無游標、BGRA、queueDepth 3；每秒一次 32×32 格點亮度；視窗被縮放時依 contentRect 更新長寬比；來源關閉的錯誤碼視為「來源已關閉」）；`VideoCapsuleController`（事件灌進狀態機；分頁離開畫面就 `pause()` 停止串流並保留所選視窗；系統挑選器開著時暫時讓瀏海不自動收合）；`VideoTabView`、設定 → 影片、`NSScreenCaptureUsageDescription`（en＋zh-Hant）。**entitlements 未改**。不呼叫 `CGRequestScreenCaptureAccess`。
+
+**隱私（實作層）**：畫面只在記憶體；不存檔、不上傳、不快取、不截圖、不寫剪貼簿；log 只記狀態與錯誤碼。
+
+**DRM**：不嘗試繞過；持續全黑只顯示「這個來源受內容保護，系統不允許擷取」。偵測是啟發式，極暗畫面可能被暫時誤判。
+
+**與前文設計的差異**：§4 的 S／M／L 三檔改為連續滑桿；釘選按鈕目前只存狀態（`videoCapsulePinned`），收合膠囊與歌詞膠囊堆疊（`VideoCapsuleVisibility`、堆疊版面測試）留給 M-C。
+
+**仍未驗證（需真機）**：實際操作手感；各瀏覽器視窗、瀏覽器畫中畫視窗、其他 Space 的視窗；視窗最小化／關閉時各種錯誤碼的實際值（目前把 noCaptureSource／noWindowList／systemStoppedStream／removingStream／userStopped 都視為「來源已關閉」，屬推測）；DRM 內容的實際行為；挑選器開啟時瀏海是否真的維持展開；ad-hoc 重建後授權是否失效、macOS 再確認提示；CPU／GPU／記憶體是否符合 §8；展開／收合連續 10 次不閃退。

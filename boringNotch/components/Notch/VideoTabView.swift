@@ -13,6 +13,7 @@ import SwiftUI
 
 struct VideoTabView: View {
     let layout: VideoCapsuleMetrics.Layout
+    @EnvironmentObject var vm: BoringViewModel
     @ObservedObject private var controller = VideoCapsuleController.shared
     @Default(.videoCapsuleWidth) private var width
     @Default(.videoCapsulePinned) private var pinned
@@ -64,6 +65,13 @@ struct VideoTabView: View {
         )
         .frame(maxHeight: .infinity)
         .onAppear { controller.tabDidAppear() }
-        .onDisappear { controller.tabDidDisappear() }
+        .onDisappear {
+            vm.isPopoverActive = false
+            controller.tabDidDisappear()
+        }
+        // 系統挑選器開著時，滑鼠移到挑選器上不要讓瀏海自動收合。
+        .onChange(of: controller.state) { _, newState in
+            vm.isPopoverActive = (newState == .choosing)
+        }
     }
 }

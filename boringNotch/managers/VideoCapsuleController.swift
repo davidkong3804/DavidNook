@@ -44,7 +44,12 @@ final class VideoCapsuleController: ObservableObject {
         machine.handle(input, at: now)
         state = machine.state
         if before != state { log.info("state \(String(describing: self.state), privacy: .public)") }
-        if !state.needsSource { display.clear() }
+        switch state {
+        case .idle, .sourceClosed, .error: display.clear()
+        case .choosing, .streaming, .blackContent: break
+        }
+        // 挑選器開著時分頁可能已離開畫面（瀏海收合）；挑完才開始的串流不能在不可見時跑。
+        if case .source(.started) = input, !isTabVisible { source.pause() }
     }
 
     // MARK: 使用者操作
