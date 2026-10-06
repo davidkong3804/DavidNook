@@ -177,4 +177,88 @@ final class VideoCapsuleStateMachineTests: XCTestCase {
         XCTAssertEqual(VideoFailure.streamStopped(code: 7).logDescription, "streamStopped(7)")
         XCTAssertEqual(VideoFailure.permissionDenied.logDescription, "permissionDenied")
     }
+
+    // MARK: - 釘選（點一下影片＝把影片釘成瀏海外面的膠囊）
+
+    func testStartsUnpinned() {
+        XCTAssertFalse(m.isPinned)
+    }
+
+    func testTogglePinOnlyWhileStreaming() {
+        m.handle(.togglePin, at: 0)
+        XCTAssertFalse(m.isPinned, "沒有串流不能釘選")
+        startStreaming()
+        m.handle(.togglePin, at: 1)
+        XCTAssertTrue(m.isPinned)
+        m.handle(.togglePin, at: 2)
+        XCTAssertFalse(m.isPinned)
+    }
+
+    func testCannotPinWhileChoosingOrBlackOrClosed() {
+        m.handle(.requestPicker, at: 0)
+        m.handle(.togglePin, at: 0)
+        XCTAssertFalse(m.isPinned)
+        m.handle(.source(.selectionCancelled), at: 0)
+        startStreaming(at: 0)
+        m.handle(.source(.brightness(0)), at: 1)
+        m.handle(.source(.brightness(0)), at: 5)
+        XCTAssertEqual(m.state, .blackContent(aspectRatio: 16.0 / 9.0))
+        m.handle(.togglePin, at: 6)
+        XCTAssertFalse(m.isPinned, "黑畫面（疑似受保護）沒有東西可釘")
+    }
+
+    func testPinSurvivesRepickCancelAndWindowChange() {
+        startStreaming()
+        m.handle(.togglePin, at: 1)
+        m.handle(.requestPicker, at: 2)
+        XCTAssertTrue(m.isPinned)
+        m.handle(.source(.selectionCancelled), at: 3)
+        XCTAssertTrue(m.isPinned)
+        m.handle(.requestPicker, at: 4)
+        m.handle(.source(.started(aspectRatio: 1.5)), at: 5)
+        XCTAssertEqual(m.state, .streaming(aspectRatio: 1.5))
+        XCTAssertTrue(m.isPinned, "換視窗後釘選維持")
+    }
+
+    func testPinSurvivesBlackAndRecovery() {
+        startStreaming(at: 0)
+        m.handle(.togglePin, at: 0)
+        m.handle(.source(.brightness(0)), at: 1)
+        m.handle(.source(.brightness(0)), at: 5)
+        XCTAssertTrue(m.isPinned)
+        m.handle(.source(.brightness(80)), at: 6)
+        XCTAssertTrue(m.isPinned)
+    }
+
+    func testStopSourceClosedAndErrorsAutoUnpin() {
+        // 決議：串流結束一律自動取消釘選（沒有畫面的膠囊沒有意義；重新啟動 App 也不會殘留釘選）。
+        for ending in [VideoCapsuleInput.userStopped, .source(.sourceClosed), .source(.failed(.unknown)), .source(.failed(.streamStopped(code: 1)))] {
+            m = VideoCapsuleStateMachine()
+            startStreaming()
+            m.handle(.togglePin, at: 1)
+            XCTAssertTrue(m.isPinned)
+            m.handle(ending, at: 2)
+            XCTAssertFalse(m.isPinned, "\(ending)")
+        }
+    }
+
+    func testPinnedThenBlackThenClosedUnpins() {
+        startStreaming(at: 0)
+        m.handle(.togglePin, at: 0)
+        m.handle(.source(.brightness(0)), at: 1)
+        m.handle(.source(.brightness(0)), at: 5)
+        m.handle(.source(.sourceClosed), at: 6)
+        XCTAssertFalse(m.isPinned)
+    }
+
+    func testClosedWhileRepickingUnpins() {
+        startStreaming()
+        m.handle(.togglePin, at: 1)
+        m.handle(.requestPicker, at: 2)
+        m.handle(.source(.sourceClosed), at: 3)
+        XCTAssertFalse(m.isPinned)
+        m.handle(.source(.selectionCancelled), at: 4)
+        XCTAssertEqual(m.state, .sourceClosed)
+    }
 }
+

@@ -42,8 +42,6 @@ struct ContentView: View {
     // 設定頁的展開寬度／高度：改變時重新排版（即時生效）。實際數值一律經 NotchSizing 夾限。
     @Default(.openNotchWidth) private var openNotchWidth
     @Default(.openNotchHeightScale) private var openNotchHeightScale
-    @Default(.videoCapsuleWidth) private var videoCapsuleWidth
-    @ObservedObject private var video = VideoCapsuleController.shared
 
     // Use standardized animations from StandardAnimations enum
     private let animationSpring = StandardAnimations.interactive
@@ -136,16 +134,7 @@ struct ContentView: View {
     }
 
     private func openBodyHeight(for panel: NotchSizing.Panel) -> CGFloat {
-        if panel == .video { return videoLayout.bodyHeight }
-        return sizing.bodyHeight(for: panel, headerHeight: openHeaderHeight)
-    }
-
-    /// 影片分頁的版面（依使用者寬度與來源長寬比；面板會加高但不超過涵蓋視窗，不改視窗大小）。
-    private var videoLayout: VideoCapsuleMetrics.Layout {
-        VideoCapsuleMetrics.layout(
-            width: videoCapsuleWidth, aspectRatio: video.aspectRatio,
-            sizing: sizing, headerHeight: openHeaderHeight, earInset: openedInsets.top
-        )
+        sizing.bodyHeight(for: panel, headerHeight: openHeaderHeight)
     }
 
     /// Compact mode drops the tab bar along with the tabs it switches
@@ -498,10 +487,6 @@ struct ContentView: View {
                             case .clipboard:
                                 ClipboardTabView()
                                     .frame(width: openContentWidth, height: openBodyHeight(for: .clipboard), alignment: .top)
-                                    .transition(.opacity)
-                            case .video:
-                                VideoTabView(layout: videoLayout)
-                                    .frame(width: openContentWidth, height: openBodyHeight(for: .video), alignment: .top)
                                     .transition(.opacity)
                             }
                         }

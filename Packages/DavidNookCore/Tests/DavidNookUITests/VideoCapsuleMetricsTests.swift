@@ -2,8 +2,8 @@ import CoreGraphics
 import XCTest
 @testable import DavidNookUI
 
-/// 影片區塊的尺寸與版面夾限。
-/// 硬限制：視窗已固定為涵蓋尺寸，影片區塊與「影片」分頁的形體只在其中畫，絕不改 NSWindow 大小。
+/// 影片尺寸夾限，以及（給 M-C 用的）收合瀏海下方「影片膠囊＋歌詞膠囊」的堆疊版面。
+/// 硬限制：視窗已固定（收合 640×210、展開涵蓋 948×346），膠囊只在其中畫，絕不改 NSWindow 大小。
 final class VideoCapsuleMetricsTests: XCTestCase {
     private let ratios: [Double] = [.nan, -1, 0, 0.1, 0.25, 0.5, 0.75, 1, 4.0 / 3.0, 16.0 / 9.0, 2, 3, 10, .infinity]
     private let widths: [Double] = [.nan, -10, 0, 100, 159, 160, 161, 200, 320, 479, 480, 481, 1000, .infinity, -.infinity]
@@ -31,7 +31,7 @@ final class VideoCapsuleMetricsTests: XCTestCase {
         XCTAssertEqual(size.height, 180, accuracy: 1e-9)
     }
 
-    func testRequestedHeightNeverExceedsTheMaximumAndKeepsTheRatio() {
+    func testRequestedSizeKeepsTheRatioAndStaysInRange() {
         for w in widths {
             for r in ratios {
                 let size = VideoCapsuleMetrics.requestedSize(width: w, aspectRatio: r)
@@ -42,72 +42,105 @@ final class VideoCapsuleMetricsTests: XCTestCase {
         }
     }
 
-    func testMaximumHeightFitsTheLargestPanelBody() {
-        let largest = NotchSizing.maximumOpenSize.height
-        XCTAssertEqual(VideoCapsuleMetrics.maximumHeight, largest - NotchSizing.minimumHeaderHeight - NotchSizing.bottomInset)
-    }
-
     func testFitShrinksProportionallyAndNeverGrows() {
         let fitted = VideoCapsuleMetrics.fit(CGSize(width: 480, height: 270), into: CGSize(width: 400, height: 180))
         XCTAssertEqual(fitted.height, 180, accuracy: 1e-9)
         XCTAssertEqual(fitted.width, 320, accuracy: 1e-9)
-        let same = VideoCapsuleMetrics.fit(CGSize(width: 200, height: 100), into: CGSize(width: 400, height: 300))
-        XCTAssertEqual(same, CGSize(width: 200, height: 100))
+        XCTAssertEqual(VideoCapsuleMetrics.fit(CGSize(width: 200, height: 100), into: CGSize(width: 400, height: 300)), CGSize(width: 200, height: 100))
         XCTAssertEqual(VideoCapsuleMetrics.fit(CGSize(width: 200, height: 100), into: CGSize(width: -5, height: 10)), .zero)
     }
 
-    // MARK: - 展開面板內的版面
+    // MARK: - 堆疊版面（M-C 接線用）
 
-    func testDefaultLayoutIn720WideDefaultPanel() {
-        let layout = VideoCapsuleMetrics.layout(width: 320, aspectRatio: 16.0 / 9.0, sizing: NotchSizing(), headerHeight: 38, earInset: 19)
-        XCTAssertEqual(layout.videoSize.width, 320, accuracy: 1e-9)
-        XCTAssertEqual(layout.videoSize.height, 180, accuracy: 1e-9)
-        XCTAssertEqual(layout.panelSize, CGSize(width: 720, height: 232), "預設寬度時面板維持剪貼簿同高")
+    private let closed = NotchSizing.legacyClosedWindowSize
+
+    func testLyricsAboveVideoWithSixPointGap() {
+        let r = VideoCapsuleStack.layout(notchBottom: 32, dropDistance: 6, lyricsVisible: true, lyricsWidth: 300,
+                                         videoWidth: 200, aspectRatio: 16.0 / 9.0, order: .lyricsAbove)
+        let lyrics = try! XCTUnwrap(r.lyrics)
+        let video = try! XCTUnwrap(r.video)
+        XCTAssertEqual(lyrics.minY, 38)
+        XCTAssertEqual(lyrics.height, LyricsPillMetrics.height)
+        XCTAssertEqual(video.minY, lyrics.maxY + VideoCapsuleStack.gap)
+        XCTAssertEqual(video.midX, closed.width / 2, accuracy: 1e-9)
+        XCTAssertEqual(lyrics.midX, closed.width / 2, accuracy: 1e-9)
+        XCTAssertEqual(video.width, 200, accuracy: 1e-9)
+        XCTAssertEqual(video.height, 112.5, accuracy: 1e-9)
     }
 
-    func testPanelGrowsToHoldALargeVideoWithinTheCoveringWindow() {
-        let layout = VideoCapsuleMetrics.layout(width: 400, aspectRatio: 16.0 / 9.0, sizing: NotchSizing(), headerHeight: 38, earInset: 19)
-        XCTAssertEqual(layout.videoSize.height, 225, accuracy: 1e-9)
-        XCTAssertEqual(layout.panelSize.height, 38 + 225 + NotchSizing.bottomInset, accuracy: 1)
-        XCTAssertGreaterThan(layout.panelSize.height, 232)
-        XCTAssertLessThanOrEqual(layout.panelSize.height, NotchSizing.maximumOpenSize.height)
+    func testVideoMovesUpToTheLyricsSpotWhenLyricsAreHidden() {
+        let r = VideoCapsuleStack.layout(notchBottom: 32, dropDistance: 6, lyricsVisible: false, lyricsWidth: 300,
+                                         videoWidth: 200, aspectRatio: 16.0 / 9.0, order: .lyricsAbove)
+        XCTAssertNil(r.lyrics)
+        XCTAssertEqual(r.video?.minY, 38)
     }
 
-    func testWorstCaseStaysInsideTheOpenPanelAndTheCoveringWindow() {
-        let window = NotchSizing.coveringWindowSize
-        XCTAssertEqual(window, CGSize(width: 948, height: 346), "視窗涵蓋尺寸不得因影片分頁而改變")
-        for panelWidth in stride(from: 560.0, through: 900.0, by: 20) {
-            for scale in stride(from: 0.85, through: 1.30, by: 0.05) {
-                for header in [38.0, 41.0, 50.0, 60.0] {
-                    let sizing = NotchSizing(width: panelWidth, heightScale: scale)
-                    for w in widths {
-                        for r in ratios {
-                            let tag = "pw\(panelWidth) s\(scale) h\(header) w\(w) r\(r)"
-                            let l = VideoCapsuleMetrics.layout(width: w, aspectRatio: r, sizing: sizing, headerHeight: CGFloat(header), earInset: 19)
-                            // 影片區塊在內容區之內（寬扣掉右側工具列）。
-                            XCTAssertLessThanOrEqual(l.videoSize.width, l.availableWidth + 1e-9, tag)
-                            XCTAssertLessThanOrEqual(l.videoSize.height, l.bodyHeight + 1e-9, tag)
-                            XCTAssertGreaterThanOrEqual(l.videoSize.width, VideoCapsuleMetrics.minimumWidth - 1e-9, tag)
-                            XCTAssertEqual(l.videoSize.width / l.videoSize.height, VideoCapsuleMetrics.clampedAspectRatio(r), accuracy: 1e-6, tag)
-                            // 面板形體在涵蓋視窗內（含下方陰影）。
-                            XCTAssertLessThanOrEqual(l.panelSize.width, window.width, tag)
-                            XCTAssertLessThanOrEqual(l.panelSize.height + NotchSizing.shadowPadding, window.height, tag)
-                            XCTAssertEqual(l.panelSize.height, CGFloat(header) + l.bodyHeight + NotchSizing.bottomInset, accuracy: 1e-9, tag)
-                            XCTAssertGreaterThanOrEqual(l.bodyHeight, NotchSizing.minimumBodyHeight, tag)
+    func testVideoAboveLyrics() {
+        let r = VideoCapsuleStack.layout(notchBottom: 32, dropDistance: 6, lyricsVisible: true, lyricsWidth: 300,
+                                         videoWidth: 200, aspectRatio: 16.0 / 9.0, order: .videoAbove)
+        let video = try! XCTUnwrap(r.video)
+        let lyrics = try! XCTUnwrap(r.lyrics)
+        XCTAssertEqual(video.minY, 38)
+        XCTAssertEqual(lyrics.minY, video.maxY + VideoCapsuleStack.gap)
+    }
+
+    func testTooLargeVideoIsScaledDownProportionally() {
+        let r = VideoCapsuleStack.layout(notchBottom: 32, dropDistance: 6, lyricsVisible: true, lyricsWidth: 300,
+                                         videoWidth: 480, aspectRatio: 16.0 / 9.0, order: .lyricsAbove)
+        let video = try! XCTUnwrap(r.video)
+        XCTAssertLessThan(video.width, 480)
+        XCTAssertEqual(video.width / video.height, 16.0 / 9.0, accuracy: 1e-6)
+    }
+
+    func testNotDisplayedWhenTheScaledWidthFallsBelowTheMinimum() {
+        // 最壞情況：瀏海底緣 60、下拉 40、歌詞膠囊在上 → 可用高度很小，16:9 會縮到寬 < 96。
+        let r = VideoCapsuleStack.layout(notchBottom: 60, dropDistance: 40, lyricsVisible: true, lyricsWidth: 300,
+                                         videoWidth: 320, aspectRatio: 16.0 / 9.0, order: .lyricsAbove)
+        XCTAssertNotNil(r.lyrics)
+        if let video = r.video { XCTAssertGreaterThanOrEqual(video.width, VideoCapsuleMetrics.minimumWidth) }
+    }
+
+    func testWorstCaseStaysInsideTheClosedAndCoveringWindows() {
+        let covering = NotchSizing.coveringWindowSize
+        XCTAssertEqual(covering, CGSize(width: 948, height: 346))
+        let bottom = LyricsPillMetrics.windowBottomPadding
+        var checked = 0
+        for notchBottom in stride(from: 0.0, through: 60.0, by: 6) {
+            for drop in stride(from: -8.0, through: 40.0, by: 6) {
+                for lyricsVisible in [true, false] {
+                    for order in [VideoCapsuleStack.Order.lyricsAbove, .videoAbove] {
+                        for w in widths {
+                            for ratio in ratios {
+                                let tag = "nb\(notchBottom) d\(drop) l\(lyricsVisible) \(order) w\(w) r\(ratio)"
+                                let r = VideoCapsuleStack.layout(
+                                    notchBottom: CGFloat(notchBottom), dropDistance: CGFloat(drop), lyricsVisible: lyricsVisible,
+                                    lyricsWidth: 360, videoWidth: w, aspectRatio: ratio, order: order
+                                )
+                                let rects = [r.video, r.lyrics].compactMap { $0 }
+                                for rect in rects {
+                                    XCTAssertGreaterThanOrEqual(rect.minX, 0, tag)
+                                    XCTAssertGreaterThanOrEqual(rect.minY, 0, tag)
+                                    XCTAssertLessThanOrEqual(rect.maxX, closed.width, tag)
+                                    XCTAssertLessThanOrEqual(rect.maxY, closed.height - bottom + 1e-9, tag)
+                                    XCTAssertLessThanOrEqual(rect.maxX, covering.width, tag)
+                                    XCTAssertLessThanOrEqual(rect.maxY, covering.height, tag)
+                                }
+                                if let v = r.video, let l = r.lyrics {
+                                    XCTAssertFalse(v.intersects(l), "重疊 \(tag)")
+                                    let gap = order == .lyricsAbove ? v.minY - l.maxY : l.minY - v.maxY
+                                    XCTAssertEqual(gap, VideoCapsuleStack.gap, accuracy: 1e-9, tag)
+                                }
+                                if let v = r.video {
+                                    XCTAssertGreaterThanOrEqual(v.width, VideoCapsuleMetrics.minimumWidth - 1e-9, tag)
+                                    XCTAssertEqual(v.width / v.height, VideoCapsuleMetrics.clampedAspectRatio(ratio), accuracy: 1e-6, tag)
+                                }
+                                checked += 1
+                            }
                         }
                     }
                 }
             }
         }
-    }
-
-    func testVideoPanelAddsNoNewWindowGrowth() {
-        // 新增 .video 分頁後，各分頁在所有可調上限下的最大尺寸與舊值相同。
-        XCTAssertEqual(NotchSizing.maximumOpenSize, CGSize(width: 900, height: 302))
-        let s = NotchSizing()
-        XCTAssertEqual(s.openSize(for: .video), CGSize(width: 720, height: 232))
-        XCTAssertEqual(s.openSize(for: .video, videoContentHeight: 10), CGSize(width: 720, height: 232), "內容小於預設高度時不縮")
-        XCTAssertEqual(s.openSize(for: .video, videoContentHeight: 1000).height, 302, "內容再大也夾在最大面板高度")
-        XCTAssertEqual(s.openSize(for: .clipboard, videoContentHeight: 1000).height, 232, "videoContentHeight 只影響影片分頁")
+        XCTAssertGreaterThan(checked, 10_000)
     }
 }

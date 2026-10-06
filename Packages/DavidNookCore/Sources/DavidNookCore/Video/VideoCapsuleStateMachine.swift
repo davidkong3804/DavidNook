@@ -28,6 +28,8 @@ public enum VideoCapsuleInput: Equatable, Sendable {
     case requestPicker
     /// 使用者按「停止」。
     case userStopped
+    /// 使用者點一下影片：釘選／取消釘選（釘成瀏海外面的影片膠囊；膠囊本身屬 M-C）。
+    case togglePin
     case source(VideoSourceEvent)
 }
 
@@ -35,11 +37,14 @@ public enum VideoCapsuleInput: Equatable, Sendable {
 ///
 /// - 挑選取消：回到挑選前的狀態（串流中換視窗取消，原串流繼續）。
 /// - 任何時候收到 `.started`（含挑選器自己的「換視窗」）→ 串流中，並重置黑畫面計時。
+/// - 釘選：只在串流中可釘；串流結束一律自動取消（見 `isPinned`）。
 /// - 串流中持續全黑 → `blackContent`；一有非黑畫面立刻恢復 `streaming`。
 public struct VideoCapsuleStateMachine: Equatable, Sendable {
     public static let fallbackAspectRatio: Double = 16.0 / 9.0
 
     public private(set) var state: VideoCapsuleState = .idle
+    /// 是否已釘選。只在串流中才能釘；串流結束（停止、來源關閉、錯誤）一律自動取消；換視窗與黑畫面期間維持。
+    public private(set) var isPinned = false
     private var stateBeforePicking: VideoCapsuleState = .idle
     private var detector = BlackFrameDetector()
 
@@ -54,7 +59,14 @@ public struct VideoCapsuleStateMachine: Equatable, Sendable {
         case .requestPicker:
             if state != .choosing { stateBeforePicking = state }
             state = .choosing
+        case .togglePin:
+            if isPinned {
+                isPinned = false
+            } else if case .streaming = state {
+                isPinned = true
+            }
         case .userStopped:
+            isPinned = false
             detector.reset()
             stateBeforePicking = .idle
             state = .idle
@@ -91,13 +103,18 @@ public struct VideoCapsuleStateMachine: Equatable, Sendable {
             switch state {
             case .streaming, .blackContent:
                 detector.reset()
+                isPinned = false
                 state = .sourceClosed
             case .choosing:
                 // 挑選中舊串流被關閉：取消後應回到「來源已關閉」。
-                if stateBeforePicking.needsSource { stateBeforePicking = .sourceClosed }
+                if stateBeforePicking.needsSource {
+                    stateBeforePicking = .sourceClosed
+                    isPinned = false
+                }
             default: break
             }
         case .failed(let failure):
+            isPinned = false
             detector.reset()
             state = .error(failure)
         }
