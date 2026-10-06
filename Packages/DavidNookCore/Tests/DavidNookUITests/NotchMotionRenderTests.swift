@@ -155,6 +155,8 @@ final class NotchMotionRenderTests: XCTestCase {
                     .frame(width: cw, height: body, alignment: .top)
             case .clipboard:
                 clipboardBody(width: cw, height: body)
+            case .video:
+                Color.clear.frame(width: cw, height: body)
             }
         }
         .frame(width: cw, alignment: .top)

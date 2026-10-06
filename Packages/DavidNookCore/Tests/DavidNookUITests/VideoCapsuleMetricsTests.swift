@@ -1,6 +1,5 @@
 import CoreGraphics
 import XCTest
-@testable import DavidNookCore
 @testable import DavidNookUI
 
 /// 影片區塊的尺寸與版面夾限。

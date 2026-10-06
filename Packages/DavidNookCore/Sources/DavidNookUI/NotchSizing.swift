@@ -14,6 +14,8 @@ public struct NotchSizing: Equatable, Sendable {
     public enum Panel: CaseIterable, Sendable {
         case home
         case clipboard
+        /// 影片分頁：高度預設與剪貼簿相同，影片較大時在不超過最大面板高度的範圍內加高（見 `openSize` 的 `videoContentHeight`）。
+        case video
     }
 
     // MARK: - 可調範圍與預設
@@ -31,6 +33,7 @@ public struct NotchSizing: Equatable, Sendable {
 
     public static let homeBaseHeight: CGFloat = 176
     public static let clipboardBaseHeight: CGFloat = 232
+    public static let videoBaseHeight: CGFloat = 232
 
     // MARK: - 版面骨架
 
@@ -88,19 +91,34 @@ public struct NotchSizing: Equatable, Sendable {
         switch panel {
         case .home: return homeBaseHeight
         case .clipboard: return clipboardBaseHeight
+        case .video: return videoBaseHeight
         }
     }
 
+    /// 所有分頁在最大高度係數下的最高形體高度（不經過 `openSize`，避免影片分頁的夾限遞迴）。
+    static var maximumPanelHeight: CGFloat {
+        let tallest = Panel.allCases.map { baseHeight(for: $0) }.max() ?? 0
+        return (tallest * heightScaleRange.upperBound).rounded()
+    }
+
     /// 分頁的展開尺寸（整點）。表頭比預設高（自訂瀏海高度）時，高度會跟著加高，內容區不會被壓到 `minimumBodyHeight` 以下。
-    public func openSize(for panel: Panel, headerHeight: CGFloat = NotchSizing.minimumHeaderHeight) -> CGSize {
+    ///
+    /// `videoContentHeight`：只對 `.video` 有效——影片區塊需要的高度；面板會加高到放得下（表頭＋影片＋底部內縮），
+    /// 但不超過 `maximumPanelHeight`（涵蓋視窗已為它留好空間，所以仍不必改視窗大小）。
+    public func openSize(for panel: Panel, headerHeight: CGFloat = NotchSizing.minimumHeaderHeight, videoContentHeight: CGFloat? = nil) -> CGSize {
         let scaled = (Self.baseHeight(for: panel) * heightScale).rounded()
         let floorHeight = headerHeight + Self.minimumBodyHeight + Self.bottomInset
-        return CGSize(width: width, height: max(scaled, floorHeight))
+        var height = max(scaled, floorHeight)
+        if panel == .video, let content = videoContentHeight, content.isFinite {
+            let wanted = (headerHeight + content + Self.bottomInset).rounded(.up)
+            height = max(height, min(wanted, max(Self.maximumPanelHeight, floorHeight)))
+        }
+        return CGSize(width: width, height: height)
     }
 
     /// 內容區（表頭之下、底部內縮之上）的高度。
-    public func bodyHeight(for panel: Panel, headerHeight: CGFloat = NotchSizing.minimumHeaderHeight) -> CGFloat {
-        openSize(for: panel, headerHeight: headerHeight).height - headerHeight - Self.bottomInset
+    public func bodyHeight(for panel: Panel, headerHeight: CGFloat = NotchSizing.minimumHeaderHeight, videoContentHeight: CGFloat? = nil) -> CGFloat {
+        openSize(for: panel, headerHeight: headerHeight, videoContentHeight: videoContentHeight).height - headerHeight - Self.bottomInset
     }
 
     /// 內容寬（形體寬扣掉兩側的耳朵與內縮）。
