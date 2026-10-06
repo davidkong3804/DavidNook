@@ -25,8 +25,12 @@ DavidNook is an independent implementation and is **not affiliated with NotchNoo
   video the cover slot widens without squeezing the title, controls or lyrics; Stop brings the cover back). **Click the video to pin it**: it grows into a
   video capsule outside the notch (collapsed state, right under the notch); click again to unpin. "Change window" and "Stop" appear only on hover and are
   separate from pinning, so they never trigger each other. Only the window you pick is captured; no audio, no cursor; nothing is captured while no window is
-  picked or the panel is off screen. Settings → Video turns the feature off and sets the video width (it only caps how wide the slot can grow in the panel
-  and sets the pinned capsule's size). **For now only the pinned state exists; the capsule outside the notch is not available yet.**
+  picked or the panel is off screen. Settings → Video turns the feature off and sets the "Video size" (it caps how wide the slot can grow when expanded
+  and sets the pinned capsule's size). **Pinned capsule (M-C)**: while the notch is collapsed, the video shows live in a rounded capsule right under the notch,
+  stacked vertically with the lyrics capsule (lyrics on top, video below; with no lyrics the video moves up, and it makes room smoothly when lyrics appear).
+  When the notch expands the video goes back into the cover slot and the outside capsule fades out, so it is never shown twice. Hovering the capsule counts as hovering the notch
+  (click to expand; unpin from the cover slot once expanded), and a small pin appears at its top right on hover. The capsule is clamped to the collapsed window's
+  available height (about 164 pt tall under a typical notch, about 291 pt wide at 16:9), scaled down proportionally, and hidden if it would be narrower than 96 pt (for example a very narrow portrait video).
 - Playback controls (previous / play-pause / next, shuffle, repeat, seek, volume; favorites for the Music app).
 - UI languages: Traditional Chinese when the system language is Traditional Chinese, English otherwise.
 
@@ -143,5 +147,8 @@ MacroVisionKit, SkyLightWindow, DynamicNotchKit and Parrot (MPL-2.0).
 - **Other Video limits**: you pick the window again after every launch (the selection is not saved); one window at a time; clicks are not forwarded and the source
   cannot be operated; the picture pauses while the window is minimized; the cover slot only widens when the layout has room (at the smallest panel size it
   stays square and the video is scaled down; notices shrink to a title and buttons, with the full text in a tooltip); pinning is cleared automatically when the
-  stream ends (stop, source window closed, error) and never survives a relaunch.
+  stream ends (stop, source window closed, error) or when the picture stays black (likely protected) and never survives a relaunch.
+- **Pinned capsule limits (M-C)**: while pinned, the stream keeps running even when the notch is collapsed (about 20 fps, no audio), so it **keeps using some GPU/CPU; actual usage is not measured**;
+  DRM/black sources never show the capsule (detected black unpins it and the capsule fades out; no black block); with several displays each display's collapsed notch shows the same capsule
+  (same approach as the lyrics capsule); **not verified on a display with a physical notch**, and the capsule's feel and animation are untested on real hardware.
 - Only Traditional Chinese and English UIs.

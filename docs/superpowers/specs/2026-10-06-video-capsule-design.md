@@ -128,3 +128,19 @@
 **與前文設計的差異**：§4 的「影片區塊／分頁」改為封面槽；S／M／L 三檔改為設定頁連續滑桿；釘選膠囊（`VideoCapsuleVisibility`、視圖、hover／點擊轉接）留給 M-C。
 
 **仍未驗證（需真機）**：實際操作手感（點影片釘選、hover 按鈕、槽加寬動畫）；各瀏覽器視窗、瀏覽器畫中畫視窗、其他 Space 的視窗；視窗最小化／關閉時各種錯誤碼的實際值（目前把 noCaptureSource／noWindowList／systemStoppedStream／removingStream／userStopped 都視為「來源已關閉」，屬推測）；DRM 內容的實際行為；挑選器開啟時瀏海是否真的維持展開；ad-hoc 重建後授權是否失效、macOS 再確認提示；CPU／GPU／記憶體是否符合 §8；展開／收合連續 10 次不閃退。
+
+## M-C 實作紀錄：收合狀態的「釘選影片膠囊」（2026-10-06）
+
+**行為**
+- **可見性**（Core `VideoCapsuleVisibility`，有測試）：功能開＋瀏海收合＋已釘選＋狀態為 `.streaming`（非黑畫面）才顯示；與音樂播放／暫停無關（Music 暫停歌曲不影響影片）。展開瀏海時不顯示（影片在封面槽），收合時淡入；兩處不會同時顯示。
+- **位置**（`VideoCapsulePlacement`→`VideoCapsuleStack.layout`，窮舉測試）：歌詞膠囊可見時在其下方（間距 6），不可見時上移到歌詞位置；歌詞出現／消失時位置與大小用瀏海的 tabSwitch 彈簧平滑過渡（只改 SwiftUI 版面，**不對 NSWindow setFrame**，視窗仍為 948×346）。歌詞可見狀態由 `LyricsPillHost.onVisibleChange` 回報給 `ContentView`，再傳給 `VideoCapsuleHost`。
+- **尺寸**：設定頁「影片大小」滑桿（160–480）＋來源長寬比（夾 1:2…2:1）；再被收合視窗可用高度夾限（一般瀏海：高 210 − 底部 8 − 上緣 38 = 164，16:9 約 291×164；有歌詞再扣 28），超出等比縮小，縮到寬 < 96 不顯示。圓角 = 短邊 12%，夾 8–16。
+- **收起**：來源關閉／串流結束（M-B 已自動取消釘選）→ 膠囊原地淡出（沿用 `NotchMotion` 的內容淡出曲線；「減少動態」只淡入淡出不縮放）。
+- **黑畫面（疑似 DRM）決議**：**不顯示膠囊，並自動取消釘選**（不顯示說明文字膠囊）。狀態機在偵測到黑畫面時 `isPinned = false`（修改了 M-B 的「黑畫面期間釘選維持」，對應測試改為 `testBlackContentAutoUnpinsAndDoesNotRepinOnRecovery`）；畫面恢復後不會自己再釘，需使用者再點一次。說明文字仍在封面槽內顯示。理由：沒有畫面的膠囊沒有意義，且避免在瀏海外面出現黑塊。
+- **互動**（照歌詞膠囊）：膠囊視覺 `allowsHitTesting(false)`；膠囊可見期間另放一塊同大小的透明區域，`onHover` 轉接瀏海的 `handleHover`、點擊轉接 `doOpen()`（只在收合且沒有提示佔用時）。透明區域只存在於膠囊可見期間，視覺層不吃事件，所以不影響既有手勢。hover 時右上角顯示小圖釘作為提示；**沒有第二種點擊語意**（點一下＝展開瀏海；取消釘選在展開後的封面槽點影片）。
+- **串流保留**（Core `VideoStreamPolicy.shouldPause(isSlotVisible:isPinned:)`，有測試）：封面槽離開畫面時，已釘選就不 pause，未釘選才 pause。`VideoCapsuleController.reconcileStreaming()` 在每次狀態變化與槽出現／消失時套用規則。封面槽與膠囊共用同一個 `VideoFrameDisplay`（多個 CALayer 同時掛同一個 IOSurface），**只有一條 SCStream**。
+- **設定頁**：「影片寬度」改名「影片大小」（說明：決定展開時封面槽可加寬的上限與釘選膠囊的大小）；字串只追加／替換於 xcstrings（en＋zh-Hant）。
+
+**程式**：`DavidNookCore/Video/VideoCapsulePolicy.swift`、`DavidNookUI/VideoCapsuleView.swift`、`VideoCapsuleMetrics.swift`（`cornerRadius`、`VideoCapsulePlacement`）、App 端 `components/Notch/VideoCapsuleHost.swift`、`ContentView`、`VideoCapsuleController`。entitlements、Hardened Runtime 未改；不呼叫 `CGRequestScreenCaptureAccess`；畫面不存檔不上傳，log 不含畫面與視窗標題。
+
+**已知限制**：釘選期間收合瀏海也持續串流（約 20 fps），會持續吃一點 GPU／CPU（**未量測**，§8 預算未驗證）；DRM／黑畫面來源不會顯示膠囊；窄直向影片（寬高比 < 約 0.59）在收合視窗內會縮到寬 < 96 而不顯示（釘選仍在）；多螢幕每個收合瀏海都會顯示同一顆膠囊；**未在有實體瀏海的螢幕、未在真機驗證**（含膠囊手感、hover 轉接、動畫、與歌詞膠囊的實際堆疊、串流在收合時持續的穩定度）。
