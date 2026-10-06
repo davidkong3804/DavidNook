@@ -46,7 +46,7 @@ final class NormalizedCropRectTests: XCTestCase {
         let wide = NormalizedCropRect(x: 0, y: 0.2, width: 1, height: 0.5)
         XCTAssertEqual(try XCTUnwrap(wide.aspectRatio(windowSize: CGSize(width: 1000, height: 1000))), 2, accuracy: 1e-9)
         XCTAssertNil(r.aspectRatio(windowSize: .zero))
-        XCTAssertNil(r.aspectRatio(windowSize: CGSize(width: .nan, height: 10)))
+        XCTAssertNil(r.aspectRatio(windowSize: CGSize(width: CGFloat.nan, height: 10)))
     }
 
     /// SCStreamConfiguration.sourceRect：單位 pt、視窗擷取時相對視窗（左上為原點、y 向下；標頭未明說原點，見設計文件，需真機驗證）。

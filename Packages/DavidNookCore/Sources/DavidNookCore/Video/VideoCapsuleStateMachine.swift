@@ -90,6 +90,14 @@ public struct VideoCapsuleStateMachine: Equatable, Sendable {
         case .started(let ratio):
             detector.reset()
             state = .streaming(aspectRatio: Self.sanitized(ratio))
+        case .cropChanged(let ratio):
+            // 裁切改變：新長寬比，黑畫面計時重來（裁切前的樣本不算數）；釘選不受影響。
+            switch state {
+            case .streaming, .blackContent:
+                detector.reset()
+                state = .streaming(aspectRatio: Self.sanitized(ratio))
+            default: break
+            }
         case .selectionCancelled:
             guard state == .choosing else { return }
             state = stateBeforePicking

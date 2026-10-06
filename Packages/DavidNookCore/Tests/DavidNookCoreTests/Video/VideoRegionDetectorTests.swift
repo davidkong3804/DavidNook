@@ -99,4 +99,20 @@ final class VideoRegionDetectorTests: XCTestCase {
         XCTAssertEqual(r, r.sanitized)
         XCTAssertGreaterThanOrEqual(r.x, 0)
     }
+
+    func testLumaFrameFromBGRADownsamples() throws {
+        let sw = 128, sh = 72
+        var bgra = [UInt8](repeating: 255, count: sw * sh * 4)   // 白
+        for y in 0..<sh { for x in 0..<(sw / 2) { let i = (y * sw + x) * 4; bgra[i] = 0; bgra[i + 1] = 0; bgra[i + 2] = 0 } }   // 左半黑
+        let f = try bgra.withUnsafeBytes { raw in
+            try XCTUnwrap(LumaFrame.fromBGRA(baseAddress: raw.baseAddress!, byteCount: raw.count, width: sw, height: sh, bytesPerRow: sw * 4, targetWidth: 64, targetHeight: 36))
+        }
+        XCTAssertEqual(f.width, 64); XCTAssertEqual(f.height, 36); XCTAssertEqual(f.pixels.count, 64 * 36)
+        XCTAssertEqual(f.pixels[10], 0)
+        XCTAssertEqual(f.pixels[60], 255)
+        let none = bgra.withUnsafeBytes { raw in
+            LumaFrame.fromBGRA(baseAddress: raw.baseAddress!, byteCount: 4, width: sw, height: sh, bytesPerRow: sw * 4, targetWidth: 64, targetHeight: 36)
+        }
+        XCTAssertNil(none)
+    }
 }

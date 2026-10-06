@@ -30,8 +30,10 @@ public enum VideoSourceEvent: Equatable, Sendable {
     case selectionCancelled
     /// 畫面尺寸（像素）改變（來源視窗被縮放）。
     case frameSize(width: Int, height: Int)
-    /// 每秒一次的平均亮度（0…255）。
+    /// 每秒一次的平均亮度（0…255）。只看裁切區域（有裁切時）。
     case brightness(Double)
+    /// 裁切範圍改變（或套用／重設）：輸出畫面的新長寬比。
+    case cropChanged(aspectRatio: Double)
     /// 來源視窗關閉（或串流被正常結束）。
     case sourceClosed
     case failed(VideoFailure)

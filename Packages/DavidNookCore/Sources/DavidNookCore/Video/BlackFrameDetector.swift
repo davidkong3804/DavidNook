@@ -51,24 +51,34 @@ public struct BlackFrameDetector: Equatable, Sendable {
 
     /// 在 BGRA 緩衝上取 `grid × grid` 個格點的平均亮度（0…255，Rec.601 係數）；緩衝為空或尺寸無效回傳 nil。
     /// 只讀取、不保留、不記錄任何像素。
-    public static func averageBrightness(bgra: [UInt8], width: Int, height: Int, bytesPerRow: Int, grid: Int) -> Double? {
+    public static func averageBrightness(bgra: [UInt8], width: Int, height: Int, bytesPerRow: Int, grid: Int, region: NormalizedCropRect? = nil) -> Double? {
         bgra.withUnsafeBytes { raw in
             guard let base = raw.baseAddress else { return nil }
-            return averageBrightness(baseAddress: base, byteCount: raw.count, width: width, height: height, bytesPerRow: bytesPerRow, grid: grid)
+            return averageBrightness(baseAddress: base, byteCount: raw.count, width: width, height: height, bytesPerRow: bytesPerRow, grid: grid, region: region)
         }
     }
 
     public static func averageBrightness(
-        baseAddress: UnsafeRawPointer, byteCount: Int, width: Int, height: Int, bytesPerRow: Int, grid: Int
+        baseAddress: UnsafeRawPointer, byteCount: Int, width: Int, height: Int, bytesPerRow: Int, grid: Int,
+        region: NormalizedCropRect? = nil
     ) -> Double? {
         guard width > 0, height > 0, grid > 0, bytesPerRow >= width * 4,
               byteCount >= bytesPerRow * (height - 1) + width * 4 else { return nil }
         let p = baseAddress.assumingMemoryBound(to: UInt8.self)
+        // 只看裁切區域（沒有區域＝整張）：把取樣格點放進該區域的像素範圍。
+        var ox = 0, oy = 0, rw = width, rh = height
+        if let region {
+            let s = region.sanitized
+            ox = min(max(Int((s.x * Double(width)).rounded(.down)), 0), width - 1)
+            oy = min(max(Int((s.y * Double(height)).rounded(.down)), 0), height - 1)
+            rw = min(max(Int((s.width * Double(width)).rounded()), 1), width - ox)
+            rh = min(max(Int((s.height * Double(height)).rounded()), 1), height - oy)
+        }
         var sum = 0.0
         for gy in 0..<grid {
-            let y = min(height - 1, (gy * height) / grid + height / (2 * grid))
+            let y = min(oy + rh - 1, oy + (gy * rh) / grid + rh / (2 * grid))
             for gx in 0..<grid {
-                let x = min(width - 1, (gx * width) / grid + width / (2 * grid))
+                let x = min(ox + rw - 1, ox + (gx * rw) / grid + rw / (2 * grid))
                 let i = y * bytesPerRow + x * 4
                 sum += 0.114 * Double(p[i]) + 0.587 * Double(p[i + 1]) + 0.299 * Double(p[i + 2])
             }
