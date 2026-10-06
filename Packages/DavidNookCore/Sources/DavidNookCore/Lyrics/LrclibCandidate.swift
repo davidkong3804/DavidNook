@@ -67,12 +67,22 @@ public struct LyricsQuery: Equatable, Hashable, Sendable {
     public var album: String?
     /// 曲目長度，單位：秒；≤ 0 或 NaN 代表未知。
     public var duration: TimeInterval
+    /// 來源 App 的 bundle id（選填；來自「正在播放」資料）。只用於判斷「標題是否為影片標題」，**不會送出、不參與快取鍵**。
+    public var sourceBundleID: String?
+    /// true＝這筆查詢的歌名／歌手是從影片標題萃取出來的，`duration` 是影片長度（常比歌長）：
+    /// 挑選器改用較寬鬆且不對稱的長度規則，並要求候選的歌名／歌手與查詢相符（寧缺勿錯）。
+    public var isVideoDerived: Bool
 
-    public init(title: String, artist: String, album: String? = nil, duration: TimeInterval) {
+    public init(
+        title: String, artist: String, album: String? = nil, duration: TimeInterval,
+        sourceBundleID: String? = nil, isVideoDerived: Bool = false
+    ) {
         self.title = title
         self.artist = artist
         self.album = album
         self.duration = duration
+        self.sourceBundleID = sourceBundleID
+        self.isVideoDerived = isVideoDerived
     }
 
     /// 快取／偏移用的曲目鍵（歌名 + 歌手 + 取整秒長度）。

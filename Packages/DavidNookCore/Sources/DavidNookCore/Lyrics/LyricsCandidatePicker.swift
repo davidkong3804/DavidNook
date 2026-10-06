@@ -1,5 +1,21 @@
 import Foundation
 
+/// 影片來源的長度規則（影片長度＝`query.duration`，常比歌長：前奏、片尾、對白）。
+public struct VideoDurationPolicy: Equatable, Sendable {
+    /// 影片比歌長最多幾秒仍接受。
+    public var maxLonger: TimeInterval
+    /// 影片比歌短最多幾秒仍接受。
+    public var maxShorter: TimeInterval
+    /// 歌手未知、只靠歌名查詢時，影片比歌長最多幾秒（更嚴格）。
+    public var titleOnlyMaxLonger: TimeInterval
+
+    public init(maxLonger: TimeInterval = 60, maxShorter: TimeInterval = 5, titleOnlyMaxLonger: TimeInterval = 20) {
+        self.maxLonger = maxLonger
+        self.maxShorter = maxShorter
+        self.titleOnlyMaxLonger = titleOnlyMaxLonger
+    }
+}
+
 /// 從 LRCLIB 候選紀錄中挑出最合適的一筆同步歌詞。
 ///
 /// ## 過濾（任一不符即剔除）
