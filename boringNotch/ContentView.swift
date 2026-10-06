@@ -20,6 +20,8 @@ struct ContentView: View {
     @ObservedObject var musicManager = MusicManager.shared
     /// Which entry of the closed-notch activity stack is on top.
     @State private var activityIndex: Int = 0
+    /// 歌詞膠囊目前是否可見（影片膠囊據此決定堆疊位置）。
+    @State private var lyricsPillVisible: Bool = false
     @State private var hoverTask: Task<Void, Never>?
     @State private var isHovering: Bool = false
 
@@ -232,11 +234,28 @@ struct ContentView: View {
 
     private var displayClosedNotchHeight: CGFloat { isNotchHeightZero ? 10 : vm.effectiveClosedNotchHeight }
 
+    /// 瀏海目前是收合狀態，且沒有被隱藏／歡迎動畫／提示佔用（歌詞膠囊與影片膠囊共用）。
+    private var isNotchClosedForPills: Bool {
+        vm.notchState == .closed && !vm.hideOnClosed
+            && !coordinator.helloAnimationRunning && !shouldDisplayNowPlayingFallbackNotice
+    }
+
     private var lyricsPill: some View {
         LyricsPillHost(
-            isNotchClosed: vm.notchState == .closed && !vm.hideOnClosed
-                && !coordinator.helloAnimationRunning && !shouldDisplayNowPlayingFallbackNotice,
+            isNotchClosed: isNotchClosedForPills,
             notchBottom: displayClosedNotchHeight,
+            onHover: { handleHover($0) },
+            onTap: { if vm.notchState == .closed && !shouldDisplayNowPlayingFallbackNotice { doOpen() } },
+            onVisibleChange: { lyricsPillVisible = $0 }
+        )
+    }
+
+    /// 釘選的影片膠囊：與歌詞膠囊垂直堆疊（歌詞在上、影片在下）；hover／點擊轉接給瀏海，做法同歌詞膠囊。
+    private var videoCapsule: some View {
+        VideoCapsuleHost(
+            isNotchClosed: isNotchClosedForPills,
+            notchBottom: displayClosedNotchHeight,
+            lyricsVisible: lyricsPillVisible,
             onHover: { handleHover($0) },
             onTap: { if vm.notchState == .closed && !shouldDisplayNowPlayingFallbackNotice { doOpen() } }
         )
@@ -366,6 +385,8 @@ struct ContentView: View {
         }
         // 收合瀏海下方的歌詞膠囊：畫在既有視窗範圍內（不改視窗大小）；hover／點擊轉接給瀏海。
         .overlay(alignment: .top) { lyricsPill }
+        // 釘選的影片膠囊（M-C）：同樣畫在既有視窗範圍內；歌詞膠囊可見時排在它下方。
+        .overlay(alignment: .top) { videoCapsule }
         .padding(.bottom, 8)
         .frame(
             maxWidth: NotchSizing.coveringWindowSize.width,

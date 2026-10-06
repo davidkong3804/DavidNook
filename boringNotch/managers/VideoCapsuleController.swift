@@ -51,8 +51,19 @@ final class VideoCapsuleController: ObservableObject {
         case .idle, .sourceClosed, .error: display.clear()
         case .choosing, .streaming, .blackContent: break
         }
-        // 挑選器開著時瀏海可能已收合（瀏海收合）；挑完才開始的串流不能在不可見時跑。
-        if case .source(.started) = input, !isSlotVisible { source.pause() }
+        reconcileStreaming()
+    }
+
+    /// 同一條串流供封面槽與釘選膠囊共用：槽在畫面上要串流；槽不可見時，已釘選就持續串流（給收合膠囊），未釘選才 pause。
+    /// 規則在 Core 的 `VideoStreamPolicy`（有測試）。`pause()`／`resume()` 都是冪等的，重複呼叫無害。
+    /// 這也涵蓋「挑選器開著時瀏海已收合、挑完才開始的串流」以及「釘選期間偵測到黑畫面而自動取消釘選」。
+    private func reconcileStreaming() {
+        guard state.needsSource else { return }
+        if VideoStreamPolicy.shouldPause(isSlotVisible: isSlotVisible, isPinned: machine.isPinned) {
+            source.pause()
+        } else {
+            source.resume()
+        }
     }
 
     // MARK: 使用者操作
@@ -68,12 +79,12 @@ final class VideoCapsuleController: ObservableObject {
         source.stop()
     }
 
-    /// 點一下影片：釘選／取消釘選（釘成瀏海外面的影片膠囊；膠囊本身是 M-C，這裡只有狀態）。
+    /// 點一下影片：釘選／取消釘選（釘成收合瀏海外面的影片膠囊，見 `VideoCapsuleHost`）。
     func togglePin() {
         apply(.togglePin)
     }
 
-    /// 設定頁的影片寬度：只作用於 M-C 的收合膠囊，以及 Home 封面槽加寬後的上限。
+    /// 設定頁的「影片大小」：決定 Home 封面槽加寬後的上限，以及釘選膠囊的大小。
     func commitWidth() { source.updateRequestedWidth(Defaults[.videoCapsuleWidth]) }
 
     /// 封面槽要用的長寬比（nil＝顯示專輯封面）；功能關閉時一律 nil。
@@ -91,12 +102,12 @@ final class VideoCapsuleController: ObservableObject {
 
     func slotDidAppear() {
         isSlotVisible = true
-        if state.needsSource { source.resume() }
+        reconcileStreaming()
     }
 
     func slotDidDisappear() {
         isSlotVisible = false
-        // M-C：已釘選時，收合膠囊需要串流繼續，屆時在這裡依 machine.isPinned 保留；M-B 只有釘選狀態，沒有膠囊可看，一律暫停。
-        source.pause()
+        // 已釘選：收合膠囊需要串流繼續，不 pause；未釘選才 pause（見 VideoStreamPolicy）。
+        reconcileStreaming()
     }
 }

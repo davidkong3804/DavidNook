@@ -4602,23 +4602,6 @@
         }
       }
     },
-    "Video width" : {
-      "comment" : "Video settings: slider label for the video width.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Video width"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "影片寬度"
-          }
-        }
-      }
-    },
     "Back to cover" : {
       "comment" : "Album art slot: button that stops the video and shows the album cover again.",
       "localizations" : {
@@ -4687,23 +4670,6 @@
         }
       }
     },
-    "Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a capsule outside the notch. The width limits how wide the video can grow in the Home panel and sets the size of the pinned capsule. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead." : {
-      "comment" : "Video settings: footer explaining the feature, pinning, width, privacy and the protected-content limit.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a capsule outside the notch. The width limits how wide the video can grow in the Home panel and sets the size of the pinned capsule. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "用專輯封面上的小按鈕挑選一個視窗，它的即時畫面就會取代封面；點一下影片，就會把它釘成瀏海外面的膠囊。寬度決定影片在「正在播放」面板裡最多能加寬到多少，也是釘選膠囊的大小。畫面只存在記憶體中：不會儲存、上傳或錄製，也不會擷取聲音。受內容保護的來源（例如 Netflix）無法被 macOS 擷取，會改為顯示說明。"
-          }
-        }
-      }
-    },
     "Show a picked window in the Home panel" : {
       "comment" : "Video settings: toggle that enables the live video in the album cover slot.",
       "localizations" : {
@@ -4751,6 +4717,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "系統不允許擷取。可改用來源本身的畫中畫，或沒有保護的來源（例如 YouTube）"
+          }
+        }
+      }
+    },
+    "Video size" : {
+      "comment" : "Video settings: slider label for the video size (Home slot upper bound and pinned capsule size).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video size"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影片大小"
+          }
+        }
+      }
+    },
+    "Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a capsule outside the notch. The video size sets how wide the video can grow in the Home panel and how big the pinned capsule is. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead." : {
+      "comment" : "Video settings: footer explaining the feature, pinning, video size, privacy and the protected-content limit.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a capsule outside the notch. The video size sets how wide the video can grow in the Home panel and how big the pinned capsule is. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用專輯封面上的小按鈕挑選一個視窗，它的即時畫面就會取代封面；點一下影片，就會把它釘成瀏海外面的膠囊。影片大小決定展開時封面槽最多能加寬到多少，也是釘選膠囊的大小。畫面只存在記憶體中：不會儲存、上傳或錄製，也不會擷取聲音。受內容保護的來源（例如 Netflix）無法被 macOS 擷取，會改為顯示說明。"
           }
         }
       }

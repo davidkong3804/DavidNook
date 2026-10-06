@@ -193,6 +193,8 @@ struct LyricsPillHost: View {
     var notchBottom: CGFloat
     var onHover: (Bool) -> Void
     var onTap: () -> Void
+    /// 膠囊實際可見（含淡出前）時回報給 ContentView，讓影片膠囊知道要不要讓位（垂直堆疊）。
+    var onVisibleChange: (Bool) -> Void = { _ in }
 
     @ObservedObject private var service = LyricsService.shared
     @ObservedObject private var musicManager = MusicManager.shared
@@ -249,6 +251,7 @@ struct LyricsPillHost: View {
         }
         .frame(width: CGFloat(maxWidth), height: LyricsPillMetrics.height, alignment: .top)
         .offset(y: LyricsPillMetrics.topOffset(notchBottom: notchBottom, dropDistance: CGFloat(dropDistance)))
+        .onChange(of: visibility.isVisible) { _, visible in onVisibleChange(visible) }
     }
 
     private func apply(_ input: LyricsPillVisibility.Input, text: String?) {

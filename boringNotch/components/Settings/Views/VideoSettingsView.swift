@@ -23,7 +23,7 @@ struct VideoSettingsView: View {
                         Task { @MainActor in VideoCapsuleController.shared.stop() }
                     }
                 }
-                LabeledContent("Video width") {
+                LabeledContent("Video size") {
                     HStack {
                         Slider(
                             value: Binding(get: { width }, set: { width = $0 }),
@@ -43,7 +43,7 @@ struct VideoSettingsView: View {
             } header: {
                 Text("Video")
             } footer: {
-                Text("Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a capsule outside the notch. The width limits how wide the video can grow in the Home panel and sets the size of the pinned capsule. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead.")
+                Text("Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a capsule outside the notch. The video size sets how wide the video can grow in the Home panel and how big the pinned capsule is. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
