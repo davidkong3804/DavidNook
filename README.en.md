@@ -20,10 +20,13 @@ DavidNook is an independent implementation and is **not affiliated with NotchNoo
   otherwise it scrolls and finishes before the next line). On by default; Settings → Media turns it off and adjusts distance, maximum width, font size and speed.
   It shares the lyrics, offset and Simplified→Traditional result with the expanded panel; with Reduce Motion it does not scroll and fades out at the end instead.
 - Clipboard history (text, images, file paths): search, filter, pin, click to paste back, item limit and retention, pause.
-- **Video (new, not verified on real hardware)**: the expanded notch gains a Video tab. Pick **one window** with the macOS system picker and its live,
-  scaled-down picture is shown in the notch (width 160-480 pt, adjustable, default 320; change window, stop, pin). Only the window you pick is captured; no
-  audio, no cursor; nothing is captured while no window is picked or the tab is off screen. Settings → Video turns the whole feature off. "Pin" only remembers
-  its state for now; the collapsed video capsule is not available yet.
+- **Video (new, not verified on real hardware)**: in the expanded notch's Now Playing panel, the album cover has a small, low-key button at its top right.
+  It opens the macOS system picker so you can pick **one window**; that window's live, scaled-down picture then **replaces the album cover** (for landscape
+  video the cover slot widens without squeezing the title, controls or lyrics; Stop brings the cover back). **Click the video to pin it**: it grows into a
+  video capsule outside the notch (collapsed state, right under the notch); click again to unpin. "Change window" and "Stop" appear only on hover and are
+  separate from pinning, so they never trigger each other. Only the window you pick is captured; no audio, no cursor; nothing is captured while no window is
+  picked or the panel is off screen. Settings → Video turns the feature off and sets the video width (it only caps how wide the slot can grow in the panel
+  and sets the pinned capsule's size). **For now only the pinned state exists; the capsule outside the notch is not available yet.**
 - Playback controls (previous / play-pause / next, shuffle, repeat, seek, volume; favorites for the Music app).
 - UI languages: Traditional Chinese when the system language is Traditional Chinese, English otherwise.
 
@@ -85,7 +88,7 @@ permission prompt.**
   playing. macOS asks the first time it is needed.
 - Paste from Other Apps (macOS 15.4+): needed by clipboard history; asked the first time the clipboard is read.
 - Screen recording (Video): shows the live picture of the one window you pick. It is **expected** to go through the system picker, where you choose one window
-  each time, without pre-authorizing the whole screen. It is only used after you press "Choose Window" in the Video tab; if macOS asks for authorization it asks
+  each time, without pre-authorizing the whole screen. It is only used after you press the small "show a window" button on the album cover; if macOS asks for authorization it asks
   then (**this behavior is not verified on real hardware**).
 - Accessibility / post events: only for the experimental "paste automatically after choosing" option (off by default), requested
   only when you press the button in Settings → Clipboard.
@@ -138,6 +141,7 @@ MacroVisionKit, SkyLightWindow, DynamicNotchKit and Parrot (MPL-2.0).
   to bypass it. When the picture stays black (average brightness below 2/255 for about 3 seconds) it shows a "content-protected" notice; try the source's own
   picture-in-picture or an unprotected source (YouTube, local video). This is a heuristic: a genuinely black scene could be misjudged and recovers as soon as the picture brightens.
 - **Other Video limits**: you pick the window again after every launch (the selection is not saved); one window at a time; clicks are not forwarded and the source
-  cannot be operated; the picture pauses while the window is minimized; a large video makes the expanded panel taller (never above the existing maximum panel
-  height; beyond that it is scaled down proportionally).
+  cannot be operated; the picture pauses while the window is minimized; the cover slot only widens when the layout has room (at the smallest panel size it
+  stays square and the video is scaled down; notices shrink to a title and buttons, with the full text in a tooltip); pinning is cleared automatically when the
+  stream ends (stop, source window closed, error) and never survives a relaunch.
 - Only Traditional Chinese and English UIs.

@@ -102,18 +102,29 @@
 - **DRM（Netflix 等）明確列為非目標**：本功能**不會**也不應嘗試繞過或規避 DRM／內容保護。受保護內容被系統擷取成黑畫面是平台的保護機制，不是我們要「解掉」的 bug。處理方式：偵測到持續全黑畫面時顯示說明（「這個來源受內容保護，系統不允許擷取」），並建議改用來源本身提供的畫中畫或無 DRM 的來源（例如 YouTube、無保護的直播、本機影片）。
 - 進度：目前只有本設計文件；下一步是在實機做「挑選器在沙盒＋ad-hoc 下能否運作」的小實測（需使用者在畫面上操作），通過才開發。使用者表示「晚點再來」。
 
-## M-A／M-B 實作紀錄（2026-10-06）
+## UX 變更與 M-A／M-B 實作紀錄（2026-10-06，優先於 §4 的 UX 描述）
 
-**已完成（離屏與單元測試層級；真機未驗證）**
-- 實機 spike（已於上方「進度」所述的小實測）：沙盒＋ad-hoc＋Hardened Runtime 下，`SCContentSharingPicker`（singleWindow）能彈出、`SCStream` 20 fps／480 寬收到畫面且非黑。因此 §3 決策閘的 (ii) 沙盒下可用、(i)（至少在這次實測中）可串流成立；(iii) 重建後授權是否失效仍**未驗證**。
-- Core（`Packages/DavidNookCore/Sources/DavidNookCore/Video/`）：`VideoFrameSource` protocol（`start`／`stop`／`pause`／`resume`＋事件串流）與 `FakeVideoFrameSource`；`VideoCapsuleStateMachine`（idle／choosing／streaming／sourceClosed／blackContent／error）；`BlackFrameDetector`（連續 3 秒平均亮度 < 2/255 才判黑，樣本間隔 > 2 秒重新計時，轉場的短暫黑場不誤判）；`VideoCapsuleSettings`（鍵名與預設：功能開關預設開、寬度 160…480 預設 320、釘選狀態預設關）。畫面像素不經過 Core。
-- UI（`DavidNookUI`）：`NotchSizing` 新增 `.video` 分頁（預設高度與剪貼簿相同；影片較大時面板加高但不超過原有最大面板高度 302，**涵蓋視窗仍為 948×346、不改任何視窗大小**）；`VideoCapsuleMetrics`（寬度夾限、長寬比夾在 1:2…2:1、影片區塊等比縮進內容區並保留右側 132 pt 工具列）；`VideoPanelView`（空狀態／挑選中／串流中＋工具列／黑畫面說明／錯誤與權限說明）；`VideoFrameDisplay`（IOSurface 直接當 layer.contents，零拷貝）。窮舉測試鎖定：各面板寬、高度係數、表頭高度、影片寬與長寬比（含 NaN、極端值）下，影片區塊必在內容區內、面板形體必在 948×346 涵蓋視窗內。
-- App 端：`ScreenCaptureKitVideoSource`（只有它碰 ScreenCaptureKit；挑選器只允許單一視窗並排除自己的 bundle ID；寬依使用者尺寸最多 480、20 fps、無音訊、無游標、BGRA、queueDepth 3；每秒一次 32×32 格點亮度；視窗被縮放時依 contentRect 更新長寬比；來源關閉的錯誤碼視為「來源已關閉」）；`VideoCapsuleController`（事件灌進狀態機；分頁離開畫面就 `pause()` 停止串流並保留所選視窗；系統挑選器開著時暫時讓瀏海不自動收合）；`VideoTabView`、設定 → 影片、`NSScreenCaptureUsageDescription`（en＋zh-Hant）。**entitlements 未改**。不呼叫 `CGRequestScreenCaptureAccess`。
+**UX 變更（使用者決定）**：不新增「影片」分頁。改為：
+1. **封面槽即影片槽**：展開瀏海 Home（正在播放）面板裡，原本顯示專輯封面的那塊，在有擷取來源串流時改顯示擷取畫面（aspect-fit）；沒在擷取就維持專輯封面。
+   槽原本是方形；橫向影片時把槽加寬（`NotchHomeMetrics(artAspectRatio:videoMaximumWidth:)`：槽高不變，寬 = 高 × 長寬比，上限 = min(版面容許寬、設定頁影片寬度)；版面容許寬已為控制區（≥ 184）與歌詞（≥ 190）保留最小寬，所以不會擠壞歌名與控制列）。直向影片維持方形。窮舉測試鎖定：寬 560–900、高度係數 0.85–1.30、表頭 38／60、有無歌詞、各種長寬比與寬度上限下，整排不超過內容寬、控制區與歌詞不低於最小寬、槽不超出內容高。動畫沿用分頁切換的彈簧（response 0.38、dampingRatio 0.82），只改槽內版面，**不對 NSWindow setFrame**（涵蓋視窗仍為 948×346）。
+2. **操作**：封面右上有低調的「擷取視窗」小按鈕（沒擷取時；hover 才完全不透明）；擷取中 hover 影片才出現「換視窗」「停止」。**點一下影片＝釘選／取消釘選**：釘選的概念是影片在瀏海**外面**（收合狀態、瀏海正下方）長成一顆影片膠囊（M-C）。hover 時影片右上顯示圖釘（已釘選時實心且一直顯示），tooltip「點一下，把影片釘到瀏海外面」／「點一下取消釘選」。釘選手勢只掛在最底層的透明層，「換視窗」「停止」「回到封面」是疊在上面的獨立 Button，按鈕自己吃掉點擊，不會同時觸發釘選。
+3. **說明狀態都在槽內**：黑畫面（疑似受保護）顯示「這個來源受內容保護」＋簡短說明＋「回到封面」；來源視窗關閉、權限不足（含「開啟系統設定」）、挑選器失敗、串流中斷、未知錯誤各有簡短說明與「選擇視窗」／「回到封面」。這些說明也放進加寬（16:9）的槽；槽太窄（最小面板）時精簡成標題＋按鈕，完整說明放 tooltip。
+4. **寬度滑桿只在設定頁**（設定 → 影片，160–480 pt、預設 320）：只決定槽可加寬的上限與（M-C）釘選膠囊的大小；槽的實際尺寸由版面決定。
+
+**釘選狀態（M-B 完整，膠囊畫面屬 M-C）**：`VideoCapsuleStateMachine.isPinned`＋輸入 `togglePin`。規則（有測試）：只在串流中才能釘；黑畫面期間不能新釘、已釘則維持；挑選取消與換視窗維持；**串流結束（停止、來源視窗關閉、錯誤）一律自動取消釘選**（決議：沒有畫面的膠囊沒有意義，重新啟動 App 也不殘留）。`videoCapsulePinned`（Defaults）由控制器每次變化同步、App 啟動時重設為 false，M-C 的視圖直接讀它。M-B 下面板不在畫面上時一律暫停串流（M-C 的釘選膠囊需要時，在 `VideoCapsuleController.slotDidDisappear` 依 `isPinned` 保留串流）。
+
+**給 M-C 的純邏輯（已完成、有窮舉測試）**：`VideoCapsuleStack.layout`（`DavidNookUI/VideoCapsuleMetrics.swift`）——歌詞膠囊在上（可切 `videoAbove`）、影片在其下、間距 6 pt；歌詞不顯示時影片上移到歌詞位置；可用高度 = 收合視窗高 − 底部內縮 8 − 上緣（瀏海底緣＋下拉距離）−（歌詞 22＋間距）；超過就等比縮小，縮到寬 < 96 不顯示；窮舉（瀏海底緣 0–60、下拉 −8…40、有無歌詞、兩種順序、各種寬與長寬比）斷言矩形必在收合視窗 640×210（扣底部 8）與涵蓋視窗 948×346 內且互不重疊。M-C 只需接視圖、hover／點擊轉接與設定。
+
+**已完成的其他部分**
+- 實機 spike（上方「進度」所述的小實測）：沙盒＋ad-hoc＋Hardened Runtime 下，`SCContentSharingPicker`（singleWindow）能彈出、`SCStream` 20 fps／480 寬收到畫面且非黑。因此 §3 決策閘 (ii)（沙盒下可用）成立、(i)（至少在這次實測中）可串流；(iii) 重建後授權是否失效仍**未驗證**。
+- Core（`DavidNookCore/Video/`）：`VideoFrameSource` protocol（`start`／`stop`／`pause`／`resume`＋事件串流）與 `FakeVideoFrameSource`；`VideoCapsuleStateMachine`（idle／choosing／streaming／sourceClosed／blackContent／error＋釘選）；`BlackFrameDetector`（連續 3 秒平均亮度 < 2/255 才判黑，樣本間隔 > 2 秒重新計時，轉場的短暫黑場不誤判）；`VideoCapsuleSettings`（鍵名與預設：功能開關預設開、寬度 160…480 預設 320、釘選預設關）。畫面像素不經過 Core。
+- UI：`VideoArtSlotView`（槽內所有狀態）、`VideoFrameDisplay`（IOSurface 直接當 layer.contents，零拷貝）、`VideoCapsuleMetrics`／`VideoCapsuleStack`。
+- App 端：`ScreenCaptureKitVideoSource`（只有它碰 ScreenCaptureKit；挑選器只允許單一視窗並排除自己的 bundle ID；寬依設定最多 480、20 fps、無音訊、無游標、BGRA、queueDepth 3；每秒一次 32×32 格點亮度；視窗被縮放時依 contentRect 更新長寬比）、`VideoCapsuleController`（事件灌進狀態機；面板離開畫面就 `pause()` 並保留所選視窗；系統挑選器開著時暫時讓瀏海不自動收合）、設定 → 影片、`NSScreenCaptureUsageDescription`（en＋zh-Hant）。**entitlements 未改**；不呼叫 `CGRequestScreenCaptureAccess`。
 
 **隱私（實作層）**：畫面只在記憶體；不存檔、不上傳、不快取、不截圖、不寫剪貼簿；log 只記狀態與錯誤碼。
 
-**DRM**：不嘗試繞過；持續全黑只顯示「這個來源受內容保護，系統不允許擷取」。偵測是啟發式，極暗畫面可能被暫時誤判。
+**DRM**：不嘗試繞過；持續全黑只顯示「這個來源受內容保護，系統不允許擷取」並可一鍵回到封面。偵測是啟發式，極暗畫面可能被暫時誤判。
 
-**與前文設計的差異**：§4 的 S／M／L 三檔改為連續滑桿；釘選按鈕目前只存狀態（`videoCapsulePinned`），收合膠囊與歌詞膠囊堆疊（`VideoCapsuleVisibility`、堆疊版面測試）留給 M-C。
+**與前文設計的差異**：§4 的「影片區塊／分頁」改為封面槽；S／M／L 三檔改為設定頁連續滑桿；釘選膠囊（`VideoCapsuleVisibility`、視圖、hover／點擊轉接）留給 M-C。
 
-**仍未驗證（需真機）**：實際操作手感；各瀏覽器視窗、瀏覽器畫中畫視窗、其他 Space 的視窗；視窗最小化／關閉時各種錯誤碼的實際值（目前把 noCaptureSource／noWindowList／systemStoppedStream／removingStream／userStopped 都視為「來源已關閉」，屬推測）；DRM 內容的實際行為；挑選器開啟時瀏海是否真的維持展開；ad-hoc 重建後授權是否失效、macOS 再確認提示；CPU／GPU／記憶體是否符合 §8；展開／收合連續 10 次不閃退。
+**仍未驗證（需真機）**：實際操作手感（點影片釘選、hover 按鈕、槽加寬動畫）；各瀏覽器視窗、瀏覽器畫中畫視窗、其他 Space 的視窗；視窗最小化／關閉時各種錯誤碼的實際值（目前把 noCaptureSource／noWindowList／systemStoppedStream／removingStream／userStopped 都視為「來源已關閉」，屬推測）；DRM 內容的實際行為；挑選器開啟時瀏海是否真的維持展開；ad-hoc 重建後授權是否失效、macOS 再確認提示；CPU／GPU／記憶體是否符合 §8；展開／收合連續 10 次不閃退。
