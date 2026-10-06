@@ -251,6 +251,10 @@ extension Defaults.Keys {
     static let clipboardRetentionDays = Key<Int>("clipboardRetentionDays", default: 30)
     /// 點選歷史項目後自動送出 ⌘V（實驗性；需要「輔助使用」授權，預設關）。
     static let clipboardAutoPaste = Key<Bool>("clipboardAutoPaste", default: false)
+    /// 剪貼簿分頁底部「操作提示」：已成功複製回剪貼簿的次數（只是次數，不含任何內容）；滿 3 次自動收起。
+    static let clipboardHintActivations = Key<Int>("clipboardHintActivations", default: 0)
+    /// 剪貼簿分頁底部「操作提示」：使用者是否按了關閉。
+    static let clipboardHintDismissed = Key<Bool>("clipboardHintDismissed", default: false)
 
     // MARK: Downloads
     static let enableDownloadListener = Key<Bool>("enableDownloadListener", default: true)

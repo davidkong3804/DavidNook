@@ -231,23 +231,6 @@
         }
       }
     },
-    "Anything you copy while paused is not recorded afterwards" : {
-      "comment" : "Clipboard panel: hint under the paused state.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anything you copy while paused is not recorded afterwards"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "暫停期間複製的內容不會被補記"
-          }
-        }
-      }
-    },
     "App" : {
       "localizations" : {
         "en" : {
@@ -3272,23 +3255,6 @@
         }
       }
     },
-    "Text, images and files you copy will show up here" : {
-      "comment" : "Clipboard panel: hint under the empty state.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Text, images and files you copy will show up here"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "複製文字、圖片或檔案後會出現在這裡"
-          }
-        }
-      }
-    },
     "The license text is not bundled with this build. See the project repository." : {
       "localizations" : {
         "zh-Hant" : {
@@ -3735,6 +3701,295 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法寫入剪貼簿歷史，請檢查磁碟空間"
+          }
+        }
+      }
+    },
+    "Copy back to clipboard (Return)" : {
+      "comment" : "Clipboard panel: tooltip of the copy button on a row, with its keyboard shortcut.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy back to clipboard (Return)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "複製回剪貼簿（Return）"
+          }
+        }
+      }
+    },
+    "Pin (⌘P)" : {
+      "comment" : "Clipboard panel: tooltip of the pin button on a row, with its keyboard shortcut.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pin (⌘P)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "釘選（⌘P）"
+          }
+        }
+      }
+    },
+    "Unpin (⌘P)" : {
+      "comment" : "Clipboard panel: tooltip of the unpin button on a row, with its keyboard shortcut.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpin (⌘P)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消釘選（⌘P）"
+          }
+        }
+      }
+    },
+    "Delete (⌘⌫)" : {
+      "comment" : "Clipboard panel: tooltip of the delete button on a row, with its keyboard shortcut.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete (⌘⌫)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除（⌘⌫）"
+          }
+        }
+      }
+    },
+    "Copied" : {
+      "comment" : "Clipboard panel: brief confirmation shown on a row after it was copied back to the clipboard.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已複製"
+          }
+        }
+      }
+    },
+    "Couldn't copy" : {
+      "comment" : "Clipboard panel: brief message shown on a row when copying it back to the clipboard failed.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't copy"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "複製失敗"
+          }
+        }
+      }
+    },
+    "Text, images and files you copy show up here. Click a row to copy it back to the clipboard" : {
+      "comment" : "Clipboard panel: hint under the empty state; also teaches the click action.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text, images and files you copy show up here. Click a row to copy it back to the clipboard"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "複製文字、圖片或檔案後會出現在這裡。點一下列，就能複製回剪貼簿"
+          }
+        }
+      }
+    },
+    "Try another keyword, or set the filter above to All" : {
+      "comment" : "Clipboard panel: hint under the no-results state.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try another keyword, or set the filter above to All"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "換個關鍵字，或把上方篩選改成「全部」"
+          }
+        }
+      }
+    },
+    "Anything you copy while paused is not recorded, and is not added after you resume. Press Resume to keep recording" : {
+      "comment" : "Clipboard panel: explains why nothing is recorded while paused and what to do.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anything you copy while paused is not recorded, and is not added after you resume. Press Resume to keep recording"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫停期間複製的內容不會被記下，恢復後也不會補記。想繼續記錄，請按「恢復」"
+          }
+        }
+      }
+    },
+    "Anything you copy while paused is not recorded" : {
+      "comment" : "Clipboard panel: one-line detail on the paused banner.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anything you copy while paused is not recorded"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫停期間複製的內容不會被記下"
+          }
+        }
+      }
+    },
+    "macOS is blocking DavidNook from reading the clipboard (set to ask every time, or denied), so nothing can be recorded for now" : {
+      "comment" : "Clipboard panel: explains why recording is stopped when the paste permission is not Allow.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS is blocking DavidNook from reading the clipboard (set to ask every time, or denied), so nothing can be recorded for now"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 限制了 DavidNook 讀取剪貼簿（每次都詢問或已拒絕），所以暫時無法記錄"
+          }
+        }
+      }
+    },
+    "Click a row: copy it back to the clipboard (turn on auto-paste in Settings to also paste)" : {
+      "comment" : "Clipboard panel tip line, auto-paste switched off in Settings.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click a row: copy it back to the clipboard (turn on auto-paste in Settings to also paste)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點一下列：複製回剪貼簿（要自動貼上，請到設定開啟）"
+          }
+        }
+      }
+    },
+    "Click a row: copy it back to the clipboard (auto-paste is not authorized yet)" : {
+      "comment" : "Clipboard panel tip line, auto-paste is on but the Accessibility permission is missing.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click a row: copy it back to the clipboard (auto-paste is not authorized yet)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點一下列：複製回剪貼簿（自動貼上尚未授權）"
+          }
+        }
+      }
+    },
+    "Click a row: copy it and paste automatically" : {
+      "comment" : "Clipboard panel tip line, auto-paste is on and authorized.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click a row: copy it and paste automatically"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點一下列：複製並自動貼上"
+          }
+        }
+      }
+    },
+    "↑↓ Select  ↩ Copy  ⌘P Pin  ⌘⌫ Delete  Just type to search" : {
+      "comment" : "Clipboard panel tip line: keyboard shortcuts.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "↑↓ Select  ↩ Copy  ⌘P Pin  ⌘⌫ Delete  Just type to search"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "↑↓ 選取　↩ 複製　⌘P 釘選　⌘⌫ 刪除　直接輸入即可搜尋"
+          }
+        }
+      }
+    },
+    "Show tips" : {
+      "comment" : "Clipboard panel: tooltip of the help button when the tip line is hidden.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show tips"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示操作提示"
+          }
+        }
+      }
+    },
+    "Hide tips" : {
+      "comment" : "Clipboard panel: tooltip of the help button and of the close button on the tip line.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide tips"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隱藏操作提示"
           }
         }
       }
