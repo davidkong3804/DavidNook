@@ -59,7 +59,8 @@ public enum TrackTitleExtractor {
         guard !rawTitle.isEmpty else { return [] }
         let rawArtist = artist.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if let id = sourceBundleID?.trimmingCharacters(in: .whitespacesAndNewlines), !id.isEmpty, !isBrowserBundleID(id) {
+        if let id = sourceBundleID?.trimmingCharacters(in: .whitespacesAndNewlines), !id.isEmpty,
+           !isVideoSource(bundleID: id, title: rawTitle) {
             return [TrackTitleCandidate(rawTitle, rawArtist.isEmpty ? nil : rawArtist)]
         }
         if durationSeconds.isFinite, durationSeconds > maxVideoDuration { return [] }
@@ -78,13 +79,27 @@ public enum TrackTitleExtractor {
         return result
     }
 
-    /// 這筆「正在播放」是不是影片：bundle id 已知 → 是否為瀏覽器；未知（nil／空）→ 以標題特徵判斷。
+    /// 這筆「正在播放」是不是影片：
+    /// - 已知瀏覽器 → 是；已知音樂 App（Apple Music、Spotify…）→ 否（行為與影片功能加入前完全相同）；
+    /// - 其他（bundle id 不認得，或 nil／空）→ 以標題特徵判斷。實測：使用者用清單外的瀏覽器（Comet）播 YouTube，
+    ///   若「不認得就當乾淨來源」會讓影片標題原樣去查而找不到歌詞。
     public static func isVideoSource(bundleID: String?, title: String) -> Bool {
         if let id = bundleID?.trimmingCharacters(in: .whitespacesAndNewlines), !id.isEmpty {
-            return isBrowserBundleID(id)
+            if isBrowserBundleID(id) { return true }
+            if isKnownMusicAppBundleID(id) { return false }
         }
         return looksLikeVideoTitle(title)
     }
+
+    /// 已知的音樂播放器：標題一定是乾淨的曲名，不做影片標題解析。
+    public static func isKnownMusicAppBundleID(_ id: String) -> Bool {
+        let lowered = id.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return knownMusicAppBundleIDs.contains { lowered == $0 || lowered.hasPrefix($0 + ".") }
+    }
+
+    private static let knownMusicAppBundleIDs: [String] = [
+        "com.apple.Music", "com.apple.iTunes", "com.spotify.client", "com.netease.163music",
+    ].map { $0.lowercased() }
 
     /// 瀏覽器（含 helper、PWA／網頁 App：以 `.` 邊界做前綴比對）。
     public static func isBrowserBundleID(_ id: String) -> Bool {
@@ -108,6 +123,7 @@ public enum TrackTitleExtractor {
         "com.operasoftware.Opera", "com.operasoftware.OperaGX", "com.vivaldi.Vivaldi",
         "com.kagi.kagimacOS", "com.duckduckgo.macos.browser", "ru.yandex.desktop.yandex-browser",
         "app.zen-browser.zen", "org.torproject.torbrowser", "com.sigmaos.sigmaos.macos",
+        "ai.perplexity.comet",
     ].map { $0.lowercased() }
 
     // MARK: - 解析
