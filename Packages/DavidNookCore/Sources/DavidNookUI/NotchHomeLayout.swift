@@ -25,7 +25,7 @@ public struct NotchHomeLayout<Art: View, Controls: View, Lyrics: View>: View {
     public var body: some View {
         HStack(spacing: metrics.spacing) {
             art
-                .frame(width: metrics.artSize, height: metrics.artSize)
+                .frame(width: metrics.artWidth, height: metrics.artSize)
                 .padding(metrics.artPadding)
             controls
             if metrics.showsLyrics {
