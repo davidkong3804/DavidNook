@@ -181,3 +181,87 @@ final class FloatingVideoViewTests: XCTestCase {
         try snapshot(view, name: "portrait-hover")
     }
 }
+
+// MARK: 滑鼠事件（取代 NSEvent.mouseLocation：用事件本身的視窗座標，才能在測試與實機都正確）
+
+@MainActor
+final class FloatingVideoInteractionTests: XCTestCase {
+    private func setUp(_ ratio: Double = 16.0 / 9.0) -> (FloatingVideoPanel, FloatingVideoView) {
+        let panel = FloatingVideoPanel(contentRect: CGRect(x: 400, y: 400, width: 320, height: 180))
+        let view = FloatingVideoView(display: VideoFrameDisplay())
+        view.aspectRatio = ratio
+        view.visibleFrameProvider = { CGRect(x: 0, y: 0, width: 1440, height: 875) }
+        panel.contentView = view
+        view.layoutSubtreeIfNeeded()
+        return (panel, view)
+    }
+
+    private func event(_ type: NSEvent.EventType, at p: CGPoint, in panel: NSWindow, clickCount: Int = 1) -> NSEvent {
+        NSEvent.mouseEvent(with: type, location: p, modifierFlags: [], timestamp: 0, windowNumber: panel.windowNumber, context: nil,
+                           eventNumber: 0, clickCount: clickCount, pressure: 1)!
+    }
+
+    func testDragMovesWindow() {
+        let (panel, view) = setUp()
+        view.mouseDown(with: event(.leftMouseDown, at: CGPoint(x: 160, y: 90), in: panel))
+        view.mouseDragged(with: event(.leftMouseDragged, at: CGPoint(x: 210, y: 70), in: panel))
+        XCTAssertEqual(panel.frame.minX, 450, accuracy: 0.5)
+        XCTAssertEqual(panel.frame.minY, 380, accuracy: 0.5)
+        var ended: CGRect?
+        view.onInteractionEnd = { ended = $0 }
+        view.mouseUp(with: event(.leftMouseUp, at: CGPoint(x: 210, y: 70), in: panel))
+        XCTAssertEqual(ended, panel.frame)
+    }
+
+    func testCornerDragResizesKeepingRatio() {
+        let (panel, view) = setUp()
+        let start = panel.frame
+        view.mouseDown(with: event(.leftMouseDown, at: CGPoint(x: 318, y: 2), in: panel))   // 右下角
+        view.mouseDragged(with: event(.leftMouseDragged, at: CGPoint(x: 418, y: 2), in: panel))
+        XCTAssertEqual(panel.frame.width, 420, accuracy: 1)
+        XCTAssertEqual(panel.frame.width / panel.frame.height, 16.0 / 9.0, accuracy: 0.01)
+        XCTAssertEqual(panel.frame.minX, start.minX, accuracy: 0.5)
+        XCTAssertEqual(panel.frame.maxY, start.maxY, accuracy: 0.5)
+    }
+
+    func testDoubleClickUnpins() {
+        let (panel, view) = setUp()
+        var count = 0
+        view.onUnpin = { count += 1 }
+        view.mouseDown(with: event(.leftMouseDown, at: CGPoint(x: 160, y: 90), in: panel, clickCount: 2))
+        XCTAssertEqual(count, 1)
+    }
+
+    func testHiddenControlBarDoesNotStealClicks() {
+        let (_, view) = setUp()
+        let spot = CGPoint(x: view.bounds.midX - 20, y: view.bounds.height - 18)   // 控制列所在位置
+        XCTAssertTrue(view.hitTest(spot) === view, "沒 hover 時（透明）控制列不可攔截點擊")
+        view.setHoverForTesting(true)
+        XCTAssertTrue(view.hitTest(spot) is NSButton || view.hitTest(spot)?.superview is NSView)
+    }
+
+    func testControlBarNeverOverlapsCornerZones() {
+        for width in [FloatingVideoGeometry.minimumWidth, 200, 320] {
+            let view = FloatingVideoView(display: VideoFrameDisplay())
+            view.frame = CGRect(x: 0, y: 0, width: width, height: (width * 9 / 16).rounded())
+            view.layoutSubtreeIfNeeded()
+            let bar = view.controlBarForTesting.frame
+            XCTAssertGreaterThan(bar.minX, FloatingVideoView.cornerZone, "\(width)")
+            XCTAssertLessThan(bar.maxX, width - FloatingVideoView.cornerZone, "\(width)")
+        }
+    }
+
+    func testMenuHasUnpinAndOpacityOnly() {
+        let (_, view) = setUp()
+        let titles = view.makeMenu().items.filter { !$0.isSeparatorItem }.map(\.title)
+        XCTAssertEqual(titles, ["Unpin", "Opacity"])
+    }
+
+    func testStatusNotices() {
+        let (_, view) = setUp()
+        view.content = .reconnecting
+        XCTAssertTrue(view.controlsAreVisible)
+        view.content = .stalledNotice
+        XCTAssertTrue(view.controlsAreVisible, "錯誤說明時一定要能關閉")
+    }
+}

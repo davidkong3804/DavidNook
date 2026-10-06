@@ -128,11 +128,15 @@ final class FloatingVideoGeometryTests: XCTestCase {
 
     // MARK: 位置恢復
 
-    func testNoSavedPlacementGoesBottomRightOfPrimary() {
+    func testNoSavedPlacementGoesBelowNotchCentered() {
         let r = FloatingVideoGeometry.restoredFrame(saved: nil, aspectRatio: ratio, screens: [screen], primary: screen)
         XCTAssertEqual(r.width, FloatingVideoGeometry.defaultWidth, accuracy: 0.001)
-        XCTAssertEqual(r.maxX, screen.maxX - FloatingVideoGeometry.cornerMargin, accuracy: 0.001)
-        XCTAssertEqual(r.minY, screen.minY + FloatingVideoGeometry.cornerMargin, accuracy: 0.001)
+        XCTAssertEqual(r.midX, screen.midX, accuracy: 0.001, "第一次出現：瀏海正下方置中")
+        XCTAssertEqual(r.maxY, screen.maxY - FloatingVideoGeometry.topMargin, accuracy: 0.001)
+        let custom = FloatingVideoGeometry.restoredFrame(saved: nil, aspectRatio: ratio, screens: [screen], primary: screen, defaultWidth: 240)
+        XCTAssertEqual(custom.width, 240, accuracy: 0.001, "預設大小＝設定頁的釘選視窗預設大小")
+        let huge = FloatingVideoGeometry.restoredFrame(saved: nil, aspectRatio: ratio, screens: [screen], primary: screen, defaultWidth: 99_999)
+        XCTAssertTrue(screen.contains(huge))
     }
 
     func testSavedOnScreenIsKept() {
@@ -144,12 +148,12 @@ final class FloatingVideoGeometryTests: XCTestCase {
         XCTAssertEqual(r.height, 225, accuracy: 0.001)
     }
 
-    func testSavedOffAllScreensFallsBackToPrimaryBottomRight() {
+    func testSavedOffAllScreensFallsBackToBelowNotch() {
         // 上次在已拔掉的第二螢幕
         let saved = FloatingVideoPlacement(x: -2500, y: 200, width: 500)
         let r = FloatingVideoGeometry.restoredFrame(saved: saved, aspectRatio: ratio, screens: [screen], primary: screen)
-        XCTAssertEqual(r.maxX, screen.maxX - FloatingVideoGeometry.cornerMargin, accuracy: 0.001)
-        XCTAssertEqual(r.minY, screen.minY + FloatingVideoGeometry.cornerMargin, accuracy: 0.001)
+        XCTAssertEqual(r.midX, screen.midX, accuracy: 0.001)
+        XCTAssertEqual(r.maxY, screen.maxY - FloatingVideoGeometry.topMargin, accuracy: 0.001)
         XCTAssertEqual(r.width, 500, accuracy: 0.001, "寬度仍沿用記住的")
         XCTAssertTrue(screen.contains(r))
     }
