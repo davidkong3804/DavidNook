@@ -22,8 +22,9 @@ final class VideoCapsulePlacementTests: XCTestCase {
     func testAloneSitsWhereTheLyricsPillWould() {
         let r = try! XCTUnwrap(rect(lyrics: false))
         XCTAssertEqual(r.minY, LyricsPillMetrics.topOffset(notchBottom: 32, dropDistance: 6), accuracy: 0.001)
-        XCTAssertEqual(r.size.width, 320, accuracy: 0.001)
-        XCTAssertEqual(r.size.height, 180, accuracy: 0.001)
+        // 收合視窗 210 − 底部 8 − 上緣 38 = 164 高放不下 320×180，等比縮成 291.6×164。
+        XCTAssertEqual(r.size.height, 164, accuracy: 0.001)
+        XCTAssertEqual(r.size.width, 164 * 16.0 / 9.0, accuracy: 0.001)
         XCTAssertEqual(r.midX, closed.width / 2, accuracy: 0.001)
     }
 
@@ -42,11 +43,17 @@ final class VideoCapsulePlacementTests: XCTestCase {
 
     func testSizeFollowsTheSliderAndAspectRatio() {
         let minR = try! XCTUnwrap(rect(lyrics: false, width: 160))
-        let maxR = try! XCTUnwrap(rect(lyrics: false, width: 480))
+        let midR = try! XCTUnwrap(rect(lyrics: false, width: 240))
         XCTAssertEqual(minR.width, 160, accuracy: 0.001)
-        XCTAssertGreaterThan(maxR.width, minR.width)
-        let tall = try! XCTUnwrap(rect(lyrics: false, width: 320, ratio: 0.5))
+        XCTAssertGreaterThan(midR.width, minR.width)
+        // 超出可用高度的設定一律縮成同一個最大尺寸（不溢出）。
+        let big1 = try! XCTUnwrap(rect(lyrics: false, width: 400))
+        let big2 = try! XCTUnwrap(rect(lyrics: false, width: 480))
+        XCTAssertEqual(big1.size.width, big2.size.width, accuracy: 0.001)
+        let tall = try! XCTUnwrap(rect(lyrics: false, width: 320, ratio: 0.75))
         XCTAssertLessThan(tall.width, tall.height)
+        // 很窄的直向影片縮到寬 < 96 就不顯示（絕不溢出）。
+        XCTAssertNil(rect(lyrics: false, width: 320, ratio: 0.5))
     }
 
     func testOutOfRangeSettingsAreClamped() {

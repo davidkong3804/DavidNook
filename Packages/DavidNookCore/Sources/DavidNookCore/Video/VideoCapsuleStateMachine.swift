@@ -47,13 +47,13 @@ public enum VideoCapsuleInput: Equatable, Sendable {
 ///
 /// - 挑選取消：回到挑選前的狀態（串流中換視窗取消，原串流繼續）。
 /// - 任何時候收到 `.started`（含挑選器自己的「換視窗」）→ 串流中，並重置黑畫面計時。
-/// - 釘選：只在串流中可釘；串流結束一律自動取消（見 `isPinned`）。
+/// - 釘選：只在串流中可釘；串流結束、偵測到黑畫面一律自動取消（見 `isPinned`）。
 /// - 串流中持續全黑 → `blackContent`；一有非黑畫面立刻恢復 `streaming`。
 public struct VideoCapsuleStateMachine: Equatable, Sendable {
     public static let fallbackAspectRatio: Double = 16.0 / 9.0
 
     public private(set) var state: VideoCapsuleState = .idle
-    /// 是否已釘選。只在串流中才能釘；串流結束（停止、來源關閉、錯誤）一律自動取消；換視窗與黑畫面期間維持。
+    /// 是否已釘選。只在串流中才能釘；串流結束（停止、來源關閉、錯誤）與偵測到黑畫面（疑似受保護）一律自動取消；換視窗期間維持。
     public private(set) var isPinned = false
     private var stateBeforePicking: VideoCapsuleState = .idle
     private var detector = BlackFrameDetector()
@@ -104,7 +104,11 @@ public struct VideoCapsuleStateMachine: Equatable, Sendable {
         case .brightness(let value):
             switch state {
             case .streaming(let ratio):
-                if detector.ingest(brightness: value, at: time) { state = .blackContent(aspectRatio: ratio) }
+                if detector.ingest(brightness: value, at: time) {
+                    state = .blackContent(aspectRatio: ratio)
+                    // 疑似受保護的內容：釘選的膠囊不顯示黑塊，直接取消釘選（恢復非黑後也不會自己再釘）。
+                    isPinned = false
+                }
             case .blackContent(let ratio):
                 if !detector.ingest(brightness: value, at: time) { state = .streaming(aspectRatio: ratio) }
             default: break

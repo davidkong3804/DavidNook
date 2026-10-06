@@ -38,6 +38,12 @@ public enum VideoCapsuleMetrics {
         return CGSize(width: w, height: h)
     }
 
+    /// 釘選膠囊的圓角：短邊的 12%，夾在 8…16 pt（短邊的一半以內）。
+    public static func cornerRadius(for size: CGSize) -> CGFloat {
+        guard size.width > 0, size.height > 0 else { return 8 }
+        return min(max(min(size.width, size.height) * 0.12, 8), 16)
+    }
+
     /// 等比縮小到放得進 `available`（不放大）；可用空間無效回傳 `.zero`。
     public static func fit(_ size: CGSize, into available: CGSize) -> CGSize {
         guard size.width > 0, size.height > 0, available.width > 0, available.height > 0 else { return .zero }
@@ -104,5 +110,19 @@ public enum VideoCapsuleStack {
             lyricsRect?.origin.y = y
         }
         return Layout(video: videoRect, lyrics: lyricsRect)
+    }
+}
+
+/// 釘選膠囊在收合視窗內的位置（純邏輯）：可見才有矩形；歌詞膠囊可見時在其下方（間距 6），不可見時上移到歌詞位置。
+/// 座標原點在視窗左上角、y 向下、水平置中；一律委託 `VideoCapsuleStack.layout`（窮舉測試保證在視窗內且與歌詞不重疊）。
+public enum VideoCapsulePlacement {
+    public static func rect(
+        isVisible: Bool, notchBottom: CGFloat, dropDistance: CGFloat, lyricsVisible: Bool, videoWidth: Double, aspectRatio: Double
+    ) -> CGRect? {
+        guard isVisible else { return nil }
+        return VideoCapsuleStack.layout(
+            notchBottom: notchBottom, dropDistance: LyricsPillMetrics.clampedDropDistance(dropDistance), lyricsVisible: lyricsVisible,
+            lyricsWidth: LyricsPillMetrics.minimumWidth, videoWidth: videoWidth, aspectRatio: aspectRatio
+        ).video
     }
 }
