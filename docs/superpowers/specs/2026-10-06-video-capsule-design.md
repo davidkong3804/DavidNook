@@ -162,3 +162,28 @@
 **DRM**：裁切**不影響** DRM 行為。受保護來源裁切後仍是黑畫面並顯示說明、釘選自動取消；本功能不嘗試繞過，也不因為裁切而改變偵測規則。
 
 **已知限制／未驗證**：(1) `sourceRect` 原點與單位的假設（見上）未真機驗證；(2) 有裁切且不在編輯時，框內畫面的 `contentRect` 不代表視窗大小，所以**不追蹤視窗被縮放**（框的比例以套用當下的視窗大小換算），縮放後請重新裁切或重設；(3) 編輯期間暫時串整個視窗，實際切換是否順暢未驗證；(4) 裁切視窗在 accessory App、多 Space、全螢幕 App 上的行為未驗證；(5) 自動偵測在真實 YouTube／影片上的準確度未驗證（只有合成資料測試）；(6) 記憶依 bundle id：同一個 App 的不同視窗（例如瀏覽器的影片分頁與一般分頁）共用同一個裁切。
+
+## 桌面浮動視窗（自由的畫中畫）（2026-10-06，使用者追加）
+
+**動機**：把影片做成桌面上可自由拖曳、縮放的視窗，不受瀏海位置與大小限制。
+
+**怎麼開**：hover 封面槽影片 → 「浮動視窗」按鈕（`pip.enter`；開啟後變 `pip.exit`＝收回）。釘選樣式擴充為 `VideoPinStyle`（`none`／`capsule`／`floating`，Core `VideoCapsuleStateMachine.pinStyle`）：
+- 轉移（有測試）：`togglePin`＝膠囊↔無（從浮動則改成膠囊）；`openFloating`（只在串流中；膠囊同時取消）；`closeFloating`（沒開浮動視窗時不影響膠囊）；`pinToCapsule`（浮動視窗的「釘選到瀏海」）。**同一時間只有一種樣式**，所以開浮動視窗時收合膠囊隱藏，封面槽仍顯示（同一份畫面，當縮圖）。
+- 串流結束（停止、來源關閉、錯誤）一律回到 `none`；換視窗期間維持，來源在挑選時被關閉則 `none`。裁切、畫面尺寸改變、挑選取消都不影響。
+- **黑畫面（疑似 DRM）決議**：膠囊維持既有決議（自動取消、不顯示黑塊）；浮動視窗**不自動關閉**，視窗內顯示簡短說明（`FloatingVideoPolicy.content` → `protectedNotice`）並讓控制列一直顯示、可關閉。理由：說明比視窗憑空消失友善。畫面恢復非黑就回到畫面。不嘗試繞過。
+- **pause 規則**：`VideoStreamPolicy.shouldPause(isSlotVisible:isPinned:isFloating:)`；浮動視窗開著一定不 pause。
+- 「✕ 關閉」「收回瀏海」「雙擊」目前語意相同（關閉浮動視窗，影片回封面槽；槽不可見且沒釘選就 pause，已選視窗保留）；「收回瀏海」不會自動展開瀏海。
+
+**視窗**（`FloatingVideoPanel`／`FloatingVideoView`，DavidNookUI；App 端 `FloatingVideoWindowController`）：
+- `NSPanel`，styleMask `[.borderless, .nonactivatingPanel]`、`level = .floating`、`collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]`（屬性名稱已對照 SDK 標頭 `NSWindow.h`）、`canBecomeKey/Main = false`（不搶焦點）、透明背景＋系統陰影、`hidesOnDeactivate = false`。圓角 10、0.5 pt 細邊框。
+- **內容純 AppKit**：layer-backed `NSView`，`CALayer.contents` 由既有 `VideoFrameDisplay` 直接放 IOSurface（`attach` 同一做法，不另開 SCStream）；控制列是 `NSButton`（`acceptsFirstMouse` 為 true，浮動視窗不先啟用也吃第一下點擊）；**沒有 NSHostingView**（測試掃描視圖階層確認；理由見 git c30828f：視窗改大小時 NSHostingView 曾進入版面更新迴圈而閃退）。**瀏海視窗仍絕不 setFrame**；浮動視窗是另一個一般視窗，可以 setFrame。
+- **縮放選擇自訂四角拖曳**（而非 `resizeIncrements`／`contentAspectRatio`）：無邊框視窗沒有系統縮放邊，自訂版只有四個 18 pt 感應區、對角固定、取水平／垂直距離換算寬度較大者、鎖長寬比、拖過對角不翻轉，邏輯都在 Core 純函式 `FloatingVideoGeometry.resize`（有測試）。移動同樣自訂（不用 `isMovableByWindowBackground`，避免與縮放手勢互搶）。
+- **夾限**（`FloatingVideoGeometry.clampedSize`，窮舉測試）：最小寬 160；最大＝min(螢幕可視寬, 可視高×比例)，高度不超過螢幕；比例夾在 1:4…4:1；螢幕比最小寬還小時以螢幕為準。來源比例改變時寬度不變、左上角不動、高度跟著變、再推回螢幕內（`adjustedForAspect`）。
+- hover 才顯示控制列（關閉、收回瀏海、透明度、釘選到瀏海）與四角標記；右鍵選單有相同動作＋透明度子選單；雙擊＝收回瀏海。
+- **透明度**：0.4…1.0（`FloatingVideoOpacity`，夾限有測試），點按鈕在 100／80／60／40% 循環，也可由右鍵選單直接選；用 `NSWindow.alphaValue`。
+
+**記憶**：只存 UserDefaults 的 `videoFloatingPlacement`（JSON：`x`、`y`、`width` 三個數字，測試鎖定沒有其他欄位）與 `videoFloatingOpacity`；不存標題或內容。恢復規則（`FloatingVideoGeometry.restoredFrame`，有測試）：記住的視窗中心仍在任一螢幕可視範圍內 → 沿用（夾限並推回該螢幕內）；否則（沒記過、螢幕被拔掉、解析度改變）→ 主螢幕右下角（邊距 24，寬度沿用記住的）。多螢幕：視窗跟著使用者拖到的螢幕，不複製；縮放上限取視窗目前所在的螢幕。
+
+**設定頁**：沒有新增選項（點影片＝釘選膠囊的既有行為不變）；只在「影片」頁尾加一段說明文字。
+
+**隱私與限制**：畫面只在記憶體；浮動視窗是你自己桌面上的視窗，**截圖或螢幕分享可能會拍到它**；DRM 來源仍是黑畫面並顯示說明、不繞過。entitlements 未改；不呼叫 `CGRequestScreenCaptureAccess`。**未驗證（需真機）**：拖曳／縮放手感（含四角感應區大小）、多螢幕、全螢幕 App 上方的顯示、多個 Space 的行為、不搶焦點是否在所有情況成立、右鍵選單與 hover 在非 key 視窗是否正常、視窗陰影在縮放時是否正確更新、GPU／CPU 負擔、半透明時的實際觀感。
