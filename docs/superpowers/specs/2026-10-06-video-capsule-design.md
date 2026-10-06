@@ -187,3 +187,20 @@
 **設定頁**：沒有新增選項（點影片＝釘選膠囊的既有行為不變）；只在「影片」頁尾加一段說明文字。
 
 **隱私與限制**：畫面只在記憶體；浮動視窗是你自己桌面上的視窗，**截圖或螢幕分享可能會拍到它**；DRM 來源仍是黑畫面並顯示說明、不繞過。entitlements 未改；不呼叫 `CGRequestScreenCaptureAccess`。**未驗證（需真機）**：拖曳／縮放手感（含四角感應區大小）、多螢幕、全螢幕 App 上方的顯示、多個 Space 的行為、不搶焦點是否在所有情況成立、右鍵選單與 hover 在非 key 視窗是否正常、視窗陰影在縮放時是否正確更新、GPU／CPU 負擔、半透明時的實際觀感。
+
+## UX 改版：釘選＝桌面浮動視窗；移除收合影片膠囊；防「畫面停住」（2026-10-06，使用者實測後，**優先於上面所有關於膠囊與「浮動視窗按鈕」的敘述**）
+
+**新流程**：點一下封面槽的影片＝釘選＝直接開出可拖曳縮放的桌面浮動視窗（先釘選，再拖曳縮放）。封面槽不再有「浮動視窗」按鈕。取消釘選：再點一下封面槽的影片、浮動視窗的 ✕、雙擊視窗、右鍵「取消釘選」。浮動視窗 hover 控制列只剩 ✕ 與透明度；「收回瀏海」「釘選到瀏海」已刪除。
+- **第一次的位置**：瀏海正下方置中（`FloatingVideoGeometry.restoredFrame`：該螢幕可視範圍上緣往下 6 pt，優先選有瀏海的螢幕），寬度＝設定頁「釘選視窗的預設大小」（原「影片大小」滑桿，160–480）；之後記住位置與寬度（`videoFloatingPlacement`），上次位置的中心不在任何螢幕內就回到瀏海正下方。
+- **移除**：收合瀏海下方的影片膠囊（`VideoCapsuleView`、`VideoCapsuleHost`、`VideoCapsuleStack`、`VideoCapsulePlacement`、`VideoCapsuleVisibility`、`ContentView` 內的疊層與歌詞可見回報）及其測試；歌詞膠囊本身不動。`VideoCapsuleMetrics` 只留來源長寬比夾限。
+- **狀態機**：`VideoPinStyle { none, pinned }`；輸入 `togglePin`（只在串流中可釘）、`unpin`；串流結束一律取消；黑畫面維持釘選（視窗內顯示說明＋可關閉）；換視窗、裁切、尺寸改變、挑選取消都不影響。
+- **pause 規則**：`VideoStreamPolicy.decision(state:isSlotVisible:isPinned:isCropEditing:)`（notNeeded／run／pause），釘選時一定 run；以所有狀態×槽可見×釘選×裁切編輯組合窮舉測試。
+
+**「浮動視窗的影片畫面停住」排查（靜態審查＋測試；未在真機重現）**
+1. **最可能的根因 A（已修）**：`VideoFrameDisplay.attach` 只掛圖層，不補送目前這一幀；SCStream 在畫面沒變時不送新幀，所以剛開的浮動視窗（或剛展開的圖層）遇到靜止／暫停的影片會一直是空的或停在舊畫面。現在 `attach` 立刻補上最新一幀（`clear` 時釋放；測試 `VideoFrameDisplayTests`）。
+2. **根因 B（已修）**：`ScreenCaptureKitVideoSource.didOutputSampleBuffer` 只接受 `SCFrameStatus.complete`，SDK 標頭（`SCStream.h`）另有 `started`＝串流（重啟／恢復）後的**第一幀**，會被丟掉；靜止來源之後不會再有 complete 幀，畫面就停住。現在 complete 與 started 都顯示（Core `VideoFrameStatus`，有測試）。
+3. **(b) pause**：釘選時決策一律 run（窮舉測試）；`reconcileStreaming` 改用同一個純函式決策。**(c) 重啟後沒恢復送幀**：`startStream` 會重新 attach 同一個 `VideoFrameDisplay`，且第一幀（started）已不再被丟掉；`sourceRect` 變更走 `updateConfiguration`，未發現不恢復的路徑，但**真機未驗證**。**(a) weak／執行緒**：圖層由視圖持有、display 以 weak 保存，`present`／`clear` 都在主執行緒套用；`VideoFrameDisplayTests` 覆蓋 attach／present／clear／圖層釋放。**(e) 鎖**：`VideoFrameDisplay` 的鎖只包一行賦值、不在鎖內呼叫外部，沒有巢狀鎖，未見死鎖。
+4. **(d) 來源靜止與視窗被遮住／最小化／換 Space**：SCStream 只在畫面變動時送新幀。標頭定義 `idle`（畫面沒變）、`blank`、`suspended` 狀態，這些回呼算**心跳**（`VideoFrameStatus.isHeartbeat`），所以靜止來源不會被當成卡住。**防呆**（Core `VideoStallWatchdog`，有測試）：釘選且串流中，每秒檢查最近一次回呼；超過 3 秒沒有心跳 → 自動重啟串流一次並在視窗內顯示「重新連線中…」；再 3 秒仍沒有 → 顯示可關閉的錯誤說明；任何心跳都會自動恢復；重啟有 30 秒冷卻，避免閃爍。**未驗證**：實機在靜止來源上是否照送 idle 回呼（若不送，靜止來源會在 3 秒後顯示重新連線、冷卻後再顯示說明，一有回呼就恢復）；來源視窗被遮住／最小化／換 Space 時 SCStream 的實際行為。
+5. 次要（已處理）：控制列透明時不再攔截點擊（`hitTest`）；拖曳／縮放改用事件自己的視窗座標（`convertPoint(toScreen:)`）取代 `NSEvent.mouseLocation`，可在測試中以合成事件驗證；控制列與四角感應區不重疊（測試）。
+
+**順手修效能**：歌詞膠囊每次 TimelineView 更新都重新量測文字（`LyricsPillLayout.init` → `LyricsFont.nsFont`＋`NSString.size`）。現在以（文字＋字級）為鍵快取量測結果（`LyricsTextWidthCache`，上限 64 筆、只存數字），同一句連續取樣只量測一次（測試以注入的計數器證明）；每個 tick 只算捲動位移。**CPU 實際降幅未量測**。

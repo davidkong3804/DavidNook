@@ -22,28 +22,22 @@ DavidNook is an independent implementation and is **not affiliated with NotchNoo
 - Clipboard history (text, images, file paths): search, filter, pin, click to paste back, item limit and retention, pause.
 - **Video (new, not verified on real hardware)**: in the expanded notch's Now Playing panel, the album cover has a small, low-key button at its top right.
   It opens the macOS system picker so you can pick **one window**; that window's live, scaled-down picture then **replaces the album cover** (for landscape
-  video the cover slot widens without squeezing the title, controls or lyrics; Stop brings the cover back). **Click the video to pin it**: it grows into a
-  video capsule outside the notch (collapsed state, right under the notch); click again to unpin. "Change window" and "Stop" appear only on hover and are
+  video the cover slot widens without squeezing the title, controls or lyrics; Stop brings the cover back). **Click the video to pin it**: it becomes a
+  floating window on your desktop that you can drag and scale; click again to unpin. "Change window" and "Stop" appear only on hover and are
   separate from pinning, so they never trigger each other. Only the window you pick is captured; no audio, no cursor; nothing is captured while no window is
-  picked or the panel is off screen. Settings → Video turns the feature off and sets the "Video size" (it caps how wide the slot can grow when expanded
-  and sets the pinned capsule's size). **Show only the player (crop)**: you may not want the whole browser window (address bar, comments, recommendations). Hover the video and press Crop to open a small separate window
-  showing that window's current picture; drag a rectangle over the part to keep (drag a corner or edge to adjust; Reset to Whole Window, OK, Cancel). After OK both the cover slot and the pinned capsule
+  picked or the panel is off screen. Settings → Video turns the feature off and sets the "Pinned window default size" (it caps how wide the slot can grow when expanded
+  and sets the floating window's size the first time you pin). **Show only the player (crop)**: you may not want the whole browser window (address bar, comments, recommendations). Hover the video and press Crop to open a small separate window
+  showing that window's current picture; drag a rectangle over the part to keep (drag a corner or edge to adjust; Reset to Whole Window, OK, Cancel). After OK both the cover slot and the floating window
   show only that area and their aspect ratio follows it. Auto-detect watches the picture for about 3 seconds and proposes the largest connected moving area (you can still adjust it; if nothing clear is found it only
   shows a note and does not guess). The crop is remembered per source app by bundle id (only the bundle id and a window-relative rectangle are stored, never window titles) and applied the next time you pick a window of
   that app; hover also offers Reset crop. Cropping does not change DRM behavior: protected sources still go black with a notice, and the app does not try to bypass it.
-  **Desktop floating window (a free-form picture-in-picture)**: hover the video in the cover slot and press the floating-window button (`pip.enter` icon) to open a borderless, non-activating window on your desktop
-  showing the same live picture (it shares the one existing capture stream, no second capture; with a crop it shows the cropped picture). **Drag anywhere on the window to move it; drag a corner to resize with the aspect ratio locked,
-  minimum width 160 pt and never larger than the visible area of its screen.** It floats above normal windows and can appear on every Space and over full-screen apps. A small control bar shows only on hover: close (x), return to notch
-  (back to the cover slot), opacity (click to cycle 100/80/60/40%) and pin to notch (turns it into the collapsed capsule); the right-click menu has the same actions and a double-click returns it to the notch.
-  The floating window and the collapsed capsule are mutually exclusive (opening the window hides the capsule; clicking the video in the cover slot still pins the capsule and closes the window).
-  Only the window position, width and opacity are remembered (a few numbers in UserDefaults, never content or titles); they are restored next time, and if the last position is no longer on any screen (for example an unplugged monitor)
-  the window goes to the bottom-right of the main screen. With several displays the window follows the screen you drag it to; it is never duplicated.
-  Protected (DRM) sources still go black: the floating window does **not** close itself but shows a short notice with a close button (the app does not try to bypass protection). The floating window is your own window on your desktop, so screenshots and screen sharing may show it.
-  **Pinned capsule (M-C)**: while the notch is collapsed, the video shows live in a rounded capsule right under the notch,
-  stacked vertically with the lyrics capsule (lyrics on top, video below; with no lyrics the video moves up, and it makes room smoothly when lyrics appear).
-  When the notch expands the video goes back into the cover slot and the outside capsule fades out, so it is never shown twice. Hovering the capsule counts as hovering the notch
-  (click to expand; unpin from the cover slot once expanded), and a small pin appears at its top right on hover. The capsule is clamped to the collapsed window's
-  available height (about 164 pt tall under a typical notch, about 291 pt wide at 16:9), scaled down proportionally, and hidden if it would be narrower than 96 pt (for example a very narrow portrait video).
+  **Pinning = a desktop floating window (a free-form picture-in-picture)**: click the video in the cover slot and it **opens straight into a borderless, non-activating window on your desktop** (pin first, then drag and scale).
+  It first appears centered right under the notch at the "Pinned window default size" from Settings; afterwards the position and size you gave it are remembered and used the next time you pin (only a few numbers for position, width and opacity are stored,
+  never content or titles; if the last position is no longer on any screen, e.g. an unplugged monitor, it returns to just under the notch). It shows the same live picture (one shared capture stream, no second capture; with a crop it shows the cropped picture).
+  **Drag anywhere on the window to move it; drag a corner to resize with the aspect ratio locked, minimum width 160 pt and never larger than the visible area of its screen.** It floats above normal windows and can appear on every Space and over full-screen apps.
+  A small control bar shows only on hover: x (unpin) and opacity (click to cycle 100/80/60/40%); the right-click menu has Unpin and opacity; a double-click unpins, and clicking the video in the cover slot again also unpins.
+  With several displays the window follows the screen you drag it to; it is never duplicated. If no picture arrives for a while the window restarts the stream once and shows "Reconnecting…", then a closable notice if it still fails (a still source is not a stall).
+  Protected (DRM) sources still go black: the window does **not** close itself but shows a short notice with a close button (the app does not try to bypass protection). The floating window is your own window on your desktop, so screenshots and screen sharing may show it.
 - Playback controls (previous / play-pause / next, shuffle, repeat, seek, volume; favorites for the Music app).
 - UI languages: Traditional Chinese when the system language is Traditional Chinese, English otherwise.
 
@@ -161,15 +155,7 @@ MacroVisionKit, SkyLightWindow, DynamicNotchKit and Parrot (MPL-2.0).
   cannot be operated; the picture pauses while the window is minimized; the cover slot only widens when the layout has room (at the smallest panel size it
   stays square and the video is scaled down; notices shrink to a title and buttons, with the full text in a tooltip); pinning is cleared automatically when the
   stream ends (stop, source window closed, error) or when the picture stays black (likely protected) and never survives a relaunch.
-- **Floating window limits**: **drag and resize feel, multiple displays, display over full-screen apps and across Spaces, and GPU/CPU cost are not verified on real hardware** (only pure-logic tests and off-screen renders exist).
-  The content is plain AppKit (no SwiftUI NSHostingView, to avoid layout loops while the window resizes). "Return to Notch" only closes the floating window (the video is back in the cover slot once you expand the notch); it does not expand the notch.
-  The stream keeps running (about 20 fps) while the window is open, regardless of the notch collapsing; when the source aspect ratio changes (crop, resized source window) the width stays and the height follows.
-- **Crop limits**: **cropping (`sourceRect`) is not verified on real hardware**. The SDK header does not state the origin of `sourceRect` for window capture; the app assumes window-relative, top-left origin, points,
-  and the direction may need a fix after real testing. While a crop is active the app does not track the source window being resized (the cropped picture does not reveal the window size), so re-crop or reset after resizing;
-  on macOS 15.2 and earlier the source app's bundle id is unavailable, so the crop only applies to the current stream and is not remembered; auto-detect is heuristic: it cannot detect a paused/still video, returns
-  nothing when the whole page moves (scrolling) or the window is full-screen video, and may pick a large animated ad instead, so adjust by hand; while editing, the whole window is streamed temporarily (larger size) and
-  the stream shrinks back to the cropped area on OK; black-picture detection looks only at the cropped area.
-- **Pinned capsule limits (M-C)**: while pinned, the stream keeps running even when the notch is collapsed (about 20 fps, no audio), so it **keeps using some GPU/CPU; actual usage is not measured**;
-  DRM/black sources never show the capsule (detected black unpins it and the capsule fades out; no black block); with several displays each display's collapsed notch shows the same capsule
-  (same approach as the lyrics capsule); **not verified on a display with a physical notch**, and the capsule's feel and animation are untested on real hardware.
+- **Floating window limits**: **drag and resize feel, multiple displays, display over full-screen apps and across Spaces, GPU/CPU cost, and whether the "picture freezes" problem is really fixed are not verified on real hardware** (only pure-logic tests and off-screen renders exist).
+  The content is plain AppKit (no SwiftUI NSHostingView, to avoid layout loops while the window resizes). The stream keeps running (about 20 fps) while pinned, regardless of the notch collapsing; when the source aspect ratio changes (crop, resized source window) the width stays and the height follows.
+  The stall watchdog relies on stream callbacks (including idle frames for an unchanged picture); the SDK header defines an idle status but that it is delivered for a still source is not verified on real hardware.
 - Only Traditional Chinese and English UIs.
