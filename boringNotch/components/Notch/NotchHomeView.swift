@@ -144,7 +144,7 @@ private enum VideoArtSlotText {
         captureWindow: String(localized: "Show a window as live video", comment: "Album art slot: tooltip of the small button that opens the system window picker."),
         changeWindow: String(localized: "Change Window", comment: "Video tab: toolbar button to pick a different window."),
         stop: String(localized: "Stop", comment: "Video tab: toolbar button that stops showing the window."),
-        pinHelp: String(localized: "Click to pin the video outside the notch", comment: "Album art slot: tooltip on the live video; clicking pins it as a capsule under the collapsed notch."),
+        pinHelp: String(localized: "Click to pin the video as a floating window", comment: "Album art slot: tooltip on the live video; clicking pins it as a free-floating window on the desktop."),
         unpinHelp: String(localized: "Click to unpin the video", comment: "Album art slot: tooltip on the live video while it is pinned."),
         backToCover: String(localized: "Back to cover", comment: "Album art slot: button that stops the video and shows the album cover again."),
         blackTitle: String(localized: "This source is content-protected", comment: "Video tab: shown over a black picture that looks like protected (DRM) content."),
@@ -160,9 +160,7 @@ private enum VideoArtSlotText {
         unknownErrorHint: String(localized: "Something unexpected happened. Choose the window again", comment: "Video tab: error hint for an unknown error."),
         chooseWindow: String(localized: "Choose Window", comment: "Video tab: button that opens the system window picker."),
         crop: String(localized: "Crop", comment: "Album art slot: tooltip of the button that opens the crop window to show only part of the picked window."),
-        resetCrop: String(localized: "Reset crop", comment: "Album art slot: tooltip of the button that goes back to showing the whole window."),
-        floatHelp: String(localized: "Show as a floating window", comment: "Album art slot: tooltip of the button that opens the video as a free-floating window on the desktop."),
-        unfloatHelp: String(localized: "Return the floating window to the notch", comment: "Album art slot: tooltip of the same button while the floating window is open.")
+        resetCrop: String(localized: "Reset crop", comment: "Album art slot: tooltip of the button that goes back to showing the whole window.")
     )
 }
 
@@ -181,7 +179,6 @@ struct VideoArtSlotHost<Cover: View>: View {
                 state: controller.state,
                 isPinned: pinned,
                 hasCrop: controller.crop != nil,
-                isFloating: controller.pinStyle == .floating,
                 strings: VideoArtSlotText.strings,
                 display: controller.display,
                 callbacks: VideoArtSlotCallbacks(
@@ -191,8 +188,7 @@ struct VideoArtSlotHost<Cover: View>: View {
                     onBackToCover: { controller.stop() },
                     onOpenSettings: { controller.openSystemSettings() },
                     onCrop: { controller.openCropEditor() },
-                    onResetCrop: { controller.resetCrop() },
-                    onToggleFloating: { controller.toggleFloating() }
+                    onResetCrop: { controller.resetCrop() }
                 ),
                 cover: cover
             )

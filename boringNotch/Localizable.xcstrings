@@ -3330,7 +3330,7 @@
       }
     },
     "Unpin" : {
-      "comment" : "Clipboard panel: remove the pin from an item.",
+      "comment" : "Floating video window: tooltip of the x button, menu item and double-click action that unpin the video.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4636,23 +4636,6 @@
         }
       }
     },
-    "Click to pin the video outside the notch" : {
-      "comment" : "Album art slot: tooltip on the live video; clicking pins it as a capsule under the collapsed notch.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Click to pin the video outside the notch"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "點一下，把影片釘到瀏海外面"
-          }
-        }
-      }
-    },
     "Click to unpin the video" : {
       "comment" : "Album art slot: tooltip on the live video while it is pinned.",
       "localizations" : {
@@ -4717,40 +4700,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "系統不允許擷取。可改用來源本身的畫中畫，或沒有保護的來源（例如 YouTube）"
-          }
-        }
-      }
-    },
-    "Video size" : {
-      "comment" : "Video settings: slider label for the video size (Home slot upper bound and pinned capsule size).",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Video size"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "影片大小"
-          }
-        }
-      }
-    },
-    "Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a capsule outside the notch. The video size sets how wide the video can grow in the Home panel and how big the pinned capsule is. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead." : {
-      "comment" : "Video settings: footer explaining the feature, pinning, video size, privacy and the protected-content limit.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a capsule outside the notch. The video size sets how wide the video can grow in the Home panel and how big the pinned capsule is. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "用專輯封面上的小按鈕挑選一個視窗，它的即時畫面就會取代封面；點一下影片，就會把它釘成瀏海外面的膠囊。影片大小決定展開時封面槽最多能加寬到多少，也是釘選膠囊的大小。畫面只存在記憶體中：不會儲存、上傳或錄製，也不會擷取聲音。受內容保護的來源（例如 Netflix）無法被 macOS 擷取，會改為顯示說明。"
           }
         }
       }
@@ -4908,57 +4857,6 @@
         }
       }
     },
-    "Close" : {
-      "comment" : "Floating video window: tooltip of the close button.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Close"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "關閉"
-          }
-        }
-      }
-    },
-    "Return to Notch" : {
-      "comment" : "Floating video window: button that closes the floating window and shows the video in the notch again.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Return to Notch"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "收回瀏海"
-          }
-        }
-      }
-    },
-    "Pin to Notch" : {
-      "comment" : "Floating video window: button that turns the floating window into the capsule under the collapsed notch.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pin to Notch"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "釘選到瀏海"
-          }
-        }
-      }
-    },
     "Opacity" : {
       "comment" : "Floating video window: tooltip of the button (and menu title) that changes the window opacity.",
       "localizations" : {
@@ -4976,53 +4874,121 @@
         }
       }
     },
-    "Show as a floating window" : {
-      "comment" : "Album art slot: tooltip of the button that opens the video as a free-floating window on the desktop.",
+    "Reconnecting…" : {
+      "comment" : "Floating video window: shown while the picture stopped coming in and the capture is being restarted.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Show as a floating window"
+            "value" : "Reconnecting…"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "以浮動視窗顯示"
+            "value" : "重新連線中…"
           }
         }
       }
     },
-    "Return the floating window to the notch" : {
-      "comment" : "Album art slot: tooltip of the same button while the floating window is open.",
+    "No picture is coming in" : {
+      "comment" : "Floating video window: title of the error shown when the picture did not come back after a restart.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Return the floating window to the notch"
+            "value" : "No picture is coming in"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "把浮動視窗收回瀏海"
+            "value" : "沒有畫面進來"
           }
         }
       }
     },
-    "The floating-window button on the video opens it as a free-floating window on your desktop: drag it anywhere, drag a corner to resize, and use the buttons that appear on hover to change its opacity. It is your own window, so screenshots and screen sharing may show it." : {
+    "Unpin and pin the video again, or choose the window again." : {
+      "comment" : "Floating video window: hint under the no-picture error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpin and pin the video again, or choose the window again."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請取消釘選後再釘一次，或重新選擇視窗。"
+          }
+        }
+      }
+    },
+    "Pinned window default size" : {
+      "comment" : "Video settings: label of the slider for the default size of the pinned floating window.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pinned window default size"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "釘選視窗的預設大小"
+          }
+        }
+      }
+    },
+    "Click to pin the video as a floating window" : {
+      "comment" : "Album art slot: tooltip on the live video; clicking pins it as a free-floating window on the desktop.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click to pin the video as a floating window"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點一下，把影片釘成桌面上的浮動視窗"
+          }
+        }
+      }
+    },
+    "Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a floating window on your desktop. The default size sets how wide the video can grow in the Home panel and how big the pinned window is the first time (afterwards it remembers the size and position you gave it). The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead." : {
+      "comment" : "Video settings footer.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a floating window on your desktop. The default size sets how wide the video can grow in the Home panel and how big the pinned window is the first time (afterwards it remembers the size and position you gave it). The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在「正在播放」面板的封面按小按鈕挑選一個視窗，它的即時畫面會取代封面；點一下影片就釘選成桌面上的浮動視窗。預設大小決定影片在面板內最寬能加寬多少，以及第一次釘選時浮動視窗的大小（之後會記住你拖到的位置與縮放的大小）。畫面只存在記憶體中：不存檔、不上傳、不錄影，也不擷取聲音。受保護的內容（例如 Netflix）macOS 不允許擷取，會顯示說明。"
+          }
+        }
+      }
+    },
+    "Click the video in the cover slot to pin it: it becomes a floating window you can drag anywhere and resize by dragging a corner. Use the buttons that appear on hover to unpin or change its opacity; double-click also unpins. It is your own window, so screenshots and screen sharing may show it." : {
       "comment" : "Video settings footer: explains the floating window.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The floating-window button on the video opens it as a free-floating window on your desktop: drag it anywhere, drag a corner to resize, and use the buttons that appear on hover to change its opacity. It is your own window, so screenshots and screen sharing may show it."
+            "value" : "Click the video in the cover slot to pin it: it becomes a floating window you can drag anywhere and resize by dragging a corner. Use the buttons that appear on hover to unpin or change its opacity; double-click also unpins. It is your own window, so screenshots and screen sharing may show it."
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "影片上的「浮動視窗」按鈕會把影片變成桌面上可自由擺放的視窗：按住任意處拖曳、拖四角縮放，滑鼠移上去會出現可調整透明度的按鈕。它是你自己桌面上的視窗，所以截圖或螢幕分享可能會拍到它。"
+            "value" : "點一下封面槽裡的影片就會釘選：影片變成可拖曳到桌面任何地方、拖四角縮放的浮動視窗。滑鼠移上去會出現取消釘選與調整透明度的按鈕，雙擊也能取消釘選。它是你自己桌面上的視窗，所以截圖或螢幕分享可能會拍到它。"
           }
         }
       }

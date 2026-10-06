@@ -20,8 +20,10 @@ final class VideoCapsuleController: ObservableObject {
     @Published private(set) var state: VideoCapsuleState = .idle
     /// 目前的裁切（正規化；nil＝整個視窗）。給封面槽決定要不要顯示「重設裁切」。
     @Published private(set) var crop: NormalizedCropRect?
-    /// 目前的釘選樣式（無／收合膠囊／桌面浮動視窗；同一時間只會有一種，規則在 Core 的狀態機）。
+    /// 目前的釘選樣式（釘選＝桌面浮動視窗；規則在 Core 的狀態機）。
     @Published private(set) var pinStyle: VideoPinStyle = .none
+    /// 浮動視窗的畫面是否還在進來（卡住監看）。
+    @Published private(set) var health: VideoConnectionHealth = .healthy
 
     let display = VideoFrameDisplay()
     private let source: ScreenCaptureKitVideoSource
@@ -29,6 +31,9 @@ final class VideoCapsuleController: ObservableObject {
     private var isSlotVisible = false
     private var cropWindow: VideoCropWindowController?
     private var floatingWindow: FloatingVideoWindowController?
+    private var watchdog = VideoStallWatchdog()
+    private var watchdogTask: Task<Void, Never>?
+    private var lastForwardedBeat: TimeInterval = 0
     private var isCropEditing: Bool { cropWindow != nil }
     private var eventTask: Task<Void, Never>?
     private let log = Logger(subsystem: "io.github.davidkong3804.DavidNook", category: "video")
@@ -75,26 +80,33 @@ final class VideoCapsuleController: ObservableObject {
         reconcileStreaming()
     }
 
-    /// 依 Core 的 `FloatingVideoPolicy` 開／關／更新桌面浮動視窗：串流結束一律關；黑畫面維持並在視窗內顯示說明。
+    /// 依 Core 的 `FloatingVideoPolicy` 開／關／更新桌面浮動視窗：串流結束一律關；黑畫面維持並在視窗內顯示說明；
+    /// 畫面沒進來時顯示「重新連線中…」／錯誤說明（卡住監看）。
     private func syncFloatingWindow() {
-        switch FloatingVideoPolicy.content(style: machine.pinStyle, state: state) {
+        let content = FloatingVideoPolicy.content(isPinned: machine.isPinned, state: state, health: health)
+        switch content {
         case .hidden:
-            // 換視窗（系統挑選器開著）期間狀態機維持浮動樣式，視窗留著不閃；取消或選好後繼續使用。
-            if case .choosing = state, machine.isFloating { return }
+            // 換視窗（系統挑選器開著）期間狀態機維持釘選，視窗留著不閃；取消或選好後繼續使用。
+            if case .choosing = state, machine.isPinned { return }
             closeFloatingWindow()
-        case .live, .protectedNotice:
+            stopWatchdog()
+        case .live, .protectedNotice, .reconnecting, .stalledNotice:
             let ratio = state.slotAspectRatio ?? VideoCapsuleStateMachine.fallbackAspectRatio
             if let floatingWindow {
                 floatingWindow.setAspectRatio(ratio)
             } else {
-                let window = FloatingVideoWindowController(display: display, aspectRatio: ratio)
-                window.onClose = { [weak self] in self?.closeFloating() }
-                window.onReturnToNotch = { [weak self] in self?.closeFloating() }
-                window.onPinToNotch = { [weak self] in self?.pinFloatingToCapsule() }
+                let window = FloatingVideoWindowController(display: display, aspectRatio: ratio, defaultWidth: Defaults[.videoCapsuleWidth])
+                window.onUnpin = { [weak self] in self?.unpin() }
                 floatingWindow = window
                 window.show()
             }
-            floatingWindow?.setContent(FloatingVideoPolicy.content(style: machine.pinStyle, state: state) == .live ? .live : .protectedNotice)
+            switch content {
+            case .protectedNotice: floatingWindow?.setContent(.protectedNotice)
+            case .reconnecting: floatingWindow?.setContent(.reconnecting)
+            case .stalledNotice: floatingWindow?.setContent(.stalledNotice)
+            default: floatingWindow?.setContent(.live)
+            }
+            if case .streaming = state { startWatchdog() } else { stopWatchdog() }
         }
     }
 
@@ -103,16 +115,50 @@ final class VideoCapsuleController: ObservableObject {
         floatingWindow = nil
     }
 
-    /// 同一條串流供封面槽與釘選膠囊共用：槽在畫面上要串流；槽不可見時，已釘選就持續串流（給收合膠囊），未釘選才 pause。
+    // MARK: 卡住監看（純邏輯在 Core 的 `VideoStallWatchdog`）
+
+    private func startWatchdog() {
+        guard watchdogTask == nil else { return }
+        watchdog.start(at: now)
+        lastForwardedBeat = source.lastCallbackTime
+        watchdogTask = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                self?.watchdogTick()
+            }
+        }
+    }
+
+    private func stopWatchdog() {
+        watchdogTask?.cancel()
+        watchdogTask = nil
+        watchdog.stop()
+        if health != .healthy { health = .healthy }
+    }
+
+    private func watchdogTick() {
+        let beat = source.lastCallbackTime
+        if beat > lastForwardedBeat { lastForwardedBeat = beat; watchdog.heartbeat(at: beat) }
+        let action = watchdog.tick(at: now)
+        if watchdog.health != health {
+            health = watchdog.health
+            syncFloatingWindow()
+        }
+        if action == .restartStream {
+            log.info("watchdog: no frames, restarting stream")
+            source.restart()
+        }
+    }
+
+    /// 同一條串流供封面槽與釘選的浮動視窗共用：槽在畫面上要串流；槽不可見時，已釘選就持續串流（給收合膠囊），未釘選才 pause。
     /// 規則在 Core 的 `VideoStreamPolicy`（有測試）。`pause()`／`resume()` 都是冪等的，重複呼叫無害。
     /// 這也涵蓋「挑選器開著時瀏海已收合、挑完才開始的串流」以及「釘選期間偵測到黑畫面而自動取消釘選」。
     private func reconcileStreaming() {
-        guard state.needsSource else { return }
         // 裁切視窗開著時瀏海可能已收合（滑鼠移到裁切視窗）；編輯期間要繼續串流。
-        if VideoStreamPolicy.shouldPause(isSlotVisible: isSlotVisible || isCropEditing, isPinned: machine.isPinned, isFloating: machine.isFloating) {
-            source.pause()
-        } else {
-            source.resume()
+        switch VideoStreamPolicy.decision(state: state, isSlotVisible: isSlotVisible, isPinned: machine.isPinned, isCropEditing: isCropEditing) {
+        case .notNeeded: return
+        case .pause: source.pause()
+        case .run: source.resume()
         }
     }
 
@@ -130,27 +176,18 @@ final class VideoCapsuleController: ObservableObject {
         source.stop()
     }
 
-    /// 點一下影片：釘選／取消釘選（釘成收合瀏海外面的影片膠囊，見 `VideoCapsuleHost`）。
+    /// 點一下封面槽的影片：釘選（直接開出可拖曳縮放的桌面浮動視窗）／取消釘選。
     func togglePin() {
         apply(.togglePin)
     }
 
-    /// 封面槽的浮動視窗按鈕：沒開就開桌面浮動視窗（收合膠囊同時隱藏）；已開就收回。
-    func toggleFloating() {
-        apply(machine.isFloating ? .closeFloating : .openFloating)
+    /// 取消釘選（浮動視窗的 x、雙擊、右鍵選單）：視窗關閉，影片回到展開瀏海的封面槽；
+    /// 串流依 pause 規則（槽不可見且沒釘就 pause，已選視窗保留）。
+    func unpin() {
+        apply(.unpin)
     }
 
-    /// 關閉浮動視窗（✕、收回瀏海、雙擊都是這個）：影片回到展開瀏海的封面槽；串流依 pause 規則（槽不可見且沒釘就 pause，已選視窗保留）。
-    func closeFloating() {
-        apply(.closeFloating)
-    }
-
-    /// 浮動視窗的「釘選到瀏海」：改成收合膠囊樣式（浮動視窗關閉）。
-    func pinFloatingToCapsule() {
-        apply(.pinToCapsule)
-    }
-
-    /// 設定頁的「影片大小」：決定 Home 封面槽加寬後的上限，以及釘選膠囊的大小。
+    /// 設定頁的「釘選視窗的預設大小」：決定 Home 封面槽加寬後的上限，以及第一次釘選時浮動視窗的大小。
     func commitWidth() { source.updateRequestedWidth(Defaults[.videoCapsuleWidth]) }
 
     // MARK: 裁切

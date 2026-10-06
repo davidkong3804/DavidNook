@@ -59,6 +59,8 @@ final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked 
     private var lastRegionSampleAt: CFAbsoluteTime = 0
     private var pickerConfigured = false
     private var captureWidth = ScreenCaptureKitVideoSource.maximumCaptureWidth
+    /// 最近一次收到串流回呼的時間（`ProcessInfo.systemUptime`；含「畫面沒變」的 idle 幀）。給卡住監看用。
+    private var lastCallbackUptime: TimeInterval = 0
 
     init(display: VideoFrameDisplay) {
         self.display = display
@@ -121,6 +123,17 @@ final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked 
         teardownStream(keepFilter: true)
         display.clear()
         log.info("paused")
+    }
+
+    /// 最近一次串流回呼的時間（0＝還沒收過）。
+    var lastCallbackTime: TimeInterval { lock.lock(); defer { lock.unlock() }; return lastCallbackUptime }
+
+    /// 卡住監看用：沿用同一個視窗與裁切重新開始串流（會回報 `.started`）。
+    func restart() {
+        lock.lock(); let filter = self.filter; lock.unlock()
+        guard let filter else { return }
+        startStream(filter: filter, resolveCrop: false)
+        log.info("restarted by watchdog")
     }
 
     func resume() {
@@ -281,9 +294,14 @@ extension ScreenCaptureKitVideoSource: SCStreamDelegate, SCStreamOutput {
 
     func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
         guard type == .screen, sampleBuffer.isValid else { return }
-        // 只處理 complete 的幀（idle／blank 等狀態幀沒有新畫面）。
-        guard let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, createIfNecessary: false) as? [[SCStreamFrameInfo: Any]],
-              let raw = attachments.first?[.status] as? Int, SCFrameStatus(rawValue: raw) == .complete,
+        let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, createIfNecessary: false) as? [[SCStreamFrameInfo: Any]]
+        let rawStatus = attachments?.first?[.status] as? Int
+        // 心跳：任何「串流還活著」的回呼（含畫面沒變的 idle）都算，卡住監看才不會在來源靜止時誤重啟（規則在 Core 的 VideoFrameStatus）。
+        if VideoFrameStatus.isHeartbeat(rawStatus: rawStatus) {
+            lock.lock(); lastCallbackUptime = ProcessInfo.processInfo.systemUptime; lock.unlock()
+        }
+        // 只顯示帶畫面的幀：complete 與 started（重啟／恢復後的第一幀；只收 complete 會丟掉它，靜止來源就一直沒畫面）。
+        guard let attachments, let rawStatus, VideoFrameStatus(rawValue: rawStatus)?.carriesNewPicture == true,
               let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
 
         if let surface = CVPixelBufferGetIOSurface(pixelBuffer)?.takeUnretainedValue() {

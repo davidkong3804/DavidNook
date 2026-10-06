@@ -19,16 +19,18 @@ final class FloatingVideoWindowController {
     private let view: FloatingVideoView
     private var aspectRatio: Double
 
-    var onClose: (() -> Void)?
-    var onReturnToNotch: (() -> Void)?
-    var onPinToNotch: (() -> Void)?
+    /// 取消釘選（✕、雙擊、右鍵選單）。
+    var onUnpin: (() -> Void)?
 
-    init(display: VideoFrameDisplay, aspectRatio: Double) {
+    /// `defaultWidth`：第一次釘選（沒有記住的位置與大小）時的寬度＝設定頁的「釘選視窗的預設大小」。
+    init(display: VideoFrameDisplay, aspectRatio: Double, defaultWidth: Double) {
         self.aspectRatio = aspectRatio
         let screens = NSScreen.screens.map(\.visibleFrame)
-        let primary = NSScreen.screens.first?.visibleFrame ?? NSScreen.main?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
+        // 第一次出現在有瀏海（或選單列）的螢幕、瀏海正下方置中；沒有瀏海的螢幕取主螢幕。
+        let primary = (NSScreen.screens.first { $0.safeAreaInsets.top > 0 } ?? NSScreen.screens.first ?? NSScreen.main)?.visibleFrame
+            ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
         let saved = Defaults[.videoFloatingPlacement].flatMap { try? JSONDecoder().decode(FloatingVideoPlacement.self, from: $0) }
-        let frame = FloatingVideoGeometry.restoredFrame(saved: saved, aspectRatio: aspectRatio, screens: screens, primary: primary)
+        let frame = FloatingVideoGeometry.restoredFrame(saved: saved, aspectRatio: aspectRatio, screens: screens, primary: primary, defaultWidth: defaultWidth)
         panel = FloatingVideoPanel(contentRect: frame)
         view = FloatingVideoView(display: display, strings: Self.strings)
         view.aspectRatio = aspectRatio
@@ -42,9 +44,7 @@ final class FloatingVideoWindowController {
         panel.alphaValue = CGFloat(opacity)
         view.setOpacity(opacity)
 
-        view.onClose = { [weak self] in self?.onClose?() }
-        view.onReturnToNotch = { [weak self] in self?.onReturnToNotch?() }
-        view.onPinToNotch = { [weak self] in self?.onPinToNotch?() }
+        view.onUnpin = { [weak self] in self?.onUnpin?() }
         view.onOpacityChange = { [weak self] value in self?.setOpacity(value) }
         view.onInteractionEnd = { [weak self] _ in self?.savePlacement() }
     }
@@ -68,7 +68,7 @@ final class FloatingVideoWindowController {
 
     func close() {
         savePlacement()
-        view.onClose = {}; view.onReturnToNotch = {}; view.onPinToNotch = {}; view.onOpacityChange = { _ in }; view.onInteractionEnd = { _ in }
+        view.onUnpin = {}; view.onOpacityChange = { _ in }; view.onInteractionEnd = { _ in }
         panel.orderOut(nil)
         panel.close()
     }
@@ -87,12 +87,13 @@ final class FloatingVideoWindowController {
 
     private static var strings: FloatingVideoStrings {
         FloatingVideoStrings(
-            close: String(localized: "Close", comment: "Floating video window: tooltip of the close button."),
-            returnToNotch: String(localized: "Return to Notch", comment: "Floating video window: button that closes the floating window and shows the video in the notch again."),
-            pinToNotch: String(localized: "Pin to Notch", comment: "Floating video window: button that turns the floating window into the capsule under the collapsed notch."),
+            unpin: String(localized: "Unpin", comment: "Floating video window: tooltip of the x button, menu item and double-click action that unpin the video."),
             opacity: String(localized: "Opacity", comment: "Floating video window: tooltip of the button (and menu title) that changes the window opacity."),
             protectedTitle: String(localized: "This source is content-protected", comment: "Video tab: shown over a black picture that looks like protected (DRM) content."),
-            protectedHint: String(localized: "The system does not allow capturing it. Try the source's own picture-in-picture, or an unprotected source such as YouTube", comment: "Album art slot: explains protected content and what to try instead.")
+            protectedHint: String(localized: "The system does not allow capturing it. Try the source's own picture-in-picture, or an unprotected source such as YouTube", comment: "Album art slot: explains protected content and what to try instead."),
+            reconnecting: String(localized: "Reconnecting…", comment: "Floating video window: shown while the picture stopped coming in and the capture is being restarted."),
+            stalledTitle: String(localized: "No picture is coming in", comment: "Floating video window: title of the error shown when the picture did not come back after a restart."),
+            stalledHint: String(localized: "Unpin and pin the video again, or choose the window again.", comment: "Floating video window: hint under the no-picture error.")
         )
     }
 }

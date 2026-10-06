@@ -187,7 +187,7 @@ public final class FloatingVideoView: NSView {
         switch content {
         case .live: break
         case .protectedNotice: noticeTitle.stringValue = strings.protectedTitle; noticeHint.stringValue = strings.protectedHint
-        case .reconnecting: noticeTitle.stringValue = strings.reconnecting; noticeHint.stringValue = ""
+        case .reconnecting: noticeTitle.stringValue = strings.reconnecting; noticeHint.stringValue = String()
         case .stalledNotice: noticeTitle.stringValue = strings.stalledTitle; noticeHint.stringValue = strings.stalledHint
         }
     }

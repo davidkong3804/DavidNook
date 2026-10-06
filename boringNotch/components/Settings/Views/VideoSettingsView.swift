@@ -23,7 +23,7 @@ struct VideoSettingsView: View {
                         Task { @MainActor in VideoCapsuleController.shared.stop() }
                     }
                 }
-                LabeledContent("Video size") {
+                LabeledContent("Pinned window default size") {
                     HStack {
                         Slider(
                             value: Binding(get: { width }, set: { width = $0 }),
@@ -44,10 +44,10 @@ struct VideoSettingsView: View {
                 Text("Video")
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
-                Text("Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a capsule outside the notch. The video size sets how wide the video can grow in the Home panel and how big the pinned capsule is. The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead.")
+                Text("Pick one window with the small button on the album cover and its live picture replaces the cover; click the video to pin it as a floating window on your desktop. The default size sets how wide the video can grow in the Home panel and how big the pinned window is the first time (afterwards it remembers the size and position you gave it). The picture stays in memory only: it is never saved, uploaded or recorded, and no sound is captured. Protected content (such as Netflix) cannot be captured by macOS and shows a notice instead.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text("The floating-window button on the video opens it as a free-floating window on your desktop: drag it anywhere, drag a corner to resize, and use the buttons that appear on hover to change its opacity. It is your own window, so screenshots and screen sharing may show it.")
+                Text("Click the video in the cover slot to pin it: it becomes a floating window you can drag anywhere and resize by dragging a corner. Use the buttons that appear on hover to unpin or change its opacity; double-click also unpins. It is your own window, so screenshots and screen sharing may show it.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 }
