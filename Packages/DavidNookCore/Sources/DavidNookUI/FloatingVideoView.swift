@@ -125,6 +125,8 @@ public final class FloatingVideoView: NSView {
         root.borderColor = NSColor(white: 1, alpha: 0.18).cgColor
 
         videoLayer.contentsGravity = .resizeAspect
+        // 手動建立的子圖層預設會對 contents 做 0.25 秒淡入淡出；每秒 20 幀時會變成殘影／像投影片。NSView 自己的 backing layer 已關閉，這裡也關掉。
+        videoLayer.actions = ["contents": NSNull(), "bounds": NSNull(), "position": NSNull(), "frame": NSNull()]
         videoLayer.backgroundColor = NSColor.black.cgColor
         root.addSublayer(videoLayer)
         display.attach(videoLayer)

@@ -138,6 +138,8 @@ final class VideoCapsuleController: ObservableObject {
 
     private func watchdogTick() {
         let beat = source.lastCallbackTime
+        // 診斷：過去 1 秒各幀狀態的次數（只有數字）。complete 長期為 0 代表 SCStream 沒送新畫面（不是顯示端的問題）。
+        log.info("frames/s \(self.source.drainStatusSummary(), privacy: .public) health=\(String(describing: self.watchdog.health), privacy: .public)")
         if beat > lastForwardedBeat { lastForwardedBeat = beat; watchdog.heartbeat(at: beat) }
         let action = watchdog.tick(at: now)
         if watchdog.health != health {
