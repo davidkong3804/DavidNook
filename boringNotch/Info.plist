@@ -9,5 +9,7 @@
 		<string>en</string>
 		<string>zh-Hant</string>
 	</array>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>DavidNook shows a live, scaled-down picture of the one window you pick inside the notch. The picture stays in memory only; it is never saved or uploaded, and no sound is captured.</string>
 </dict>
 </plist>

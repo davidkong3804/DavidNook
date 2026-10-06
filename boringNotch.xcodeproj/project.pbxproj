@@ -802,7 +802,6 @@
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "DavidNook uses Apple events to read the current track, favorite state and volume of the Music app and to control its playback. This only happens when Now Playing information is unavailable, or when the Music app is the one playing.";
-				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "DavidNook shows a live, scaled-down picture of the one window you pick inside the notch. The picture stays in memory only; it is never saved or uploaded, and no sound is captured.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024-2026 The Bored Team and contributors (boring.notch); DavidNook modifications © 2026 davidkong3804. Licensed under GPL-3.0.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -863,7 +862,6 @@
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "DavidNook uses Apple events to read the current track, favorite state and volume of the Music app and to control its playback. This only happens when Now Playing information is unavailable, or when the Music app is the one playing.";
-				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "DavidNook shows a live, scaled-down picture of the one window you pick inside the notch. The picture stays in memory only; it is never saved or uploaded, and no sound is captured.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024-2026 The Bored Team and contributors (boring.notch); DavidNook modifications © 2026 davidkong3804. Licensed under GPL-3.0.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
