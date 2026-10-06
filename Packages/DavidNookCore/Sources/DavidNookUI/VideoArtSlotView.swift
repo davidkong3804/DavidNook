@@ -24,19 +24,15 @@ public struct VideoArtSlotStrings {
     public var chooseWindow: String
     public var crop: String
     public var resetCrop: String
-    public var floatHelp: String
-    public var unfloatHelp: String
 
     public init(
         captureWindow: String, changeWindow: String, stop: String, pinHelp: String, unpinHelp: String, backToCover: String,
         blackTitle: String, blackHint: String, closedTitle: String, closedHint: String,
         permissionTitle: String, permissionHint: String, openSettings: String,
         errorTitle: String, pickerFailedHint: String, streamErrorHint: String, unknownErrorHint: String, chooseWindow: String,
-        crop: String = "Crop", resetCrop: String = "Reset crop",
-        floatHelp: String = "Show as a floating window", unfloatHelp: String = "Return the floating window to the notch"
+        crop: String = "Crop", resetCrop: String = "Reset crop"
     ) {
         self.crop = crop; self.resetCrop = resetCrop
-        self.floatHelp = floatHelp; self.unfloatHelp = unfloatHelp
         self.captureWindow = captureWindow; self.changeWindow = changeWindow; self.stop = stop
         self.pinHelp = pinHelp; self.unpinHelp = unpinHelp; self.backToCover = backToCover
         self.blackTitle = blackTitle; self.blackHint = blackHint; self.closedTitle = closedTitle; self.closedHint = closedHint
@@ -60,15 +56,13 @@ public struct VideoArtSlotCallbacks {
     public var onCrop: () -> Void
     /// 重設裁切（回到整個視窗）。
     public var onResetCrop: () -> Void
-    /// 開啟（或已開啟時收回）桌面浮動視窗。
-    public var onToggleFloating: () -> Void
 
     public init(
         onChoose: @escaping () -> Void, onStop: @escaping () -> Void, onTogglePin: @escaping () -> Void,
         onBackToCover: @escaping () -> Void, onOpenSettings: @escaping () -> Void,
-        onCrop: @escaping () -> Void = {}, onResetCrop: @escaping () -> Void = {}, onToggleFloating: @escaping () -> Void = {}
+        onCrop: @escaping () -> Void = {}, onResetCrop: @escaping () -> Void = {}
     ) {
-        self.onCrop = onCrop; self.onResetCrop = onResetCrop; self.onToggleFloating = onToggleFloating
+        self.onCrop = onCrop; self.onResetCrop = onResetCrop
         self.onChoose = onChoose; self.onStop = onStop; self.onTogglePin = onTogglePin
         self.onBackToCover = onBackToCover; self.onOpenSettings = onOpenSettings
     }
@@ -84,8 +78,6 @@ public struct VideoArtSlotView<Cover: View>: View {
     let isPinned: Bool
     /// 目前有裁切（hover 按鈕多一顆「重設裁切」）。
     let hasCrop: Bool
-    /// 桌面浮動視窗開著（按鈕變成「收回」）。
-    let isFloating: Bool
     let strings: VideoArtSlotStrings
     let display: VideoFrameDisplay
     let callbacks: VideoArtSlotCallbacks
@@ -97,11 +89,11 @@ public struct VideoArtSlotView<Cover: View>: View {
     @State private var isHovering = false
 
     public init(
-        state: VideoCapsuleState, isPinned: Bool, hasCrop: Bool = false, isFloating: Bool = false, strings: VideoArtSlotStrings, display: VideoFrameDisplay,
+        state: VideoCapsuleState, isPinned: Bool, hasCrop: Bool = false, strings: VideoArtSlotStrings, display: VideoFrameDisplay,
         callbacks: VideoArtSlotCallbacks, staticFrame: CGImage? = nil, forceHover: Bool = false,
         @ViewBuilder cover: () -> Cover
     ) {
-        self.hasCrop = hasCrop; self.isFloating = isFloating
+        self.hasCrop = hasCrop
         self.state = state; self.isPinned = isPinned; self.strings = strings; self.display = display
         self.callbacks = callbacks; self.staticFrame = staticFrame; self.forceHover = forceHover; self.cover = cover()
     }
@@ -198,7 +190,6 @@ public struct VideoArtSlotView<Cover: View>: View {
                     if hasCrop {
                         iconButton("arrow.counterclockwise", help: strings.resetCrop, action: callbacks.onResetCrop)
                     }
-                    iconButton(isFloating ? "pip.exit" : "pip.enter", help: isFloating ? strings.unfloatHelp : strings.floatHelp, action: callbacks.onToggleFloating)
                     iconButton("stop.fill", help: strings.stop, action: callbacks.onStop)
                 }
                 .padding(.bottom, 5)

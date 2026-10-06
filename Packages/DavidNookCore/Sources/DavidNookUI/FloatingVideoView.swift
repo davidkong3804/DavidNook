@@ -3,20 +3,23 @@ import DavidNookCore
 
 /// 浮動視窗上所有文案；App 傳入在地化後的字串。
 public struct FloatingVideoStrings {
-    public var close: String
-    public var returnToNotch: String
-    public var pinToNotch: String
+    public var unpin: String
     public var opacity: String
     public var protectedTitle: String
     public var protectedHint: String
+    public var reconnecting: String
+    public var stalledTitle: String
+    public var stalledHint: String
 
     public init(
-        close: String = "Close", returnToNotch: String = "Return to Notch", pinToNotch: String = "Pin to Notch",
-        opacity: String = "Opacity", protectedTitle: String = "This source is content-protected",
-        protectedHint: String = "The system does not allow capturing it. Try the source's own picture-in-picture."
+        unpin: String = "Unpin", opacity: String = "Opacity", protectedTitle: String = "This source is content-protected",
+        protectedHint: String = "The system does not allow capturing it. Try the source's own picture-in-picture.",
+        reconnecting: String = "Reconnecting…", stalledTitle: String = "No picture is coming in",
+        stalledHint: String = "Unpin and pin the video again, or choose the window again."
     ) {
-        self.close = close; self.returnToNotch = returnToNotch; self.pinToNotch = pinToNotch; self.opacity = opacity
+        self.unpin = unpin; self.opacity = opacity
         self.protectedTitle = protectedTitle; self.protectedHint = protectedHint
+        self.reconnecting = reconnecting; self.stalledTitle = stalledTitle; self.stalledHint = stalledHint
     }
 }
 
@@ -69,16 +72,15 @@ final class FloatingIconButton: NSButton {
 /// - 畫面：一個 CALayer，`contents` 由 `VideoFrameDisplay` 直接放 IOSurface（與封面槽、膠囊同一份、同一條串流）。
 /// - 移動：在視窗任一處按住拖曳；縮放：拖四角（約 18 pt 感應區），鎖定長寬比（`FloatingVideoGeometry.resize`）。
 ///   選擇自訂四角拖曳而非 NSWindow.resizeIncrements／aspectRatio：無邊框視窗沒有系統縮放邊，自訂版行為可由純函式測試。
-/// - hover 才出現控制列（關閉、收回瀏海、透明度、釘選到瀏海）；雙擊＝收回瀏海；右鍵選單有相同動作。
+/// - hover 才出現控制列（✕＝取消釘選、透明度）；雙擊＝取消釘選；右鍵選單有取消釘選與透明度。
 /// - 黑畫面（疑似受保護）：蓋上簡短說明，控制列一直顯示（可關閉）。
 @MainActor
 public final class FloatingVideoView: NSView {
-    public enum Content: Equatable { case live, protectedNotice }
+    public enum Content: Equatable { case live, protectedNotice, reconnecting, stalledNotice }
 
     public var strings: FloatingVideoStrings { didSet { refreshStrings() } }
-    public var onClose: () -> Void = {}
-    public var onReturnToNotch: () -> Void = {}
-    public var onPinToNotch: () -> Void = {}
+    /// 取消釘選（✕、雙擊、右鍵選單）。
+    public var onUnpin: () -> Void = {}
     public var onOpacityChange: (Double) -> Void = { _ in }
     /// 移動或縮放結束（滑鼠放開）時回報最終 frame，給控制器記住位置。
     public var onInteractionEnd: (CGRect) -> Void = { _ in }
@@ -165,10 +167,8 @@ public final class FloatingVideoView: NSView {
         controlBar.layer?.cornerRadius = 12
         controlBar.layer?.cornerCurve = .continuous
         buttons = [
-            FloatingIconButton(symbol: "xmark", help: strings.close, target: self, action: #selector(closeTapped)),
-            FloatingIconButton(symbol: "pip.exit", help: strings.returnToNotch, target: self, action: #selector(returnTapped)),
+            FloatingIconButton(symbol: "xmark", help: strings.unpin, target: self, action: #selector(unpinTapped)),
             FloatingIconButton(symbol: "circle.lefthalf.filled", help: strings.opacity, target: self, action: #selector(opacityTapped)),
-            FloatingIconButton(symbol: "pin", help: strings.pinToNotch, target: self, action: #selector(pinTapped)),
         ]
         buttons.forEach(controlBar.addSubview)
         controlBar.alphaValue = 0
@@ -176,17 +176,28 @@ public final class FloatingVideoView: NSView {
     }
 
     private func refreshStrings() {
-        guard buttons.count == 4 else { return }
-        let helps = [strings.close, strings.returnToNotch, strings.opacity, strings.pinToNotch]
+        guard buttons.count == 2 else { return }
+        let helps = [strings.unpin, strings.opacity]
         for (button, help) in zip(buttons, helps) { button.toolTip = help; button.setAccessibilityLabel(help) }
-        noticeTitle.stringValue = strings.protectedTitle
-        noticeHint.stringValue = strings.protectedHint
+        applyNoticeText()
         needsLayout = true
     }
 
+    private func applyNoticeText() {
+        switch content {
+        case .live: break
+        case .protectedNotice: noticeTitle.stringValue = strings.protectedTitle; noticeHint.stringValue = strings.protectedHint
+        case .reconnecting: noticeTitle.stringValue = strings.reconnecting; noticeHint.stringValue = ""
+        case .stalledNotice: noticeTitle.stringValue = strings.stalledTitle; noticeHint.stringValue = strings.stalledHint
+        }
+    }
+
     private func applyContent() {
-        noticeView.isHidden = content != .protectedNotice
-        videoLayer.isHidden = content == .protectedNotice
+        applyNoticeText()
+        noticeView.isHidden = content == .live
+        // 重新連線中：半透明蓋在最後一幀上；其他說明不透明。
+        noticeView.layer?.backgroundColor = NSColor(white: 0.12, alpha: content == .reconnecting ? 0.78 : 1).cgColor
+        videoLayer.isHidden = content == .protectedNotice || content == .stalledNotice
         updateControlsVisibility(animated: false)
         needsLayout = true
     }
@@ -211,7 +222,7 @@ public final class FloatingVideoView: NSView {
         let available = bounds.height - barBottom - 6
         let showsHint = titleSize.height + 4 + hintSize.height <= available
         noticeHint.isHidden = !showsHint
-        noticeView.toolTip = strings.protectedHint
+        noticeView.toolTip = content == .protectedNotice ? strings.protectedHint : (content == .stalledNotice ? strings.stalledHint : nil)
         let total = showsHint ? titleSize.height + 4 + hintSize.height : titleSize.height
         let region = bounds.height - barBottom   // 控制列在上方，說明置中於它下方的區域
         let top = min(region / 2 + total / 2, region)
@@ -251,7 +262,7 @@ public final class FloatingVideoView: NSView {
     public func setHoverForTesting(_ value: Bool) { hovering = value; updateControlsVisibility(animated: false) }
 
     /// 控制列目前是否可見（hover 中，或黑畫面說明時一直顯示）。
-    public var controlsAreVisible: Bool { hovering || content == .protectedNotice }
+    public var controlsAreVisible: Bool { hovering || content != .live }
     var controlBarForTesting: NSView { controlBar }
     var buttonsForTesting: [NSButton] { buttons }
 
@@ -285,6 +296,13 @@ public final class FloatingVideoView: NSView {
     public override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     public override var mouseDownCanMoveWindow: Bool { false }
 
+    /// 控制列透明（沒 hover）時不可攔截點擊：否則從那裡開始拖曳會變成按到看不見的按鈕。
+    public override func hitTest(_ point: NSPoint) -> NSView? {
+        let hit = super.hitTest(point)
+        if !controlsAreVisible, let hit, hit !== self, hit.isDescendant(of: controlBar) { return self }
+        return hit
+    }
+
     /// 滑鼠位置（視圖座標）落在哪個角的感應區；不在角落＝nil。
     func corner(at point: CGPoint) -> FloatingVideoCorner? {
         let z = Self.cornerZone
@@ -303,10 +321,10 @@ public final class FloatingVideoView: NSView {
         guard let window else { return }
         if event.clickCount >= 2 {
             drag = nil
-            onReturnToNotch()
+            onUnpin()
             return
         }
-        let mouse = NSEvent.mouseLocation
+        let mouse = window.convertPoint(toScreen: event.locationInWindow)
         let frame = window.frame
         if let corner = corner(at: convert(event.locationInWindow, from: nil)) {
             let cornerPoint: CGPoint
@@ -324,7 +342,8 @@ public final class FloatingVideoView: NSView {
 
     public override func mouseDragged(with event: NSEvent) {
         guard let window, let drag else { return }
-        let mouse = NSEvent.mouseLocation
+        // 用事件自己的視窗座標換算成螢幕座標（視窗一邊移動時仍然正確，也能在測試中合成事件）。
+        let mouse = window.convertPoint(toScreen: event.locationInWindow)
         switch drag {
         case .move(let start, let startFrame):
             window.setFrameOrigin(CGPoint(x: startFrame.minX + mouse.x - start.x, y: startFrame.minY + mouse.y - start.y))
@@ -343,9 +362,7 @@ public final class FloatingVideoView: NSView {
 
     // MARK: 按鈕與右鍵選單
 
-    @objc private func closeTapped() { onClose() }
-    @objc private func returnTapped() { onReturnToNotch() }
-    @objc private func pinTapped() { onPinToNotch() }
+    @objc private func unpinTapped() { onUnpin() }
     @objc private func opacityTapped() { onOpacityChange(FloatingVideoOpacity.next(after: opacity)) }
     @objc private func opacityMenuItemChosen(_ item: NSMenuItem) { onOpacityChange(FloatingVideoOpacity.clamped(Double(item.tag) / 100)) }
 
@@ -359,8 +376,7 @@ public final class FloatingVideoView: NSView {
             item.target = self
             menu.addItem(item)
         }
-        add(strings.returnToNotch, #selector(returnTapped))
-        add(strings.pinToNotch, #selector(pinTapped))
+        add(strings.unpin, #selector(unpinTapped))
         let opacityItem = NSMenuItem(title: strings.opacity, action: nil, keyEquivalent: "")
         let sub = NSMenu()
         for step in FloatingVideoOpacity.steps {
@@ -374,8 +390,6 @@ public final class FloatingVideoView: NSView {
         }
         opacityItem.submenu = sub
         menu.addItem(opacityItem)
-        menu.addItem(.separator())
-        add(strings.close, #selector(closeTapped))
         return menu
     }
 }

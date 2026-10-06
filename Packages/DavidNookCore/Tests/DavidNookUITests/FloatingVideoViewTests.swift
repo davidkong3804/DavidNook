@@ -113,21 +113,17 @@ final class FloatingVideoViewTests: XCTestCase {
     func testButtonsFireCallbacks() {
         let view = makeView()
         var log: [String] = []
-        view.onClose = { log.append("close") }
-        view.onReturnToNotch = { log.append("return") }
-        view.onPinToNotch = { log.append("pin") }
+        view.onUnpin = { log.append("unpin") }
         view.onOpacityChange = { log.append("opacity \($0)") }
         view.setOpacity(1.0)
         view.buttonsForTesting.forEach { $0.performClick(nil) }
-        XCTAssertEqual(log, ["close", "return", "opacity 0.8", "pin"])
+        XCTAssertEqual(log, ["unpin", "opacity 0.8"])
     }
 
-    func testContextMenuHasSameActions() {
+    func testContextMenuOpacitySubmenu() {
         let view = makeView()
         view.setOpacity(0.6)
-        let menu = view.makeMenu()
-        XCTAssertEqual(menu.items.filter { !$0.isSeparatorItem }.map(\.title), ["Return to Notch", "Pin to Notch", "Opacity", "Close"])
-        let sub = menu.items.first { $0.title == "Opacity" }?.submenu
+        let sub = view.makeMenu().items.first { $0.title == "Opacity" }?.submenu
         XCTAssertEqual(sub?.items.map(\.title), ["100%", "80%", "60%", "40%"])
         XCTAssertEqual(sub?.items.map(\.state), [.off, .off, .on, .off])
         var chosen: Double?
@@ -172,6 +168,19 @@ final class FloatingVideoViewTests: XCTestCase {
         let small = makeView(width: 160)
         small.content = .protectedNotice
         try snapshot(small, name: "protected-notice-min")
+    }
+
+    func testSnapshotReconnecting() throws {
+        let view = makeView(width: 320)
+        view.setStaticFrame(fakeFrame(width: 640, height: 360))
+        view.content = .reconnecting
+        try snapshot(view, name: "reconnecting")
+    }
+
+    func testSnapshotStalled() throws {
+        let view = makeView(width: 320)
+        view.content = .stalledNotice
+        try snapshot(view, name: "stalled")
     }
 
     func testSnapshotPortrait() throws {

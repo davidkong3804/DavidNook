@@ -60,8 +60,7 @@ struct LyricsPillLayout: Equatable {
     var marquee: LyricsMarquee
 
     init(text: String, lineDuration: TimeInterval?, style: LyricsPillStyle) {
-        let font = LyricsFont.nsFont(size: style.fontSize, weight: .medium)
-        let width = ceil((text as NSString).size(withAttributes: [.font: font]).width)
+        let width = LyricsTextWidthCache.shared.width(text: text, fontSize: style.fontSize)
         textWidth = width
         pillWidth = LyricsPillMetrics.pillWidth(textWidth: width, maxWidth: style.maxWidth)
         containerWidth = LyricsPillMetrics.textContainerWidth(pillWidth: pillWidth)
@@ -239,5 +238,48 @@ private struct LyricsPillBody: View {
             LyricsPillTextLayer(text: shown.line.text, elapsed: elapsed, layout: layout, style: style)
         }
         .frame(width: layout.pillWidth, height: LyricsPillMetrics.height)
+    }
+}
+
+/// 歌詞文字寬度的量測快取（鍵＝文字＋字級）：換句才重新量測，TimelineView 每個 tick 只算捲動位移。
+/// （原本每個 tick 都重做字型查找與文字量測，是收合時 CPU 的熱點。）有容量上限，只存數字不存畫面。
+final class LyricsTextWidthCache: @unchecked Sendable {
+    static let shared = LyricsTextWidthCache()
+
+    private struct Key: Hashable { var text: String; var size: CGFloat }
+    private let measure: (String, CGFloat) -> CGFloat
+    private let capacity: Int
+    private let lock = NSLock()
+    private var values: [Key: CGFloat] = [:]
+    private var order: [Key] = []
+    private(set) var measureCount = 0
+
+    init(capacity: Int = 64, measure: @escaping (String, CGFloat) -> CGFloat = LyricsTextWidthCache.measureWithFont) {
+        self.capacity = max(capacity, 1)
+        self.measure = measure
+    }
+
+    var count: Int { lock.lock(); defer { lock.unlock() }; return values.count }
+
+    func width(text: String, fontSize: CGFloat) -> CGFloat {
+        let key = Key(text: text, size: fontSize)
+        lock.lock()
+        if let hit = values[key] { lock.unlock(); return hit }
+        measureCount += 1
+        lock.unlock()
+        let width = measure(text, fontSize)
+        lock.lock()
+        if values[key] == nil {
+            if order.count >= capacity, let oldest = order.first { order.removeFirst(); values[oldest] = nil }
+            values[key] = width
+            order.append(key)
+        }
+        lock.unlock()
+        return width
+    }
+
+    static func measureWithFont(_ text: String, _ size: CGFloat) -> CGFloat {
+        let font = LyricsFont.nsFont(size: size, weight: .medium)
+        return ceil((text as NSString).size(withAttributes: [.font: font]).width)
     }
 }

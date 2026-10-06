@@ -12,35 +12,25 @@ final class VideoCropEditorTests: XCTestCase {
 
     // MARK: 長寬比跟著裁切區域
 
-    func testCropRatioFlowsIntoCapsulePlacementAndStaysInsideTheWindow() throws {
+    /// 任意裁切比例：釘選的浮動視窗大小仍在螢幕內、比例等於裁切比例（夾在 1:4…4:1）。
+    func testCropRatioFlowsIntoFloatingWindowSize() throws {
+        let screen = CGRect(x: 0, y: 0, width: 1440, height: 875)
         var checked = 0
         for cx in stride(from: 0.0, through: 0.9, by: 0.15) {
             for w in stride(from: 0.1, through: 1.0, by: 0.15) {
                 for h in stride(from: 0.1, through: 1.0, by: 0.15) {
                     let crop = NormalizedCropRect(x: cx, y: cx, width: w, height: h)
                     let ratio = try XCTUnwrap(crop.aspectRatio(windowSize: window))
-                    for lyrics in [false, true] {
-                        guard let r = VideoCapsulePlacement.rect(isVisible: true, notchBottom: 32, dropDistance: 6, lyricsVisible: lyrics,
-                                                                 videoWidth: 320, aspectRatio: ratio) else { continue }
-                        checked += 1
-                        XCTAssertTrue(CGRect(x: 0, y: 0, width: closed.width, height: closed.height - 8).contains(r.insetBy(dx: 0.001, dy: 0.001)), "\(crop) \(r)")
-                        // 夾限後的比例仍在 1:2…2:1
-                        let shown = r.width / r.height
-                        XCTAssertTrue(shown >= 0.5 - 0.001 && shown <= 2 + 0.001, "\(shown)")
-                    }
+                    let size = FloatingVideoGeometry.clampedSize(width: 320, aspectRatio: ratio, in: screen)
+                    checked += 1
+                    XCTAssertLessThanOrEqual(size.width, screen.width)
+                    XCTAssertLessThanOrEqual(size.height, screen.height)
+                    let eff = min(max(ratio, 0.25), 4)
+                    XCTAssertEqual(size.width / size.height, eff, accuracy: 0.001)
                 }
             }
         }
         XCTAssertGreaterThan(checked, 50)
-    }
-
-    func testCroppedRatioChangesTheCapsuleShape() throws {
-        let sixteenNine = try XCTUnwrap(NormalizedCropRect.full.aspectRatio(windowSize: window))   // 1.6
-        let squareCrop = try XCTUnwrap(NormalizedCropRect(x: 0.2, y: 0.1, width: 0.4, height: 0.64).aspectRatio(windowSize: window))   // 1.0
-        let a = try XCTUnwrap(VideoCapsulePlacement.rect(isVisible: true, notchBottom: 32, dropDistance: 6, lyricsVisible: false, videoWidth: 240, aspectRatio: sixteenNine))
-        let b = try XCTUnwrap(VideoCapsulePlacement.rect(isVisible: true, notchBottom: 32, dropDistance: 6, lyricsVisible: false, videoWidth: 240, aspectRatio: squareCrop))
-        XCTAssertEqual(a.width / a.height, 1.6, accuracy: 0.01)
-        XCTAssertEqual(b.width / b.height, 1.0, accuracy: 0.01)
     }
 
     func testVeryNarrowCropIsClampedByTheMetrics() {
@@ -146,18 +136,5 @@ final class VideoCropEditorTests: XCTestCase {
         let img = try renderImage(slot)
         try writeSnapshot(img, named: "videocrop-slot-cropped-hover")
 
-        // 收合膠囊（歌詞在上）
-        let layout = VideoCapsuleStack.layout(notchBottom: 32, dropDistance: 6, lyricsVisible: true, lyricsWidth: 140, videoWidth: 240, aspectRatio: ratio)
-        let v = try XCTUnwrap(layout.video)
-        let scene = ZStack(alignment: .topLeading) {
-            Color(white: 0.78)
-            UnevenRoundedRectangle(bottomLeadingRadius: 14, bottomTrailingRadius: 14).fill(Color.black).frame(width: 200, height: 32)
-                .position(x: closed.width / 2, y: 16)
-            LyricsPillContent(text: "夜風輕輕吹過窗台", elapsed: 0, lineDuration: 5).position(x: closed.width / 2, y: 38 + 11)
-            VideoCapsuleView(size: v.size, isVisible: true, isHovering: false, display: VideoFrameDisplay(), motion: NotchMotion(), staticFrame: frame)
-                .position(x: v.midX, y: v.midY)
-        }.frame(width: closed.width, height: closed.height)
-        try writeSnapshot(try renderImage(scene), named: "videocrop-capsule-cropped")
-        XCTAssertLessThanOrEqual(v.maxY, closed.height - 8 + 0.01)
     }
 }

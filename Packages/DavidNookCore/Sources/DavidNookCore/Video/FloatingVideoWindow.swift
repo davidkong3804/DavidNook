@@ -49,8 +49,8 @@ public enum FloatingVideoCorner: Equatable, Sendable, CaseIterable {
 public enum FloatingVideoGeometry {
     public static let minimumWidth: Double = 160
     public static let defaultWidth: Double = 320
-    /// 預設位置離螢幕右下角的距離。
-    public static let cornerMargin: Double = 24
+    /// 第一次出現時，視窗上緣離螢幕可視範圍上緣（瀏海／選單列下緣）的距離。
+    public static let topMargin: Double = 6
     /// 視窗比例（寬÷高）夾在 1:4…4:1，避免極端來源讓視窗變成細線。
     public static let aspectRatioRange: ClosedRange<Double> = 0.25...4.0
     static let fallbackAspectRatio: Double = 16.0 / 9.0
@@ -119,9 +119,11 @@ public enum FloatingVideoGeometry {
         return CGRect(x: x, y: y, width: rect.width, height: rect.height)
     }
 
-    /// 開啟時的位置：記住的位置的中心還在某個螢幕範圍內 → 沿用（夾限大小並推回螢幕內）；
-    /// 否則（沒記過、螢幕被拔掉、解析度改變）→ 主螢幕右下角（寬度仍沿用記住的）。
-    public static func restoredFrame(saved: FloatingVideoPlacement?, aspectRatio: Double, screens: [CGRect], primary: CGRect) -> CGRect {
+    /// 釘選時的位置：記住的位置的中心還在某個螢幕範圍內 → 沿用（夾限大小並推回螢幕內）；
+    /// 否則（第一次、螢幕被拔掉、解析度改變）→ 瀏海正下方置中（寬度沿用記住的，沒有就用 `defaultWidth`＝設定頁的預設大小）。
+    public static func restoredFrame(
+        saved: FloatingVideoPlacement?, aspectRatio: Double, screens: [CGRect], primary: CGRect, defaultWidth: Double = FloatingVideoGeometry.defaultWidth
+    ) -> CGRect {
         let ratio = sanitized(ratio: aspectRatio)
         if let saved, saved.width.isFinite, saved.x.isFinite, saved.y.isFinite, saved.width > 0 {
             let center = CGPoint(x: saved.x + saved.width / 2, y: saved.y + saved.width / ratio / 2)
@@ -133,7 +135,7 @@ public enum FloatingVideoGeometry {
         let width = saved.flatMap { $0.width.isFinite && $0.width > 0 ? $0.width : nil } ?? defaultWidth
         let size = clampedSize(width: width, aspectRatio: ratio, in: primary)
         let rect = CGRect(
-            x: primary.maxX - size.width - cornerMargin, y: primary.minY + cornerMargin, width: size.width, height: size.height
+            x: primary.midX - size.width / 2, y: primary.maxY - topMargin - size.height, width: size.width, height: size.height
         )
         return nudgedInside(rect, in: primary)
     }
