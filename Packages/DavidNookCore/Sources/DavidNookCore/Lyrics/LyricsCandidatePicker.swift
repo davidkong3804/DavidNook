@@ -36,6 +36,13 @@ public struct VideoDurationPolicy: Equatable, Sendable {
 ///    預設恆為 0）。放在時間軸共識之後：殘留的簡體字可由後續轉換修復，錯誤的時間軸卻無法修復。
 /// 5. LRCLIB `id`（小者優先），確保結果與輸入順序無關。
 ///
+/// ## 影片來源（`query.isVideoDerived`）
+/// 歌名／歌手是從影片標題萃取的、`duration` 是影片長度時，長度規則改為不對稱（`VideoDurationPolicy`：
+/// 影片可比歌長最多 60 秒、比歌短最多 5 秒；歌手未知只靠歌名時，影片最多長 20 秒），
+/// 並**要求候選的歌名／歌手與查詢相符**（簡繁、大小寫、標點不敏感）——長度放寬後，只有歌名／歌手把關才不會放錯歌。
+/// 歌名：折疊後相同，或較短者 ≥ 4 字且被另一方包含（`Shape of You` 對 `Shape of You (Acoustic)`）；歌手未知時要求完全相同。
+/// 歌手：折疊後相同，或較短者 ≥ 2 字且被另一方包含（合作歌手）。排序規則不變。非影片查詢完全不受影響。
+///
 /// 絕不使用 `albumName`（來源資料很髒）。
 ///
 /// 簡繁分類由注入的 `scriptClassifier` 提供（餵入的是剝除檔頭後、非空白行以換行串接的全文）。
@@ -47,22 +54,27 @@ public struct LyricsCandidatePicker: Sendable {
     public let stripper: LyricsMetaStripper
     /// 計算一份歌詞（逐行文字）裡「殘留的簡體字」個數；只用於排序的次要準則（見類別說明第 4 項）。
     public let residualSimplifiedCounter: @Sendable ([String]) -> Int
+    /// 影片來源的長度規則（只對 `isVideoDerived` 的查詢生效）。
+    public let videoDuration: VideoDurationPolicy
 
     /// - Parameters:
     ///   - scriptClassifier: 判斷一段歌詞全文的簡繁屬性。
     ///   - durationTolerance: 允許的長度差（秒），預設 2。
     ///   - stripper: 檔頭中繼行剝除器；需要跨簡繁比對歌名時請在其中注入 normalize。
     ///   - residualSimplifiedCounter: 殘留簡體字計數器；預設恆為 0（不影響排序）。
+    ///   - videoDuration: 影片來源的長度規則。
     public init(
         scriptClassifier: @escaping @Sendable (String) -> LyricsScript,
         durationTolerance: TimeInterval = 2,
         stripper: LyricsMetaStripper = LyricsMetaStripper(),
-        residualSimplifiedCounter: @escaping @Sendable ([String]) -> Int = { _ in 0 }
+        residualSimplifiedCounter: @escaping @Sendable ([String]) -> Int = { _ in 0 },
+        videoDuration: VideoDurationPolicy = VideoDurationPolicy()
     ) {
         self.scriptClassifier = scriptClassifier
         self.durationTolerance = durationTolerance
         self.stripper = stripper
         self.residualSimplifiedCounter = residualSimplifiedCounter
+        self.videoDuration = videoDuration
     }
 
     /// 挑出最佳候選；沒有任何候選通過過濾回傳 nil。
@@ -86,11 +98,21 @@ public struct LyricsCandidatePicker: Sendable {
                   !synced.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             else { continue }
 
+            if query.isVideoDerived, !identityMatches(candidate, query) { continue }
+
             var diff = 0.0
             if knownDuration {
                 guard let d = candidate.duration, d.isFinite else { continue }
                 diff = abs(d - query.duration)
-                if diff > durationTolerance { continue }
+                if query.isVideoDerived {
+                    // delta > 0：影片比歌長（前奏、片尾、對白）。
+                    let delta = query.duration - d
+                    let longerLimit = query.artist.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        ? videoDuration.titleOnlyMaxLonger : videoDuration.maxLonger
+                    if delta > longerLimit || -delta > max(videoDuration.maxShorter, durationTolerance) { continue }
+                } else if diff > durationTolerance {
+                    continue
+                }
             }
 
             let document = LRCParser.parse(synced)
@@ -132,6 +154,34 @@ public struct LyricsCandidatePicker: Sendable {
         }
 
         return pool.min { rankKey($0).lexicographicallyPrecedes(rankKey($1)) }?.picked
+    }
+
+    // MARK: - 影片來源：歌名／歌手比對
+
+    private func foldedLettersAndDigits(_ s: String) -> String {
+        stripper.foldForMatching(s).filter { $0.isLetter || $0.isNumber }
+    }
+
+    private func identityMatches(_ candidate: LrclibCandidate, _ query: LyricsQuery) -> Bool {
+        let wantedArtist = foldedLettersAndDigits(query.artist)
+        let titleOK = Self.titleMatches(
+            foldedLettersAndDigits(candidate.trackName), foldedLettersAndDigits(query.title), exact: wantedArtist.isEmpty
+        )
+        guard titleOK else { return false }
+        if wantedArtist.isEmpty { return true }
+        let have = foldedLettersAndDigits(candidate.artistName)
+        guard !have.isEmpty else { return false }
+        if have == wantedArtist { return true }
+        let (short, long) = have.count <= wantedArtist.count ? (have, wantedArtist) : (wantedArtist, have)
+        return short.count >= 2 && long.contains(short)
+    }
+
+    private static func titleMatches(_ candidate: String, _ wanted: String, exact: Bool) -> Bool {
+        guard !candidate.isEmpty, !wanted.isEmpty else { return false }
+        if candidate == wanted { return true }
+        if exact { return false }
+        let (short, long) = candidate.count <= wanted.count ? (candidate, wanted) : (wanted, candidate)
+        return short.count >= 4 && long.contains(short)
     }
 
     private static func median(_ values: [Double]) -> Double {

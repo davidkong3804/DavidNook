@@ -225,7 +225,9 @@ public final class LrclibClient: LyricsFetching, @unchecked Sendable {
     private func getRequest(_ q: LyricsQuery) -> URLRequest {
         var items: [(String, String)] = [("track_name", q.title), ("artist_name", q.artist)]
         if let album = q.album, !album.isEmpty { items.append(("album_name", album)) }
-        if q.duration.isFinite {
+        // 影片來源（isVideoDerived）：duration 是影片長度、不是歌長，LRCLIB 的 get 會以它比對而查不到，所以不帶；
+        // 長度由挑選器的影片規則把關。
+        if q.duration.isFinite, !q.isVideoDerived {
             let seconds = Int(min(max(q.duration, -1), 1e9).rounded())
             if (1...3_600).contains(seconds) { items.append(("duration", String(seconds))) }
         }

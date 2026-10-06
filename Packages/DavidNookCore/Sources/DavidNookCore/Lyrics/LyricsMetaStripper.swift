@@ -139,6 +139,9 @@ public struct LyricsMetaStripper: Sendable {
 
     // MARK: - 正規化
 
+    /// 比對用折疊（先套用注入的 normalize，再轉小寫、去掉空白）；供挑選器比對歌名／歌手名時與檔頭剝除一致。
+    public func foldForMatching(_ s: String) -> String { fold(s) }
+
     /// 比對用正規化：先套用注入的 normalize，再轉小寫並去掉所有空白。
     private func fold(_ s: String) -> String {
         normalize(s).lowercased().filter { !$0.isWhitespace }

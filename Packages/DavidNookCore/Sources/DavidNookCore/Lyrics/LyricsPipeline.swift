@@ -66,7 +66,7 @@ public enum LyricsPipeline {
         )
     }
 
-    /// 歌詞倉庫（快取＋用戶端）。
+    /// 歌詞倉庫（快取＋影片感知＋用戶端）。快取鍵是「原始曲目鍵」（播放器給的 title／artist／duration）。
     public static func makeRepository(
         transport: any HTTPTransport,
         store: any LyricsCacheStore,
@@ -80,6 +80,7 @@ public enum LyricsPipeline {
             transport: transport, appVersion: appVersion, sleeper: sleeper,
             requestSpacing: requestSpacing, baseURL: baseURL
         )
-        return LyricsRepository(fetcher: client, store: store, negativeTTL: negativeTTL)
+        // 影片來源（瀏覽器播 YouTube 等）先從影片標題萃取歌名／歌手；乾淨來源原樣直通。
+        return LyricsRepository(fetcher: VideoAwareLyricsFetcher(base: client), store: store, negativeTTL: negativeTTL)
     }
 }

@@ -593,7 +593,8 @@ final class MusicManager: ObservableObject {
         // 歌詞：每次狀態更新都告知目前曲目；LyricsService 以（歌名＋歌手＋取整秒長度）去重，
         // 並等 duration 等欄位穩定後才查詢。查詢一律用播放器原值。
         lyricsService.setTrack(LyricsTrack(
-            title: state.title, artist: state.artist, album: state.album, duration: state.duration
+            title: state.title, artist: state.artist, album: state.album, duration: state.duration,
+            sourceBundleID: state.bundleIdentifier
         ))
 
         // The slider extrapolates from (elapsedTime, timestampDate); only

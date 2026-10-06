@@ -22,6 +22,9 @@ struct LyricsTrack: Equatable, Sendable {
     var album: String
     /// 秒；0 代表未知。
     var duration: TimeInterval
+    /// 來源 App 的 bundle id（「正在播放」資料的 parentApplicationBundleIdentifier ?? bundleIdentifier）。
+    /// 只用來判斷標題是不是影片標題（瀏覽器）；不送出、不參與曲目鍵。nil／空字串＝未知。
+    var sourceBundleID: String? = nil
 
     /// 沒有實際曲目時 Music.app 備援會回報的占位內容，不拿去查歌詞。
     var isPlaceholder: Bool {
@@ -160,7 +163,12 @@ final class LyricsService: ObservableObject {
     private func load(_ track: LyricsTrack, key: TrackKey, attempt: Int, delay: Duration) {
         status = .loading
         // 查詢一律用播放器原值；不送專輯名（來源資料很髒，只會降低命中率；也與設定頁的揭露文字一致）。
-        let query = LyricsQuery(title: track.title, artist: track.artist, album: nil, duration: track.duration)
+        // 來源是瀏覽器（影片標題）時，Core 的 VideoAwareLyricsFetcher 會先萃取歌名／歌手再查；
+        // 快取鍵仍是原始曲目鍵（歌名＋歌手＋長度）。Apple Music 等乾淨來源的行為完全不變。
+        let query = LyricsQuery(
+            title: track.title, artist: track.artist, album: nil, duration: track.duration,
+            sourceBundleID: track.sourceBundleID
+        )
         let repository = repository
         fetchTask = Task { @MainActor [weak self] in
             do {

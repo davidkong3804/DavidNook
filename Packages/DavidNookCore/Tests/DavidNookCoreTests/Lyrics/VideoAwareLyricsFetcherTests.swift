@@ -17,7 +17,8 @@ final class VideoAwareLyricsFetcherTests: XCTestCase {
 
     /// 假 LRCLIB：`catalog` 內的曲目，get 以（歌名,歌手）精確比對（不看 duration，與 LRCLIB 缺省行為近似），
     /// search 以歌名包含比對；其餘 404／空陣列。
-    private func fakeLrclib(_ catalog: [Song]) -> StubTransport {
+    /// `searchIgnoresArtist`：模擬 LRCLIB 搜尋對歌手不嚴格（會回其他歌手的同名歌）。
+    private func fakeLrclib(_ catalog: [Song], searchIgnoresArtist: Bool = false) -> StubTransport {
         StubTransport(handler: { [lrc] request, _ in
             let q = queryDict(request)
             func record(_ s: Song) -> [String: Any] {
@@ -33,7 +34,7 @@ final class VideoAwareLyricsFetcherTests: XCTestCase {
                 let hits = catalog.filter { s in
                     guard let name = q["track_name"] else { return false }
                     return s.track.lowercased().contains(name.lowercased())
-                        && (q["artist_name"].map { s.artist.lowercased().contains($0.lowercased()) } ?? true)
+                        && (searchIgnoresArtist || (q["artist_name"].map { s.artist.lowercased().contains($0.lowercased()) } ?? true))
                 }
                 return .ok(jsonString(hits.map(record)))
             default:
@@ -130,9 +131,10 @@ final class VideoAwareLyricsFetcherTests: XCTestCase {
     }
 
     func testSameTitleByAnotherArtistIsNotAccepted() async throws {
-        let t = fakeLrclib([Song(id: 51, track: "Shape of You", artist: "Some Cover Band", duration: 233)])
+        let t = fakeLrclib([Song(id: 51, track: "Shape of You", artist: "Some Cover Band", duration: 233)], searchIgnoresArtist: true)
         let picked = try await repo(t).lyrics(for: youtube("Ed Sheeran - Shape of You (Official Music Video)", channel: "Ed Sheeran", duration: 245))
         XCTAssertNil(picked, "同名但歌手不同＝放錯歌，寧可顯示找不到")
+        XCTAssertTrue(t.requests.contains { $0.url?.path == "/api/search" }, "搜尋確實回了那首同名歌，是挑選器擋下的")
     }
 
     func testNothingFoundReturnsNilWithoutCrashing() async throws {
