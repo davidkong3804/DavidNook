@@ -46,11 +46,6 @@ final class LyricsService: ObservableObject {
         case error
     }
 
-    /// 每次調整偏移的步長（毫秒）。
-    static let offsetStepMs = 500
-    /// 偏移上下限（毫秒）。
-    static let offsetLimitMs = 60_000
-
     @Published private(set) var status: Status = .idle
     /// 已本地化（簡→繁）的顯示行，與 `timeline.lines` 一一對應；空字串是間奏／空白行。
     @Published private(set) var lines: [String] = []
@@ -121,9 +116,25 @@ final class LyricsService: ObservableObject {
         return timeline.currentIndex(at: position, userOffsetMs: offsetMs)
     }
 
-    /// 逐曲偏移：以 `offsetStepMs` 為單位增減（`steps` 可為負），並依曲目記住。
-    func adjustOffset(steps: Int) {
-        setOffset(offsetMs + steps * Self.offsetStepMs)
+    /// 逐曲偏移：增減 `deltaMs` 毫秒（正值＝歌詞提早；細調 ±100、粗調 ±500），夾在 ±60 秒內並依曲目記住。
+    func adjustOffset(byMs deltaMs: Int) {
+        setOffset(offsetMs + deltaMs)
+    }
+
+    /// 點歌詞對齊：把偏移設成讓第 `index` 行「剛好是現在播放的那一行」，並依曲目記住。
+    /// 行時間用 `timeline.lines` 的原始時間（不含偏移），所以不論現有偏移是多少結果都一樣。
+    /// - Parameter position: 點擊當下的播放位置（秒）；播放中時請傳「點擊那一刻」的時鐘讀數。
+    /// - Returns: 沒有可對齊的行（沒載入、索引無效、空白行、位置無效）回傳 nil。
+    @discardableResult
+    func alignOffset(toLine index: Int, atPosition position: TimeInterval) -> LyricsOffsetAlignment.Result? {
+        guard status == .loaded, timeline.lines.indices.contains(index) else { return nil }
+        let line = timeline.lines[index]
+        guard !line.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        guard let result = LyricsOffsetAlignment.aligned(
+            position: position, lineTimeMs: line.timeMs, lrcOffsetMs: timeline.lrcOffsetMs
+        ) else { return nil }
+        setOffset(result.offsetMs)
+        return result
     }
 
     func resetOffset() {
@@ -244,7 +255,7 @@ final class LyricsService: ObservableObject {
 
     private func setOffset(_ ms: Int) {
         guard let key = loadedKey else { return }
-        let clamped = min(max(ms, -Self.offsetLimitMs), Self.offsetLimitMs)
+        let clamped = LyricsOffsetAlignment.clamp(ms)
         offsetMs = clamped
         offsetStore.setOffsetMs(clamped, for: key)
     }

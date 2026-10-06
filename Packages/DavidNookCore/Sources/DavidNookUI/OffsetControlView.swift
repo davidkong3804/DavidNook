@@ -110,7 +110,7 @@ public struct OffsetControlStrings: Sendable {
         coarse: "粗調",
         coarseHelp: "開啟後每次調整 0.5 秒（預設 0.1 秒）",
         reset: "重設",
-        resetHelp: "重設這首歌的歌詞偏移",
+        resetHelp: "重設歌詞偏移",
         aligned: "已對齊，並記住這首歌",
         alignedLimit: "偏移已達上限（±60 秒）",
         lineHelp: "點這一行：把它對齊到現在播放的位置",
@@ -274,7 +274,7 @@ public struct OffsetControlView: View {
                     .foregroundStyle(Color.white.opacity(0.55))
                 HStack(spacing: 3) {
                     if nudge == .advance { Image(systemName: "chevron.left").font(.system(size: 8, weight: .bold)) }
-                    Text(verbatim: title).font(.system(size: 11, weight: .semibold, design: .rounded))
+                    Text(verbatim: title).font(.system(size: 11, weight: .semibold, design: .rounded)).lineLimit(1).minimumScaleFactor(0.8)
                     Text(verbatim: LyricsOffsetFormat.seconds(abs: step))
                         .font(.system(size: 8.5, weight: .medium, design: .rounded).monospacedDigit())
                         .foregroundStyle(Color.white.opacity(0.55))
@@ -345,12 +345,27 @@ struct HoldRepeatButton<Label: View>: View {
 struct OffsetWheelModifier: ViewModifier {
     var onDelta: (Int) -> Void
     var onPointerInside: (Bool) -> Void
+    @Environment(\.offsetWheelEnabled) private var wheelEnabled
 
     func body(content: Content) -> some View {
         content
-            .background(OffsetWheelCatcher(onDelta: onDelta))
+            .background {
+                if wheelEnabled { OffsetWheelCatcher(onDelta: onDelta) }
+            }
             .onHover { onPointerInside($0) }
             .onDisappear { onPointerInside(false) }
+    }
+}
+
+private struct OffsetWheelEnabledKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    /// 是否掛上滾輪監聽（NSViewRepresentable）。離屏渲染（ImageRenderer）畫不出 AppKit 視圖，會變成黃色占位塊，測試時關掉。
+    public var offsetWheelEnabled: Bool {
+        get { self[OffsetWheelEnabledKey.self] }
+        set { self[OffsetWheelEnabledKey.self] = newValue }
     }
 }
 
