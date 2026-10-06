@@ -32,10 +32,6 @@ final class NotchWindowManager {
     private var windowScreenDidChangeObserver: Any?
     private var previousScreens: [NSScreen]?
 
-    /// 每個視窗跟著瀏海開／關調整大小的訂閱，以及「收合後延遲縮回」的待辦（以視窗為鍵）。
-    private var windowSizeObservers: [ObjectIdentifier: AnyCancellable] = [:]
-    private var pendingWindowShrinks: [ObjectIdentifier: DispatchWorkItem] = [:]
-
     init() {
         primaryViewModel = BoringViewModel()
     }
@@ -107,7 +103,6 @@ final class NotchWindowManager {
             for (uuid, context) in contexts {
                 context.window?.close()
                 if let window = context.window {
-                    forgetWindowSizeTracking(for: window)
                     NotchSpaceManager.shared.notchSpace.windows.remove(window)
                 }
                 contexts.removeValue(forKey: uuid)
@@ -115,7 +110,6 @@ final class NotchWindowManager {
         } else {
             if let window = primaryWindow {
                 window.close()
-                forgetWindowSizeTracking(for: window)
                 NotchSpaceManager.shared.notchSpace.windows.remove(window)
             }
             if let obs = windowScreenDidChangeObserver {
@@ -127,8 +121,10 @@ final class NotchWindowManager {
     }
 
     private func createBoringNotchWindow(for screen: NSScreen, with viewModel: BoringViewModel) -> NSWindow {
-        // 視窗大小隨瀏海開／關改變（見 trackWindowSize）：關閉時與舊版相同（640×210），展開時涵蓋所有分頁與可調上限。
-        let size = NotchSizing.windowSize(isOpen: viewModel.notchState == .open)
+        // 視窗大小固定為涵蓋尺寸（涵蓋所有分頁與可調上限）。不要在開／關時改視窗大小：
+        // 實測（2026-10-06）在 SwiftUI 動畫進行中 setFrame 會讓 NSHostingView 陷入版面更新迴圈而閃退
+        // （NSWindow _postWindowNeedsUpdateConstraints 丟例外；有縮放時 3/3 崩潰，關掉後 3/3 正常）。
+        let size = NotchSizing.windowSize(isOpen: true)
         let rect = NSRect(x: 0, y: 0, width: size.width, height: size.height)
         let styleMask: NSWindow.StyleMask = [.borderless, .nonactivatingPanel, .utilityWindow, .hudWindow]
 
@@ -151,65 +147,8 @@ final class NotchWindowManager {
 
         window.orderFrontRegardless()
         NotchSpaceManager.shared.notchSpace.windows.insert(window)
-        trackWindowSize(of: window, viewModel: viewModel)
 
         return window
-    }
-
-    // MARK: - Window size follows the notch state
-
-    /// 展開時視窗放大到涵蓋尺寸（在 SwiftUI 開始動畫之前就先放大，形體不會被視窗邊緣切到）；
-    /// 收合後等彈簧穩定（再多留一點餘裕）才縮回舊版大小。
-    ///
-    /// 為什麼不讓視窗一直是涵蓋尺寸：視窗是透明的，點擊能否穿透透明區域取決於 WindowServer 對 alpha 的處理，
-    /// 專案裡沒有任何 `ignoresMouseEvents`／`hitTest` 保證；關閉狀態維持舊版 640×210，就不會比改版前多擋任何地方。
-    private func trackWindowSize(of window: NSWindow, viewModel: BoringViewModel) {
-        let key = ObjectIdentifier(window)
-        windowSizeObservers[key] = viewModel.$notchState
-            .removeDuplicates()
-            .dropFirst()
-            .sink { [weak self, weak window, weak viewModel] state in
-                // @Published 在設定值的當下同步送出（主執行緒），這裡不能再非同步跳一次，否則第一格動畫會先於視窗放大。
-                MainActor.assumeIsolated {
-                    guard let self, let window, let viewModel else { return }
-                    self.windowSizeFollows(state, window: window, viewModel: viewModel)
-                }
-            }
-    }
-
-    private func windowSizeFollows(_ state: NotchState, window: NSWindow, viewModel: BoringViewModel) {
-        let key = ObjectIdentifier(window)
-        pendingWindowShrinks[key]?.cancel()
-        pendingWindowShrinks[key] = nil
-
-        switch state {
-        case .open:
-            setWindowSize(window, to: NotchSizing.windowSize(isOpen: true))
-        case .closed:
-            let delay = NotchMotion.current.closeSettleTime + 0.25
-            let shrink = DispatchWorkItem { [weak self, weak window, weak viewModel] in
-                MainActor.assumeIsolated {
-                    guard let self, let window, let viewModel, viewModel.notchState == .closed else { return }
-                    self.pendingWindowShrinks[ObjectIdentifier(window)] = nil
-                    self.setWindowSize(window, to: NotchSizing.windowSize(isOpen: false))
-                }
-            }
-            pendingWindowShrinks[key] = shrink
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: shrink)
-        }
-    }
-
-    private func setWindowSize(_ window: NSWindow, to size: CGSize) {
-        guard window.frame.size != size else { return }
-        window.setFrame(NotchSizing.anchoredFrame(from: window.frame, to: size), display: false)
-    }
-
-    private func forgetWindowSizeTracking(for window: NSWindow) {
-        let key = ObjectIdentifier(window)
-        windowSizeObservers[key]?.cancel()
-        windowSizeObservers[key] = nil
-        pendingWindowShrinks[key]?.cancel()
-        pendingWindowShrinks[key] = nil
     }
 
     private func positionWindow(_ window: NSWindow, on screen: NSScreen, changeAlpha: Bool = false) {
@@ -235,7 +174,6 @@ final class NotchWindowManager {
             for uuid in contexts.keys where !currentScreenUUIDs.contains(uuid) {
                 if let window = contexts[uuid]?.window {
                     window.close()
-                    forgetWindowSizeTracking(for: window)
                     NotchSpaceManager.shared.notchSpace.windows.remove(window)
                 }
                 contexts.removeValue(forKey: uuid)
