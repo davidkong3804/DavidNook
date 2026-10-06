@@ -25,8 +25,10 @@ final class FloatingVideoGeometryTests: XCTestCase {
         let size = FloatingVideoGeometry.clampedSize(width: 99_999, aspectRatio: ratio, in: screen)
         XCTAssertLessThanOrEqual(size.width, screen.width + 0.001)
         XCTAssertLessThanOrEqual(size.height, screen.height + 0.001)
-        // 寬螢幕上受高度限制：875 × 16/9
-        XCTAssertEqual(size.width, 875 * ratio, accuracy: 0.001)
+        XCTAssertEqual(size.width, min(screen.width, screen.height * ratio), accuracy: 0.001)
+        let wide = CGRect(x: 0, y: 0, width: 3000, height: 800)
+        let w2 = FloatingVideoGeometry.clampedSize(width: 99_999, aspectRatio: ratio, in: wide)
+        XCTAssertEqual(w2.height, 800, accuracy: 0.001, "寬螢幕受高度限制")
     }
 
     func testInvalidInputsFallBack() {
@@ -105,11 +107,15 @@ final class FloatingVideoGeometryTests: XCTestCase {
     // MARK: 比例改變、推回螢幕內
 
     func testAspectChangeKeepsWidthAndTopLeft() {
-        let r = FloatingVideoGeometry.adjustedForAspect(frame: frame, aspectRatio: 1.0, in: screen)
+        let high = CGRect(x: 100, y: 500, width: 320, height: 180)   // maxY = 680
+        let r = FloatingVideoGeometry.adjustedForAspect(frame: high, aspectRatio: 1.0, in: screen)
         XCTAssertEqual(r.width, 320, accuracy: 0.001)
         XCTAssertEqual(r.height, 320, accuracy: 0.001)
         XCTAssertEqual(r.minX, 100, accuracy: 0.001)
-        XCTAssertEqual(r.maxY, 280, accuracy: 0.001)
+        XCTAssertEqual(r.maxY, 680, accuracy: 0.001)
+        // 靠近螢幕下緣：長高後被推回螢幕內
+        let low = FloatingVideoGeometry.adjustedForAspect(frame: frame, aspectRatio: 1.0, in: screen)
+        XCTAssertTrue(screen.contains(low))
     }
 
     func testNudgedInside() {
@@ -156,7 +162,7 @@ final class FloatingVideoGeometryTests: XCTestCase {
     }
 
     func testSavedPartlyOffscreenIsNudgedInsideAndOversizeClamped() {
-        let partly = FloatingVideoPlacement(x: 1300, y: 800, width: 400)   // 中心在螢幕內，但右上超出
+        let partly = FloatingVideoPlacement(x: 1200, y: 700, width: 400)   // 中心在螢幕內，但右上超出
         let a = FloatingVideoGeometry.restoredFrame(saved: partly, aspectRatio: ratio, screens: [screen], primary: screen)
         XCTAssertTrue(screen.contains(a))
         let big = FloatingVideoPlacement(x: 0, y: 0, width: 9000)
@@ -165,7 +171,7 @@ final class FloatingVideoGeometryTests: XCTestCase {
     }
 
     func testSavedCenterOnScreenButAspectChangedStillInside() {
-        let saved = FloatingVideoPlacement(x: 1300, y: 10, width: 400)
+        let saved = FloatingVideoPlacement(x: 1100, y: 10, width: 400)
         let r = FloatingVideoGeometry.restoredFrame(saved: saved, aspectRatio: 0.5, screens: [screen], primary: screen)
         XCTAssertTrue(screen.contains(r))
     }
