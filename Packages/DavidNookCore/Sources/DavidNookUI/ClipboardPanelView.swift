@@ -56,6 +56,8 @@ public struct ClipboardPanelView: View {
     public var autoPasteMode: ClipboardAutoPasteMode
     /// 點擊後的回饋狀態（哪一列正在顯示「已複製」或「複製失敗」）。
     public var feedback: ClipboardCopyFeedback
+    /// 滑鼠進出可捲動清單時回報；App 端據此暫停瀏海的「上滑關閉」滾動手勢，清單才捲得動（見 `NotchScrollGesturePolicy`）。
+    public var onScrollPointerInside: (Bool) -> Void
 
     @FocusState private var searchFocused: Bool
     @Environment(\.clipboardStaticRender) private var staticRender
@@ -71,7 +73,8 @@ public struct ClipboardPanelView: View {
         autoFocusSearch: Bool = true,
         showsHints: Bool = false,
         autoPasteMode: ClipboardAutoPasteMode = .off,
-        feedback: ClipboardCopyFeedback = ClipboardCopyFeedback()
+        feedback: ClipboardCopyFeedback = ClipboardCopyFeedback(),
+        onScrollPointerInside: @escaping (Bool) -> Void = { _ in }
     ) {
         self.model = model
         self.strings = strings
@@ -83,6 +86,7 @@ public struct ClipboardPanelView: View {
         self.showsHints = showsHints
         self.autoPasteMode = autoPasteMode
         self.feedback = feedback
+        self.onScrollPointerInside = onScrollPointerInside
     }
 
     public var body: some View {
@@ -367,6 +371,8 @@ public struct ClipboardPanelView: View {
                 .onChange(of: model.selectedItem?.id) { _, id in
                     if let id { proxy.scrollTo(id) }
                 }
+                .onHover { onScrollPointerInside($0) }
+                .onDisappear { onScrollPointerInside(false) }
             }
         }
     }

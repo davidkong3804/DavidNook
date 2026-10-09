@@ -823,6 +823,7 @@ extension ContentView {
         guard vm.notchState == .closed else { return }
         // 滑鼠在歌詞對時控制上：滾輪是拿來微調偏移的，不當成手勢（結束事件照常處理，避免進度卡住）。
         guard phase == .ended || !LyricsSyncPointer.isOverControl else { return }
+        guard scrollGestureAllowed(.down, phase: phase) else { return }
 
         if phase == .ended {
             withAnimation(animationSpring) { gestureProgress = .zero }
@@ -844,10 +845,23 @@ extension ContentView {
         }
     }
 
+    /// 目前分頁與滑鼠位置是否允許瀏海處理這個方向的滾動手勢（決策在 DavidNookUI 的 `NotchScrollGesturePolicy`）。
+    private func scrollGestureAllowed(_ direction: NotchScrollGestureDirection, phase: NSEvent.Phase) -> Bool {
+        let tab: NotchScrollTab = coordinator.currentView == .clipboard ? .clipboard : .home
+        return NotchScrollGesturePolicy.shouldHandle(
+            tab: tab,
+            pointerOverScrollable: NotchScrollPointer.isOverScrollable,
+            direction: direction,
+            isEnd: phase == .ended
+        )
+    }
+
     private func handleUpGesture(translation: CGFloat, phase: NSEvent.Phase) {
         guard vm.notchState == .open else { return }
         // 滑鼠在歌詞對時控制上：滾輪往上捲是微調偏移，不能把瀏海關掉。
         guard phase == .ended || !LyricsSyncPointer.isOverControl else { return }
+        // 剪貼簿分頁、滑鼠在清單上：清單往下捲（手指上滑）不能被當成「上滑關閉」。
+        guard scrollGestureAllowed(.up, phase: phase) else { return }
 
         withAnimation(animationSpring) {
             gestureProgress = (translation / Defaults[.gestureSensitivity]) * -20

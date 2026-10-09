@@ -15,6 +15,18 @@ import DavidNookUI
 import Defaults
 import SwiftUI
 
+// MARK: - 滾動指標旗標
+
+/// 滑鼠是否正指著展開瀏海內的可捲動清單（目前只有剪貼簿清單）。
+///
+/// 瀏海外層（ContentView）用 NSEvent.scrollWheel 監聽「上滑關閉」，但不會吃掉事件——清單照常捲動，
+/// 同時手勢也累計，清單往下捲（手指上滑）就把瀏海收了。清單在滑鼠進出時設定這個旗標，
+/// ContentView 依 `NotchScrollGesturePolicy` 在旗標為 true 時略過垂直手勢。
+@MainActor
+enum NotchScrollPointer {
+    static var isOverScrollable = false
+}
+
 // MARK: - 控制器
 
 /// 持有面板的 `ClipboardPanelModel`，把服務的狀態灌進模型，並執行模型回報的動作。
@@ -212,7 +224,8 @@ struct ClipboardTabView: View {
             ),
             showsHints: controller.hints.isVisible,
             autoPasteMode: ClipboardAutoPasteMode.resolve(enabled: autoPaste, authorized: ClipboardService.shared.isAutoPasteAuthorized),
-            feedback: controller.feedback
+            feedback: controller.feedback,
+            onScrollPointerInside: { NotchScrollPointer.isOverScrollable = $0 }
         )
         .frame(maxHeight: .infinity)
         .background(ClipboardKeyboardHost(viewModel: vm) { controller.handle($0) })
