@@ -86,6 +86,9 @@ final class MusicManager: ObservableObject {
     @Published var artistName: String = ""
     @Published var albumArt: NSImage = defaultImage
     @Published var isPlaying = false
+    /// 來源回報「沒有曲目」（播完／來源離開）後，仍保留最後一首的標題／封面／歌詞，並標記為已播完。
+    /// 行為等同暫停：展開瀏海仍顯示最後一首，收合時沒有任何即時活動。只在記憶體，不寫入磁碟。
+    @Published private(set) var isPlaybackEnded = false
     @Published var album: String = ""
     @Published var isPlayerIdle: Bool = true
     @Published var animations: BoringAnimations = .init()
@@ -110,6 +113,8 @@ final class MusicManager: ObservableObject {
     @Published var isFavoriteTrack: Bool = false
 
     private var artworkData: Data?
+    /// 「結束＝暫停」的保留規則（純邏輯在 DavidNookCore 的 NowPlayingRetention）。
+    private var retention = NowPlayingRetention()
 
     // Store last values at the time artwork was changed
     private var lastArtworkTitle: String = ""
@@ -394,6 +399,8 @@ final class MusicManager: ObservableObject {
         debounceIdleTask?.cancel()
         debounceIdleTask = nil
 
+        retention.reset()
+        isPlaybackEnded = false
         songTitle = ""
         artistName = ""
         album = ""
@@ -466,6 +473,18 @@ final class MusicManager: ObservableObject {
     // MARK: - Update Methods
     private func updateFromPlaybackState(_ state: PlaybackState) {
         guard state.lastUpdated != .distantPast else { return }
+
+        // 播放結束時來源會回報「沒有曲目」；照單全收會清空標題／封面／歌詞（暫停卻不會）。
+        // 改成保留最後一首、只標記為已停止，行為與暫停一致。
+        let decision = retention.observe(
+            hasTrack: NowPlayingRetention.hasTrack(title: state.title, artist: state.artist),
+            isPlaying: state.isPlaying
+        )
+        if isPlaybackEnded != retention.isEnded { isPlaybackEnded = retention.isEnded }
+        if decision == .retainLast {
+            retainLastTrackAsStopped()
+            return
+        }
 
         // 先更新時鐘：換歌、seek、暫停/恢復都會帶來新錨點，整個取代舊的。
         playbackClock.update(PlaybackSnapshot(
@@ -605,6 +624,34 @@ final class MusicManager: ObservableObject {
         if timeChanged || playbackRateChanged || playingStateChanged {
             self.timestampDate = state.lastUpdated
         }
+    }
+
+    /// 來源回報無曲目：保留最後一首的所有顯示資料，只把播放狀態轉成「已停止」（等同暫停）。
+    /// 不碰標題／歌手／封面／來源／歌詞；位置凍結在目前的內插位置，之後仍可由播放鍵再次播放。
+    private func retainLastTrackAsStopped() {
+        // 收合時不出現任何即時活動：不等 waitInterval，直接視為閒置（資料仍保留，展開後照常顯示）。
+        debounceIdleTask?.cancel()
+        debounceIdleTask = nil
+        if !isPlayerIdle {
+            withAnimation { isPlayerIdle = true }
+        }
+
+        guard isPlaying else { return }
+        let now = Date()
+        let position = playbackClock.position(at: now) ?? elapsedTime
+        playbackClock.update(PlaybackSnapshot(
+            elapsedTime: position,
+            timestamp: now,
+            playbackRate: playbackRate,
+            isPlaying: false,
+            duration: songDuration > 0 ? songDuration : nil
+        ))
+        NSLog("Playback ended; keeping last track as stopped")
+        withAnimation(.smooth) {
+            isPlaying = false
+        }
+        elapsedTime = position
+        timestampDate = now
     }
 
     func toggleFavoriteTrack() {
