@@ -1,6 +1,6 @@
 # DavidNook
 
-A macOS notch utility: **fully local — no server, no telemetry, no auto-update, no AI, no account.**
+A macOS notch utility: **fully local — no server, no telemetry, no background updates, no AI, no account.** (It contacts GitHub only when you press "Check for Updates"; see Updating.)
 
 [繁體中文說明](README.md) (the primary README)
 
@@ -48,15 +48,17 @@ DavidNook is an independent implementation and is **not affiliated with NotchNoo
 - Everything stays on this Mac. The app is sandboxed; lyrics cache and clipboard history live in the container's
   Application Support (`~/Library/Containers/io.github.davidkong3804.DavidNook/Data/Library/Application Support/DavidNook/`),
   files `0600`, directories `0700`. Settings let you clear them.
-- **The only network connection is `lrclib.net`** (lyrics lookup). It receives the **track title, artist and duration** and a
+- **There are only two kinds of network connection**: (1) `lrclib.net` for lyrics (automatic), and (2) **only when you press "Check for Updates"**, `api.github.com` and GitHub's download hosts
+  (see Updating; just a GET and a User-Agent with the app version; nothing in the background or at launch). The lyrics lookup receives the **track title, artist and duration** and a
   `User-Agent: DavidNook/<version> (project URL)`. It does **not** receive the album, clipboard content, file paths or any
   identifier. (The server sees your IP address, as with any request.) Turn lyrics off in Settings → Media to disable it.
-- No telemetry, no update server, no content in logs.
+- No telemetry, no update server of ours (updates are manual and come straight from GitHub Releases), no content in logs.
 - **Video picture**: lives only in memory (handed straight to the display layer and recycled with the stream queue). It is **never saved, uploaded, cached,
   screenshotted or written to the clipboard**, adds no network request, and no audio is captured. Logs contain only states and error codes, never picture
   content, window titles or source app names. Once a second the app samples the picture's average brightness (only to tell whether it is all black); the value
   is not kept. macOS shows its own recording/sharing indicator while capturing.
-- **No new entitlements**: Video uses the system window picker, not whole-screen recording permission; Hardened Runtime and entitlements are unchanged.
+- **One entitlement added, for updating only**: `com.apple.security.files.user-selected.read-write`, so the system folder picker can let you authorize the folder DavidNook is in while it replaces itself
+  (asked every time; nothing remembered). Video still uses the system window picker, not whole-screen recording permission; Hardened Runtime and all other entitlements are unchanged.
 - Clipboard: items marked as passwords or one-time content (`org.nspasteboard.ConcealedType` and friends) are skipped;
   text over 1 MB and images over 20 MB are not recorded.
 
@@ -92,6 +94,38 @@ cd Packages/DavidNookCore && swift test      # pure-logic package tests
 - **Every rebuild changes the ad-hoc cdhash**, so permissions you granted before (Automation, Accessibility) may need to be
   granted again.
 
+## Updating (manual, one click)
+
+Settings → About → "Updates": press **Check for Updates** and only then does the app contact GitHub. If there is a newer version it shows the version and a plain-text summary
+of the release notes; **Update and Restart** downloads, verifies, replaces and reopens the app. **There is no background polling and no check at login or launch.**
+The menu bar item "Check for Updates…" opens the same flow.
+
+- **What goes where**: only when you press "Check for Updates" the app sends one plain GET to `api.github.com`
+  (`/repos/davidkong3804/DavidNook/releases?per_page=10`) with just `User-Agent: DavidNook/<app version>` and `Accept`; pressing "Update and Restart" additionally contacts
+  GitHub's download hosts. **No token, cookie, account or identifier is sent.** Only https to `api.github.com`, `github.com`, `objects.githubusercontent.com`,
+  `release-assets.githubusercontent.com` and `*.githubusercontent.com` is allowed, including every redirect; anything else is refused. (GitHub sees your IP address, as with any
+  request; unauthenticated API use is limited to 60 requests per hour per IP, and the app says so when that is used up.)
+- **Which version**: all releases are pre-releases, so `/releases/latest` (which skips them) is not used. The app reads the list and picks the highest SemVer 2.0.0 version
+  (`0.1.0-beta.1 < 0.1.0-beta.2 < 0.1.0`) and accepts only a **strictly newer** one (no downgrades). **Important:** the app's `CFBundleShortVersionString` must be the full version
+  including `-beta.N`, otherwise betas cannot be ordered; `Tools/package_release.sh` checks it equals the version you release.
+- **How the download is checked** (any failure refuses the update and keeps the old app, with the reason shown):
+  1. SHA-256 from the same release's `DavidNook-<version>-arm64.zip.sha256` first, then from the release body ("SHA-256: `<hex>`"). **Neither present: refused.** Both present but different: refused.
+  2. Before unpacking, the zip directory must contain only `DavidNook.app/…` entries, no `..`, no absolute paths.
+  3. After unpacking: bundle id `io.github.davidkong3804.DavidNook`, version equal to the tag, contains arm64, signature passes `SecStaticCodeCheckValidity` (strict, nested code), **Hardened Runtime on**.
+  4. **No new privileges**: the new entitlements may not exceed the running app's; the only allowed addition is `com.apple.security.files.user-selected.read-write`.
+  5. After the swap it verifies again and automatically restores the old app if that fails. The old version is kept as `DavidNook.app.previous` next to the app.
+- **Why one more entitlement**: the app is sandboxed and cannot modify its own folder without your consent. While updating, the system folder picker asks you to choose the folder DavidNook is in
+  (only `com.apple.security.files.user-selected.read-write`; **no** bookmarks entitlement, so you are asked **every time** and nothing is remembered). Hardened Runtime, library validation and the other
+  entitlements are untouched.
+- **Cannot update from a DMG or the Downloads folder** (macOS runs it from a read-only copy under `/AppTranslocation/`): move DavidNook to Applications or your own folder first.
+- **After an update the first launch may be blocked by macOS again (important)**: files written by a sandboxed app always get `com.apple.quarantine`, and a sandboxed app is not allowed to remove it
+  (measured: both the downloaded zip and the unpacked app carry it; `removexattr` and `xattr -d` fail with Operation not permitted). DavidNook is ad-hoc signed and not notarized, so the new version is treated
+  like a fresh download. If macOS blocks it, open System Settings → Privacy & Security and click "Open Anyway", then open DavidNook again (the running version keeps running meanwhile, so you are never left
+  without an app). This is the same as the first install; it does **not** mean turning off Gatekeeper or changing system security settings.
+- **You may have to re-authorize**: the new build has a different code-signature hash (cdhash), so macOS may treat it as another app and ask again for Screen Recording or Automation (Music).
+
+Publisher flow: `Tools/build_release.sh` → `Tools/package_release.sh <version>` (creates `dist/DavidNook-<version>-arm64.zip` and `.sha256`, and **only prints** a `gh release create` example).
+
 ## First launch and permissions
 
 A welcome window explains what DavidNook does and which permissions it uses. **It only explains; it never triggers a system
@@ -103,6 +137,7 @@ permission prompt.**
 - Screen recording (Video): shows the live picture of the one window you pick. It is **expected** to go through the system picker, where you choose one window
   each time, without pre-authorizing the whole screen. It is only used after you press the small "show a window" button on the album cover; if macOS asks for authorization it asks
   then (**this behavior is not verified on real hardware**).
+- User-selected files (read/write): only for updating; the system folder picker appears when you press "Update and Restart" and have not authorized the folder yet. Asked each time, never remembered.
 - Accessibility / post events: only for the experimental "paste automatically after choosing" option (off by default), requested
   only when you press the button in Settings → Clipboard.
 

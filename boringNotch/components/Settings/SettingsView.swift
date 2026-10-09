@@ -7,6 +7,11 @@
 
 import SwiftUI
 
+extension Notification.Name {
+    /// 要求設定視窗切到「關於」分頁（選單列的「檢查更新…」使用）。
+    static let showAboutSettings = Notification.Name("io.github.davidkong3804.DavidNook.showAboutSettings")
+}
+
 private enum SettingsTab: String, CaseIterable, Identifiable {
     case general
     case notch
@@ -105,6 +110,9 @@ struct SettingsView: View {
         .id(accentColorUpdateTrigger)
         .onReceive(NotificationCenter.default.publisher(for: .accentColorChanged)) { _ in
             accentColorUpdateTrigger = UUID()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showAboutSettings)) { _ in
+            selectedTab = .about
         }
     }
 

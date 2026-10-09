@@ -394,6 +394,12 @@
             "state" : "translated",
             "value" : "重新檢查"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check Again"
+          }
         }
       }
     },
@@ -854,16 +860,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "DavidNook 與「正在播放」的連線中斷，正在自動重新連線…"
-          }
-        }
-      }
-    },
-    "DavidNook turns the notch into a small control center. Everything stays on this Mac; the only network connection is lrclib.net, for lyrics." : {
-      "localizations" : {
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "DavidNook 讓瀏海變成小型控制中心。資料都只留在這台 Mac，唯一的對外連線是查詢歌詞用的 lrclib.net。"
           }
         }
       }
@@ -3233,16 +3229,6 @@
         }
       }
     },
-    "The only connection: the title, artist and duration of the current track go to lrclib.net to look up lyrics (can be turned off in Settings → Media). No telemetry, no update server." : {
-      "localizations" : {
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "唯一的對外連線：把目前曲目的曲名、歌手與長度送到 lrclib.net 查詢歌詞（可在「設定 → 媒體」關閉）。沒有遙測，也沒有更新伺服器。"
-          }
-        }
-      }
-    },
     "Third-party licenses" : {
       "localizations" : {
         "zh-Hant" : {
@@ -3625,16 +3611,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "目前 macOS 系統的強調色彩"
-          }
-        }
-      }
-    },
-    "lrclib.net only" : {
-      "localizations" : {
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "只連線 lrclib.net"
           }
         }
       }
@@ -4989,6 +4965,1057 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "點一下封面槽裡的影片就會釘選：影片變成可拖曳到桌面任何地方、拖四角縮放的浮動視窗。滑鼠移上去會出現取消釘選與調整透明度的按鈕，雙擊也能取消釘選。它是你自己桌面上的視窗，所以截圖或螢幕分享可能會拍到它。"
+          }
+        }
+      }
+    },
+    "Updates" : {
+      "comment" : "Settings: About tab, section header for updates.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新"
+          }
+        }
+      }
+    },
+    "DavidNook connects to GitHub only when you press “Check for Updates”: a plain GET request to api.github.com (and, if you update, to GitHub's download servers) that carries only a User-Agent with the app version, for example DavidNook/0.1.0. No account, token, identifier or usage data is sent, and nothing is checked in the background or at launch. To replace itself, DavidNook asks you to choose the folder it is in, only while updating (the sandbox “user-selected files” permission)." : {
+      "comment" : "Settings: About tab, privacy disclosure under the update section.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook connects to GitHub only when you press “Check for Updates”: a plain GET request to api.github.com (and, if you update, to GitHub's download servers) that carries only a User-Agent with the app version, for example DavidNook/0.1.0. No account, token, identifier or usage data is sent, and nothing is checked in the background or at launch. To replace itself, DavidNook asks you to choose the folder it is in, only while updating (the sandbox “user-selected files” permission)."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有在你按下「檢查更新」時，DavidNook 才會連線到 GitHub：對 api.github.com（若你選擇更新，還有 GitHub 的下載伺服器）送出一個單純的 GET 請求，內容只有帶著 App 版本號的 User-Agent，例如 DavidNook/0.1.0。不會送出帳號、token、識別碼或任何使用資料，也不會在背景或啟動時自動檢查。為了取代自己，DavidNook 會在更新時請你選擇它所在的資料夾（沙盒的「使用者選取的檔案」權限）。"
+          }
+        }
+      }
+    },
+    "Check for Updates…" : {
+      "comment" : "Menu bar item.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check for Updates…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檢查更新…"
+          }
+        }
+      }
+    },
+    "Couldn't read the current version of DavidNook." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't read the current version of DavidNook."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法讀取 DavidNook 目前的版本。"
+          }
+        }
+      }
+    },
+    "That isn't the folder DavidNook is in. Choose “%@” (or a folder that contains it)." : {
+      "comment" : "Update error: the user picked the wrong folder.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That isn't the folder DavidNook is in. Choose “%@” (or a folder that contains it)."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這不是 DavidNook 所在的資料夾。請選擇「%@」（或包含它的上層資料夾）。"
+          }
+        }
+      }
+    },
+    "Authorize the update" : {
+      "comment" : "Title of the folder picker shown when updating.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authorize the update"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授權更新"
+          }
+        }
+      }
+    },
+    "Please choose the folder DavidNook is in to authorize the update." : {
+      "comment" : "Message in the folder picker shown when updating.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please choose the folder DavidNook is in to authorize the update."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請選擇 DavidNook 所在的資料夾，以授權這次更新。"
+          }
+        }
+      }
+    },
+    "Authorize" : {
+      "comment" : "Confirm button of the folder picker shown when updating.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authorize"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授權"
+          }
+        }
+      }
+    },
+    "Couldn't reach GitHub. Check your internet connection and try again." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach GitHub. Check your internet connection and try again."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法連到 GitHub。請檢查網路連線後再試一次。"
+          }
+        }
+      }
+    },
+    "GitHub returned an error (HTTP %lld)." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub returned an error (HTTP %lld)."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub 回傳了錯誤（HTTP %lld）。"
+          }
+        }
+      }
+    },
+    "GitHub is limiting requests right now. Try again in a few minutes." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub is limiting requests right now. Try again in a few minutes."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub 目前限制了請求次數。請幾分鐘後再試。"
+          }
+        }
+      }
+    },
+    "GitHub's answer could not be understood." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub's answer could not be understood."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法理解 GitHub 的回應。"
+          }
+        }
+      }
+    },
+    "The new version has no Apple Silicon download, so the update was not started." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The new version has no Apple Silicon download, so the update was not started."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新版沒有適用 Apple Silicon 的下載檔，所以沒有開始更新。"
+          }
+        }
+      }
+    },
+    "The new version has no SHA-256 checksum, so the update was refused." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The new version has no SHA-256 checksum, so the update was refused."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新版沒有附上 SHA-256 校驗碼，所以拒絕更新。"
+          }
+        }
+      }
+    },
+    "The checksum file of the new version is malformed, so the update was refused." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The checksum file of the new version is malformed, so the update was refused."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新版的校驗碼檔案格式不正確，所以拒絕更新。"
+          }
+        }
+      }
+    },
+    "The published checksums disagree with each other, so the update was refused." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The published checksums disagree with each other, so the update was refused."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "發布者公佈的校驗碼彼此不一致，所以拒絕更新。"
+          }
+        }
+      }
+    },
+    "The release points to a download host that is not allowed, so the update was refused." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The release points to a download host that is not allowed, so the update was refused."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這個版本指向不被允許的下載主機，所以拒絕更新。"
+          }
+        }
+      }
+    },
+    "The update failed." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The update failed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新失敗。"
+          }
+        }
+      }
+    },
+    "Please move DavidNook to the Applications folder or your own folder before updating." : {
+      "comment" : "Update error: the app runs from a translocated (temporary read-only) location.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please move DavidNook to the Applications folder or your own folder before updating."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請先把 DavidNook 移到「應用程式」或你的資料夾，再更新。"
+          }
+        }
+      }
+    },
+    "DavidNook is on a read-only disk. Please move it to the Applications folder or your own folder before updating." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook is on a read-only disk. Please move it to the Applications folder or your own folder before updating."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook 在唯讀的磁碟上。請先把它移到「應用程式」或你的資料夾，再更新。"
+          }
+        }
+      }
+    },
+    "DavidNook can't write to its own folder. Choose that folder when asked, or move DavidNook to the Applications folder." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook can't write to its own folder. Choose that folder when asked, or move DavidNook to the Applications folder."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook 無法寫入它所在的資料夾。請在被詢問時選擇該資料夾，或把 DavidNook 移到「應用程式」。"
+          }
+        }
+      }
+    },
+    "The download failed." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The download failed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載失敗。"
+          }
+        }
+      }
+    },
+    "The download couldn't be unpacked." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The download couldn't be unpacked."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的檔案無法解壓縮。"
+          }
+        }
+      }
+    },
+    "The download doesn't contain exactly one DavidNook app, so it was not installed." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The download doesn't contain exactly one DavidNook app, so it was not installed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的檔案裡不是剛好一個 DavidNook App，所以沒有安裝。"
+          }
+        }
+      }
+    },
+    "Replacing the app failed. The previous version was kept." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replacing the app failed. The previous version was kept."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取代 App 失敗，已保留原本的版本。"
+          }
+        }
+      }
+    },
+    "Replacing the app failed and the previous version could not be restored. Your previous copy is DavidNook.app.previous in the same folder." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replacing the app failed and the previous version could not be restored. Your previous copy is DavidNook.app.previous in the same folder."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取代 App 失敗，而且無法還原舊版。你的舊版在同一個資料夾裡，名為 DavidNook.app.previous。"
+          }
+        }
+      }
+    },
+    "The installed copy failed verification, so the previous version was restored." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The installed copy failed verification, so the previous version was restored."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝好的新版沒有通過驗證，已還原成舊版。"
+          }
+        }
+      }
+    },
+    "The installed copy failed verification and the previous version could not be restored. Your previous copy is DavidNook.app.previous in the same folder." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The installed copy failed verification and the previous version could not be restored. Your previous copy is DavidNook.app.previous in the same folder."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝好的新版沒有通過驗證，而且無法還原舊版。你的舊版在同一個資料夾裡，名為 DavidNook.app.previous。"
+          }
+        }
+      }
+    },
+    "The update was cancelled." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The update was cancelled."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已取消更新。"
+          }
+        }
+      }
+    },
+    "The downloaded file doesn't match the SHA-256 published by the author, so it was not installed." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The downloaded file doesn't match the SHA-256 published by the author, so it was not installed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的檔案和作者公佈的 SHA-256 不相符，所以沒有安裝。"
+          }
+        }
+      }
+    },
+    "The downloaded app is not DavidNook (wrong identifier), so it was not installed." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The downloaded app is not DavidNook (wrong identifier), so it was not installed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的 App 不是 DavidNook（識別碼不對），所以沒有安裝。"
+          }
+        }
+      }
+    },
+    "The downloaded app's version doesn't match the release, so it was not installed." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The downloaded app's version doesn't match the release, so it was not installed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的 App 版本和這個發行版本不一致，所以沒有安裝。"
+          }
+        }
+      }
+    },
+    "The downloaded version is not newer than the one you have, so it was not installed." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The downloaded version is not newer than the one you have, so it was not installed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的版本並不比你現在的新，所以沒有安裝。"
+          }
+        }
+      }
+    },
+    "The downloaded app doesn't run on Apple Silicon, so it was not installed." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The downloaded app doesn't run on Apple Silicon, so it was not installed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的 App 不能在 Apple Silicon 上執行，所以沒有安裝。"
+          }
+        }
+      }
+    },
+    "The downloaded app's code signature is invalid, so it was not installed." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The downloaded app's code signature is invalid, so it was not installed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的 App 程式碼簽章無效，所以沒有安裝。"
+          }
+        }
+      }
+    },
+    "The downloaded app has Hardened Runtime turned off, so it was not installed." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The downloaded app has Hardened Runtime turned off, so it was not installed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的 App 沒有開啟 Hardened Runtime，所以沒有安裝。"
+          }
+        }
+      }
+    },
+    "The downloaded app asks for more permissions than the current one, so it was not installed." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The downloaded app asks for more permissions than the current one, so it was not installed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的 App 要求比現在這版更多的權限，所以沒有安裝。"
+          }
+        }
+      }
+    },
+    "The downloaded app is not sandboxed, so it was not installed." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The downloaded app is not sandboxed, so it was not installed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的 App 沒有啟用沙盒，所以沒有安裝。"
+          }
+        }
+      }
+    },
+    "The downloaded app couldn't be inspected, so it was not installed." : {
+      "comment" : "Update error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The downloaded app couldn't be inspected, so it was not installed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法檢查下載的 App，所以沒有安裝。"
+          }
+        }
+      }
+    },
+    "Check for Updates" : {
+      "comment" : "Updates: button.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check for Updates"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檢查更新"
+          }
+        }
+      }
+    },
+    "Checking…" : {
+      "comment" : "Updates: status while contacting GitHub.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在檢查…"
+          }
+        }
+      }
+    },
+    "DavidNook is up to date" : {
+      "comment" : "Updates: status.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook is up to date"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook 已是最新版本"
+          }
+        }
+      }
+    },
+    "New version available: %@" : {
+      "comment" : "Updates: status; the argument is a version such as 0.2.0.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New version available: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有新版本：%@"
+          }
+        }
+      }
+    },
+    "Pre-release" : {
+      "comment" : "Updates: label for a beta release.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pre-release"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "預覽版"
+          }
+        }
+      }
+    },
+    "Update and Restart" : {
+      "comment" : "Updates: button.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update and Restart"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新並重新啟動"
+          }
+        }
+      }
+    },
+    "View This Version in Browser" : {
+      "comment" : "Updates: button; opens the GitHub release page.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View This Version in Browser"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在瀏覽器查看這個版本"
+          }
+        }
+      }
+    },
+    "Release notes (summary)" : {
+      "comment" : "Updates: heading above the plain-text release notes.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Release notes (summary)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "發行說明（摘要）"
+          }
+        }
+      }
+    },
+    "Permission needed to update" : {
+      "comment" : "Updates: status.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permission needed to update"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要你的授權才能更新"
+          }
+        }
+      }
+    },
+    "DavidNook runs in the macOS sandbox and can't change its own folder without your permission. Choose the “%@” folder to authorize this update. You are asked only while updating; DavidNook does not remember or reuse this permission." : {
+      "comment" : "Updates: explanation before the folder picker; the argument is a folder name such as Applications.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook runs in the macOS sandbox and can't change its own folder without your permission. Choose the “%@” folder to authorize this update. You are asked only while updating; DavidNook does not remember or reuse this permission."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook 在 macOS 沙盒中執行，沒有你的允許就不能更動自己所在的資料夾。請選擇「%@」資料夾來授權這次更新。只有更新時才會請你選一次，DavidNook 不會記住或重複使用這個授權。"
+          }
+        }
+      }
+    },
+    "Choose Folder…" : {
+      "comment" : "Updates: button.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Folder…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇資料夾…"
+          }
+        }
+      }
+    },
+    "Downloading %@…" : {
+      "comment" : "Updates: status; the argument is a version.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading %@…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在下載 %@…"
+          }
+        }
+      }
+    },
+    "Verifying %@ (checksum, signature, permissions)…" : {
+      "comment" : "Updates: status; the argument is a version.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifying %@ (checksum, signature, permissions)…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在驗證 %@（校驗碼、簽章、權限）…"
+          }
+        }
+      }
+    },
+    "Installing %@…" : {
+      "comment" : "Updates: status; the argument is a version.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installing %@…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在安裝 %@…"
+          }
+        }
+      }
+    },
+    "Installed %@" : {
+      "comment" : "Updates: status; the argument is a version.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安裝 %@"
+          }
+        }
+      }
+    },
+    "The old version is kept as DavidNook.app.previous. DavidNook is signed by its author and not notarized by Apple, so macOS treats the new version as a fresh download: the first launch may be blocked once. If so, open System Settings → Privacy & Security and click “Open Anyway”. After an update the code signature changes, so Screen Recording and Automation permissions may need to be allowed again." : {
+      "comment" : "Updates: explanation after a successful update (Gatekeeper and re-authorization).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The old version is kept as DavidNook.app.previous. DavidNook is signed by its author and not notarized by Apple, so macOS treats the new version as a fresh download: the first launch may be blocked once. If so, open System Settings → Privacy & Security and click “Open Anyway”. After an update the code signature changes, so Screen Recording and Automation permissions may need to be allowed again."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "舊版已備份為 DavidNook.app.previous。DavidNook 由作者自行簽署、未經 Apple 公證，所以 macOS 會把新版當成剛下載的 App：第一次開啟可能會被擋下一次。若是如此，請到「系統設定 → 隱私權與安全性」按「仍要打開」。更新後簽章指紋會改變，螢幕錄製與自動化的授權可能需要重新允許。"
+          }
+        }
+      }
+    },
+    "Restart and Open New Version" : {
+      "comment" : "Updates: button.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restart and Open New Version"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新啟動並打開新版"
+          }
+        }
+      }
+    },
+    "The new version is installed but not open yet" : {
+      "comment" : "Updates: status after macOS blocked the first launch.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The new version is installed but not open yet"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新版已安裝，但還沒打開"
+          }
+        }
+      }
+    },
+    "macOS did not open the new version yet. This is normal after an update: open System Settings → Privacy & Security, click “Open Anyway”, then open DavidNook again. This version keeps running until then." : {
+      "comment" : "Shown when macOS (Gatekeeper) blocks the first launch of the updated app.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS did not open the new version yet. This is normal after an update: open System Settings → Privacy & Security, click “Open Anyway”, then open DavidNook again. This version keeps running until then."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 還沒有打開新版。更新後這是正常的：請到「系統設定 → 隱私權與安全性」按「仍要打開」，再打開一次 DavidNook。在那之前，目前這個版本會繼續執行。"
+          }
+        }
+      }
+    },
+    "Try Again" : {
+      "comment" : "Updates: button.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try Again"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再試一次"
+          }
+        }
+      }
+    },
+    "DavidNook turns the notch into a small control center. Everything stays on this Mac; it goes online only for lyrics (lrclib.net) and when you press Check for Updates (GitHub)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook turns the notch into a small control center. Everything stays on this Mac; it goes online only for lyrics (lrclib.net) and when you press Check for Updates (GitHub)."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook 讓瀏海變成小型控制中心。資料都只留在這台 Mac；只有查歌詞（lrclib.net）與你按下「檢查更新」時（GitHub）才會連網。"
+          }
+        }
+      }
+    },
+    "Online only when needed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Online only when needed"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只在需要時連網"
+          }
+        }
+      }
+    },
+    "Lyrics: the title, artist and duration of the current track go to lrclib.net (can be turned off in Settings → Media). Updates: only when you press Check for Updates, a plain request goes to GitHub. No telemetry, no background checks." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyrics: the title, artist and duration of the current track go to lrclib.net (can be turned off in Settings → Media). Updates: only when you press Check for Updates, a plain request goes to GitHub. No telemetry, no background checks."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歌詞：把目前曲目的曲名、歌手與長度送到 lrclib.net（可在「設定 → 媒體」關閉）。更新：只有你按下「檢查更新」時，才會對 GitHub 送出單純的請求。沒有遙測，也不會在背景自動檢查。"
           }
         }
       }

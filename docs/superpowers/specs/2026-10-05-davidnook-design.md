@@ -3,7 +3,7 @@
 ## 目標
 macOS 瀏海工具，完全本機、無授權伺服器、永不過期。取代已失效的 NotchNook（專有軟體，不得複製其程式碼/素材/字串；只參考「行為」）。
 只做：瀏海外觀與互動、剪貼簿歷史、動態歌詞（繁體中文正確性最優先）、播放控制（使用者所謂「歌詞點播」＝播放/暫停/上一首/下一首＋正確歌詞，不需獨立搜尋功能）。
-不做：AI、帳號、雲端同步、遙測、自動更新。
+不做：AI、帳號、雲端同步、遙測、背景自動更新（2026-10-10 起有「使用者手動按下才連 GitHub」的更新，見文末〈手動更新〉）。
 
 ## 已定決策
 | 項目 | 決定 | 依據 |
@@ -269,3 +269,30 @@ Latin 裝飾詞只認片語，不吃單字 `video`／`audio`（`Video Games` 不
   所以游標在瀏海與膠囊之間移動不會閃爍或誤收。pan／捲動手勢維持只掛在瀏海形體上，膠囊上不處理（不影響既有手勢）。
 - **設定**：設定 → 媒體 → 歌詞：開關、與瀏海的距離、最大寬度、歌詞字級（11–16）、捲動速度（0.5×–2×）。所有值在使用處再夾一次（`LyricsPillMetrics.clamped*`）。
 - **未驗證**：真機播放的手感與時間軸對音訊的準確度；有實體瀏海螢幕上膠囊的實際位置與下拉距離是否合手；無瀏海外接螢幕的瀏海底緣假設；hover／點擊轉接在真機上的行為（只讀程式碼推論）。
+
+## 手動更新（2026-10-10）
+
+**決議**：「不做自動更新伺服器」的原則不變——我們沒有伺服器，也沒有背景輪詢或啟動時檢查。新增的是**使用者按下「檢查更新」才連 GitHub**、再按「更新並重新啟動」才下載並替換自己的流程。
+
+- **對外連線（隱私揭露，已同步 README 中英、設定頁、首次啟動說明）**：除 lrclib.net（歌詞）外，僅在使用者按下「檢查更新」時連 `api.github.com`，按下更新後連 GitHub 的下載主機。
+  只送 GET 與 `User-Agent: DavidNook/<版本>`（＋`Accept`），不帶 token／cookie／識別資料。主機白名單：`api.github.com`、`github.com`、`objects.githubusercontent.com`、
+  `release-assets.githubusercontent.com`、`*.githubusercontent.com`，https、預設連接埠、不帶帳密，**每一次重新導向**都重驗（`UpdateHostPolicy`＋`AllowlistedSession`）。
+- **權限**：新增且僅新增 `com.apple.security.files.user-selected.read-write`（沙盒下用 NSOpenPanel 讓使用者授權 DavidNook 所在資料夾）。**沒有**加 bookmarks.app-scope，所以每次更新都重新詢問；
+  Hardened Runtime、library validation、其他 entitlements 不動。新版的 entitlements 不得多於目前的 App（唯一例外就是上面這個），由 `UpdateVerifier` 在安裝前與安裝後各驗一次。
+- **版本**：所有 release 都是 pre-release，所以不用 `/releases/latest`；讀 `/releases?per_page=10` 後以 SemVer 2.0.0（`SemanticVersion`）挑最高版本，只接受嚴格較新者。
+  **App 的 `CFBundleShortVersionString` 必須是含預覽後綴的完整版本**（例如 `0.2.0-beta.1`）：實測 v0.1.0-beta.1 的 App 版本是 `0.1.0`，與 tag 不等價，也無法與之後的 beta 比較；
+  所以從下一個 release 起 MARKETING_VERSION 要寫成完整版本，`Tools/package_release.sh` 檢查它與要發布的版本逐字相同。
+- **完整性**：SHA-256 優先取同 release 的 `<zip>.sha256`，其次取內文「SHA-256：`hex`」，兩者都沒有或不一致就拒絕；GitHub asset 的 `digest` 欄位若存在也必須一致。
+  zip 解壓前先讀中央目錄（`ZipEntryListing`），只准 `DavidNook.app/…`；解壓後檢查 bundle id、版本＝tag、arm64、`SecStaticCodeCheckValidity`（strict、巢狀、全架構）、Hardened Runtime、沙盒仍開。
+  這些檢查**不能防止發布者帳號被盜後上傳惡意但自洽的版本**（簽章是 ad-hoc、沒有開發者身分可釘選）；它防的是傳輸錯誤、檔案被換、權限被悄悄放大。
+- **安裝**：在目標資料夾內暫存一份新版 → `FileManager.replaceItemAt(…, backupItemName: "DavidNook.app.previous", options: .withoutDeletingBackupItem)` 原子替換 → 對安裝後的位置再驗一次，失敗就用備份換回。
+  `/AppTranslocation/` 路徑與唯讀磁碟區拒絕更新並提示「請先把 DavidNook 移到『應用程式』或你的資料夾再更新」。
+- **沙盒實測（ad-hoc＋Hardened Runtime＋app-sandbox＋network.client＋user-selected.read-write 的小程式，macOS 27）**：
+  ① URLSession 可下載 GitHub release asset（github.com → release-assets.githubusercontent.com，約 4 MB）；沙盒**自動替下載檔加上 `com.apple.quarantine`**（`0086;…`），
+  `removexattr` 與 `xattr -d` 都是 EPERM，`ditto` 解壓後的 App 與內部檔案也都帶 quarantine，`ditto --noqtn`／`FileManager.copyItem` 也無法擺脫；
+  ② 沙盒內可用 `Process` 執行 `/usr/bin/ditto`、`/usr/bin/xattr`、`/usr/bin/codesign`（`-v` 可驗證），但我們改用 Security.framework 做簽章與 entitlements 檢查、只有解壓用 ditto；
+  ③ 對 `~/Applications` 的寫入在未授權時被拒（EPERM），所以必須有 NSOpenPanel 授權（真實的 NSOpenPanel 流程無法在 headless 下測，**未驗證**）。
+- **已知後果**：更新後的新版帶 quarantine，ad-hoc 又未公證，所以**第一次開啟可能被 Gatekeeper 擋一次**，使用者要到「系統設定 → 隱私權與安全性」按「仍要打開」。
+  App 以 `NSWorkspace.openApplication` 開新版，**成功才結束舊版**；被擋時舊版繼續執行並顯示說明（不會讓使用者沒有 App 可用）。沒有合法且不降低安全性的替代方案
+  （不得關閉 Gatekeeper、不得要求改系統安全設定；沙盒內無法移除 quarantine；改由沙盒外的行程搬檔等於繞過沙盒，不做）。更新後 cdhash 改變，螢幕錄製／自動化授權可能要重新允許。
+- **未驗證**：真實 NSOpenPanel 授權流程、實際覆蓋自己並重新開啟、跨版本更新、Gatekeeper 實際行為（只確認了 quarantine 屬性存在）。

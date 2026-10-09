@@ -8,11 +8,13 @@
 
 import Defaults
 import DavidNookCore
+import DavidNookUI
 import SwiftUI
 
 struct AboutView: View {
     @State private var showBuildNumber: Bool = false
     @State private var presentedDocument: LegalDocument?
+    @ObservedObject private var updates = UpdateController.shared
 
     var body: some View {
         Form {
@@ -55,6 +57,16 @@ struct AboutView: View {
                 }
             } header: {
                 Text("Version info")
+            }
+
+            Section {
+                UpdatePanelView(state: updates.state, strings: updates.strings, callbacks: updates.callbacks)
+            } header: {
+                Text("Updates")
+            } footer: {
+                Text("DavidNook connects to GitHub only when you press “Check for Updates”: a plain GET request to api.github.com (and, if you update, to GitHub's download servers) that carries only a User-Agent with the app version, for example DavidNook/0.1.0. No account, token, identifier or usage data is sent, and nothing is checked in the background or at launch. To replace itself, DavidNook asks you to choose the folder it is in, only while updating (the sandbox “user-selected files” permission).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section {
