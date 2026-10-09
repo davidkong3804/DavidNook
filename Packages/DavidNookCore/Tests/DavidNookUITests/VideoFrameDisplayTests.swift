@@ -56,3 +56,40 @@ final class VideoFrameDisplayTests: XCTestCase {
         pump()
     }
 }
+
+/// 畫質：縮小用三線性、放大用線性、等比顯示；contentsScale 跟著視窗的 backingScaleFactor。
+@MainActor
+final class VideoLayerQualityTests: XCTestCase {
+    func testAttachedLayerGetsQualityFilters() {
+        let display = VideoFrameDisplay()
+        let layer = CALayer()
+        display.attach(layer)
+        XCTAssertEqual(layer.contentsGravity, .resizeAspect)
+        XCTAssertEqual(layer.minificationFilter, .trilinear)
+        XCTAssertEqual(layer.magnificationFilter, .linear)
+    }
+
+    func testFloatingViewVideoLayerUsesQualityFiltersAndWindowScale() {
+        let display = VideoFrameDisplay()
+        let view = FloatingVideoView(display: display)
+        XCTAssertEqual(view.videoLayer.contentsGravity, .resizeAspect)
+        XCTAssertEqual(view.videoLayer.minificationFilter, .trilinear)
+        XCTAssertEqual(view.videoLayer.magnificationFilter, .linear)
+        let panel = FloatingVideoPanel(contentRect: CGRect(x: 0, y: 0, width: 320, height: 180))
+        panel.contentView = view
+        view.viewDidChangeBackingProperties()
+        XCTAssertEqual(view.videoLayer.contentsScale, panel.backingScaleFactor)
+    }
+
+    func testLayerHostViewAppliesWindowScaleToItsLayer() {
+        let display = VideoFrameDisplay()
+        let host = VideoFrameLayerHostView(display: display)
+        XCTAssertEqual(host.layer?.minificationFilter, .trilinear)
+        XCTAssertEqual(host.layer?.magnificationFilter, .linear)
+        XCTAssertEqual(host.layer?.contentsGravity, .resizeAspect)
+        let panel = FloatingVideoPanel(contentRect: CGRect(x: 0, y: 0, width: 320, height: 180))
+        panel.contentView = host
+        host.viewDidChangeBackingProperties()
+        XCTAssertEqual(host.layer?.contentsScale, panel.backingScaleFactor)
+    }
+}
