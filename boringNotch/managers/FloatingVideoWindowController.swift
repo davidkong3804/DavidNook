@@ -21,6 +21,13 @@ final class FloatingVideoWindowController {
 
     /// 取消釘選（✕、雙擊、右鍵選單）。
     var onUnpin: (() -> Void)?
+    /// 視窗大小或所在螢幕的 scale 改變（拖曳縮放中會連續呼叫；由接收端節流）。
+    var onSizeChange: (() -> Void)?
+    private var observers: [NSObjectProtocol] = []
+
+    /// 視窗寬（pt）與所在螢幕的 backingScaleFactor：擷取輸出尺寸依此決定。
+    var widthPoints: Double { Double(panel.frame.width) }
+    var backingScale: Double { Double(panel.backingScaleFactor) }
 
     /// `defaultWidth`：第一次釘選（沒有記住的位置與大小）時的寬度＝設定頁的「釘選視窗的預設大小」。
     init(display: VideoFrameDisplay, aspectRatio: Double, defaultWidth: Double) {
@@ -47,6 +54,12 @@ final class FloatingVideoWindowController {
         view.onUnpin = { [weak self] in self?.onUnpin?() }
         view.onOpacityChange = { [weak self] value in self?.setOpacity(value) }
         view.onInteractionEnd = { [weak self] _ in self?.savePlacement() }
+
+        for name in [NSWindow.didResizeNotification, NSWindow.didChangeBackingPropertiesNotification] {
+            observers.append(NotificationCenter.default.addObserver(forName: name, object: panel, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.onSizeChange?() }
+            })
+        }
     }
 
     func show() {
@@ -69,6 +82,9 @@ final class FloatingVideoWindowController {
     func close() {
         savePlacement()
         view.onUnpin = {}; view.onOpacityChange = { _ in }; view.onInteractionEnd = { _ in }
+        onSizeChange = nil
+        observers.forEach { NotificationCenter.default.removeObserver($0) }
+        observers = []
         panel.orderOut(nil)
         panel.close()
     }

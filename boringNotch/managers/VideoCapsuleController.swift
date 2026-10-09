@@ -41,7 +41,7 @@ final class VideoCapsuleController: ObservableObject {
     private init() {
         Defaults[.videoCapsulePinned] = false
         source = ScreenCaptureKitVideoSource(display: display)
-        source.updateRequestedWidth(Defaults[.videoCapsuleWidth])
+        source.updateRequestedWidth(Defaults[.videoCapsuleWidth], scale: Self.screenScale)
         // 新挑選視窗時，依來源 App 的 bundle id 取回記住的裁切（記憶只含 bundle id 與矩形）。
         source.cropResolver = { bundleID in VideoCropStore.load().rect(for: bundleID) }
         let events = source.events
@@ -53,6 +53,8 @@ final class VideoCapsuleController: ObservableObject {
     }
 
     private var now: TimeInterval { ProcessInfo.processInfo.systemUptime }
+    private static var screenScale: Double { Double(NSScreen.main?.backingScaleFactor ?? 2) }
+    private var floatingSizeTask: Task<Void, Never>?
 
     private func apply(_ input: VideoCapsuleInput) {
         let before = state
@@ -97,8 +99,10 @@ final class VideoCapsuleController: ObservableObject {
             } else {
                 let window = FloatingVideoWindowController(display: display, aspectRatio: ratio, defaultWidth: Defaults[.videoCapsuleWidth])
                 window.onUnpin = { [weak self] in self?.unpin() }
+                window.onSizeChange = { [weak self] in self?.floatingSizeDidChange() }
                 floatingWindow = window
                 window.show()
+                applyFloatingSize()   // 釘選一開始就以視窗大小擷取（30 fps、依視窗寬的解析度）
             }
             switch content {
             case .protectedNotice: floatingWindow?.setContent(.protectedNotice)
@@ -111,8 +115,29 @@ final class VideoCapsuleController: ObservableObject {
     }
 
     private func closeFloatingWindow() {
+        floatingSizeTask?.cancel()
+        floatingSizeTask = nil
+        guard floatingWindow != nil else { return }
         floatingWindow?.close()
         floatingWindow = nil
+        source.setFloatingTarget(widthPoints: nil, scale: Self.screenScale)   // 回到封面槽的小尺寸與 20 fps
+    }
+
+    // MARK: 擷取解析度跟著浮動視窗大小
+
+    /// 拖曳縮放中不重設串流：停手約 0.3 秒後才套用最終大小（Core 的 `VideoCaptureSizing` 再過濾 < 10% 的變動）。
+    private func floatingSizeDidChange() {
+        floatingSizeTask?.cancel()
+        floatingSizeTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled else { return }
+            self?.applyFloatingSize()
+        }
+    }
+
+    private func applyFloatingSize() {
+        guard let floatingWindow else { return }
+        source.setFloatingTarget(widthPoints: floatingWindow.widthPoints, scale: floatingWindow.backingScale)
     }
 
     // MARK: 卡住監看（純邏輯在 Core 的 `VideoStallWatchdog`）
@@ -190,7 +215,7 @@ final class VideoCapsuleController: ObservableObject {
     }
 
     /// 設定頁的「釘選視窗的預設大小」：決定 Home 封面槽加寬後的上限，以及第一次釘選時浮動視窗的大小。
-    func commitWidth() { source.updateRequestedWidth(Defaults[.videoCapsuleWidth]) }
+    func commitWidth() { source.updateRequestedWidth(Defaults[.videoCapsuleWidth], scale: Self.screenScale) }
 
     // MARK: 裁切
 

@@ -24,10 +24,6 @@ import OSLog
 import ScreenCaptureKit
 
 final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked Sendable {
-    /// 擷取寬度上限（再由視圖縮放）。
-    static let maximumCaptureWidth = 480
-    static let minimumCaptureWidth = 160
-    static let frameInterval = CMTime(value: 1, timescale: 20)
     /// 編輯裁切時的擷取寬度（px）：裁切視窗顯示較大的畫面。
     static let editorCaptureWidth = 1200
     /// 自動偵測的取樣：間隔與小圖大小。
@@ -50,15 +46,25 @@ final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked 
     private var stoppingByUs = false
     private var generation = 0
     private var lastBrightnessAt: CFAbsoluteTime = 0
-    /// 來源視窗大小（pt）。有裁切（且不在編輯）時不再追蹤（框內畫面的 contentRect 不代表視窗大小）。
-    private var windowSize = CGSize.zero
+    /// 來源視窗大小（pt）的追蹤（Core 的 `WindowSizeTracker`：挑選時的已知大小為準，幀的 contentRect 只用來偵測真的縮放）。
+    /// 有裁切（且不在編輯）時不追蹤（框內畫面的 contentRect 不代表視窗大小）。
+    private var tracker = WindowSizeTracker(initial: .zero)
+    private var windowSize: CGSize { tracker.size }
     private var currentCrop: NormalizedCropRect?
     private var isEditingCrop = false
     private var sourceBundleID: String?
     private var regionFrames: [LumaFrame]?
     private var lastRegionSampleAt: CFAbsoluteTime = 0
     private var pickerConfigured = false
-    private var captureWidth = ScreenCaptureKitVideoSource.maximumCaptureWidth
+    /// 擷取輸出尺寸跟著顯示大小走（Core 的 `VideoCaptureSizing`）：封面槽＝槽寬 pt × scale（≤ 480 px、20 fps）；
+    /// 釘選的浮動視窗＝視窗寬 pt × scale（480…1920 px、高 ≤ 1080、30 fps）。
+    private var slotWidthPoints: Double = 240
+    private var floatingWidthPoints: Double?
+    private var backingScale: Double = 2
+    /// 最近一次放進串流設定的輸出計畫（用來判斷縮放浮動視窗時要不要重設）。
+    private var appliedPlan: VideoCapturePlan?
+    /// 診斷：最近一幀的輸出像素尺寸（只有數字）。
+    private var lastOutputSize = CGSize.zero
     /// 最近一次收到串流回呼的時間（`ProcessInfo.systemUptime`；含「畫面沒變」的 idle 幀）。給卡住監看用。
     private var lastCallbackUptime: TimeInterval = 0
     /// 各幀狀態的回呼次數（只有計數，沒有內容；診斷「畫面停住」用，見 `drainStatusSummary`）。
@@ -72,20 +78,56 @@ final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked 
         super.init()
     }
 
-    /// 使用者的寬度（pt）→ 擷取寬度（Retina 2×，夾在 160…480）。滑桿放開時呼叫。
-    func updateRequestedWidth(_ points: Double) {
-        let w = min(max(Int((points * 2).rounded()), Self.minimumCaptureWidth), Self.maximumCaptureWidth)
+    /// 封面槽的寬度（pt；設定頁的預設大小）與螢幕 scale。滑桿放開時呼叫。
+    func updateRequestedWidth(_ points: Double, scale: Double = 2) {
         lock.lock()
-        let changed = w != captureWidth
-        captureWidth = w
+        slotWidthPoints = points
+        backingScale = scale
+        lock.unlock()
+        applyPlanIfNeeded(force: false)
+    }
+
+    /// 釘選的浮動視窗大小（pt）改變／開啟時呼叫；`nil`＝沒有浮動視窗（回到封面槽的小尺寸與 20 fps）。
+    /// 縮放中的連續呼叫由呼叫端節流；這裡再以「目標變動 < 10% 就不重設」過濾。
+    func setFloatingTarget(widthPoints: Double?, scale: Double) {
+        lock.lock()
+        let modeChanged = (floatingWidthPoints == nil) != (widthPoints == nil)
+        floatingWidthPoints = widthPoints
+        backingScale = scale
+        lock.unlock()
+        applyPlanIfNeeded(force: modeChanged)
+    }
+
+    /// 目前輸出計畫（編輯裁切時固定 1200 px 寬的整窗畫面）。呼叫時需持有 lock。
+    private func currentPlanLocked() -> VideoCapturePlan {
+        let ratio = ratioLocked()
+        let fps = floatingWidthPoints == nil ? 20 : 30
+        if isEditingCrop {
+            return VideoCapturePlan(width: Self.editorCaptureWidth, height: max(2, Int((Double(Self.editorCaptureWidth) / max(ratio, 0.01)).rounded())), framesPerSecond: fps)
+        }
+        if let floating = floatingWidthPoints {
+            return VideoCaptureSizing.plan(mode: .floating, displayWidthPoints: floating, scale: backingScale, aspectRatio: ratio)
+        }
+        return VideoCaptureSizing.plan(mode: .slot, displayWidthPoints: slotWidthPoints, scale: backingScale, aspectRatio: ratio)
+    }
+
+    private func applyPlanIfNeeded(force: Bool) {
+        lock.lock()
+        let target = currentPlanLocked()
+        let need = force || VideoCaptureSizing.shouldReconfigure(current: appliedPlan, target: target)
         let stream = self.stream
         let known = windowSize.width > 0 && windowSize.height > 0
         lock.unlock()
-        guard changed, let stream, known else { return }
-        let config = makeConfiguration()
-        stream.updateConfiguration(config) { [log] error in
+        guard need, let stream, known else { return }
+        stream.updateConfiguration(makeConfiguration()) { [log] error in
             if let error { log.error("updateConfiguration failed code=\((error as NSError).code)") }
         }
+    }
+
+    /// 診斷（只有數字）：目前追蹤的來源視窗大小（pt）與最近一幀的輸出像素尺寸。
+    var debugSizes: (window: CGSize, output: CGSize) {
+        lock.lock(); defer { lock.unlock() }
+        return (windowSize, lastOutputSize)
     }
 
     // MARK: VideoFrameSource
@@ -175,17 +217,17 @@ final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked 
     private func makeConfiguration() -> SCStreamConfiguration {
         lock.lock()
         let editing = isEditingCrop
-        let width = editing ? Self.editorCaptureWidth : captureWidth
         let crop = editing ? nil : currentCrop
         let window = windowSize
-        let ratio = ratioLocked()
+        let plan = currentPlanLocked()
+        appliedPlan = plan
         lock.unlock()
         let config = SCStreamConfiguration()
-        config.width = width
-        config.height = max(1, Int((Double(width) / max(ratio, 0.01)).rounded()))
+        config.width = plan.width
+        config.height = plan.height
         // 裁切：只擷取視窗內這一塊（單位 pt，相對視窗；原點假設見上方說明，未經真機驗證）。
         if let crop, window.width > 0, window.height > 0 { config.sourceRect = crop.sourceRect(in: window) }
-        config.minimumFrameInterval = Self.frameInterval
+        config.minimumFrameInterval = CMTime(value: 1, timescale: CMTimeScale(plan.framesPerSecond))
         config.capturesAudio = false
         config.showsCursor = false
         config.pixelFormat = kCVPixelFormatType_32BGRA
@@ -205,7 +247,8 @@ final class ScreenCaptureKitVideoSource: NSObject, VideoFrameSource, @unchecked 
         generation += 1
         let myGeneration = generation
         lastBrightnessAt = 0
-        windowSize = rect.size
+        // 新挑選的視窗才以 filter 的大小（pt）重新校準；重啟／恢復沿用目前追蹤的大小（filter.contentRect 是挑選當下的快照，視窗可能已縮放）。
+        if resolveCrop || tracker.size == .zero { tracker.reset(to: rect.size) }
         if resolveCrop {
             sourceBundleID = bundleID
             currentCrop = remembered
@@ -321,10 +364,15 @@ extension ScreenCaptureKitVideoSource: SCStreamDelegate, SCStreamOutput {
         }
 
         // 來源視窗被縮放：contentRect 的長寬比改變 → 回報並調整擷取高度。
+        // contentRect 是輸出畫面裡的內容（單位不是視窗的點）：除以 contentScale 換回來源大小，再交給 WindowSizeTracker 校準。
         if let info = attachments.first, let rectDict = info[.contentRect] as? NSDictionary,
            let rect = CGRect(dictionaryRepresentation: rectDict as CFDictionary), rect.width > 0, rect.height > 0 {
-            reportSizeIfChanged(rect.size)
+            let contentScale = (info[.contentScale] as? Double).flatMap { $0 > 0 ? $0 : nil } ?? 1
+            reportSizeIfChanged(CGSize(width: rect.width / contentScale, height: rect.height / contentScale))
         }
+        lock.lock()
+        lastOutputSize = CGSize(width: CVPixelBufferGetWidth(pixelBuffer), height: CVPixelBufferGetHeight(pixelBuffer))
+        lock.unlock()
 
         // 每秒一次的平均亮度（只看裁切區域）；自動偵測期間另外每 0.25 秒取一張小圖。
         let now = CFAbsoluteTimeGetCurrent()
@@ -359,19 +407,17 @@ extension ScreenCaptureKitVideoSource: SCStreamDelegate, SCStreamOutput {
         }
     }
 
-    private func reportSizeIfChanged(_ size: CGSize) {
+    private func reportSizeIfChanged(_ raw: CGSize) {
         lock.lock()
         // 有裁切（且不在編輯）時，框內畫面的 contentRect 不代表視窗大小：不追蹤視窗縮放（需要時請重新裁切）。
         if currentCrop != nil, !isEditingCrop { lock.unlock(); return }
-        let previous = windowSize
-        let changed = abs(size.width - previous.width) > 1 || abs(size.height - previous.height) > 1
-        if changed { windowSize = size }
+        let changed = tracker.ingest(rawSize: raw)
+        let size = tracker.size
         let editing = isEditingCrop
-        let stream = self.stream
         lock.unlock()
         guard changed else { return }
         if !editing { continuation.yield(.frameSize(width: Int(size.width.rounded()), height: Int(size.height.rounded()))) }
-        stream?.updateConfiguration(makeConfiguration()) { _ in }
+        applyPlanIfNeeded(force: true)   // 長寬比改變：高度要跟著變
     }
 }
 
