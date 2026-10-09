@@ -7,7 +7,7 @@ private final class FakeDownloader: UpdateDownloading, @unchecked Sendable {
     var payload = Data("zip-bytes".utf8)
     var failure: Error?
     private(set) var requestedURLs: [URL] = []
-    func download(from url: URL, to destination: URL, progress: @Sendable (Double) -> Void) async throws {
+    func download(from url: URL, to destination: URL, progress: @escaping @Sendable (Double) -> Void) async throws {
         requestedURLs.append(url)
         if let failure { throw failure }
         progress(0.5)
@@ -281,7 +281,7 @@ final class UpdateInstallerTests: XCTestCase {
     }
 
     func testUserFacingMessagesForLocationProblemsAreHelpful() {
-        XCTAssertTrue(UpdateInstallError.translocated.reason.contains("應用程式"))
+        XCTAssertTrue(UpdateInstallError.translocated.reason.contains("Applications"), "Core 的 reason 是英文診斷文字；App 層再對應成在地化句子")
         XCTAssertFalse(UpdateInstallError.readOnlyVolume.reason.isEmpty)
     }
 

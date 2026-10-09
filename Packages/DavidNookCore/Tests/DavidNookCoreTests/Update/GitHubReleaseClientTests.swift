@@ -16,7 +16,7 @@ private func asset(_ name: String, tag: String, digest: String? = nil, state: St
     return a
 }
 
-private func release(
+private func fakeRelease(
     tag: String, prerelease: Bool = true, draft: Bool = false, body: String? = nil,
     assets: [[String: Any]]? = nil, hashInBody: String? = nil, name: String? = nil
 ) -> [String: Any] {
@@ -64,10 +64,10 @@ final class GitHubReleaseClientTests: XCTestCase {
 
     func testPicksHighestVersionIncludingPrereleaseNotListOrder() async throws {
         let body = listing([
-            release(tag: "v0.1.0-beta.1", hashInBody: hashA),
-            release(tag: "v0.1.0-beta.2", hashInBody: hashB),
-            release(tag: "v0.1.0-beta.10", hashInBody: hashB),
-            release(tag: "v0.1.0-alpha.9", hashInBody: hashA),
+            fakeRelease(tag: "v0.1.0-beta.1", hashInBody: hashA),
+            fakeRelease(tag: "v0.1.0-beta.2", hashInBody: hashB),
+            fakeRelease(tag: "v0.1.0-beta.10", hashInBody: hashB),
+            fakeRelease(tag: "v0.1.0-alpha.9", hashInBody: hashA),
         ])
         let result = try await client(StubTransport(steps: [.ok(body)])).check(current: current)
         guard case .available(let c) = result else { return XCTFail("應有新版：\(result)") }
@@ -77,8 +77,8 @@ final class GitHubReleaseClientTests: XCTestCase {
 
     func testStableReleaseBeatsItsBetas() async throws {
         let body = listing([
-            release(tag: "v0.1.0-beta.2", hashInBody: hashA),
-            release(tag: "v0.1.0", prerelease: false, hashInBody: hashB),
+            fakeRelease(tag: "v0.1.0-beta.2", hashInBody: hashA),
+            fakeRelease(tag: "v0.1.0", prerelease: false, hashInBody: hashB),
         ])
         let result = try await client(StubTransport(steps: [.ok(body)])).check(current: current)
         guard case .available(let c) = result else { return XCTFail("\(result)") }
@@ -88,13 +88,13 @@ final class GitHubReleaseClientTests: XCTestCase {
     }
 
     func testUpToDateWhenLatestEqualsCurrent() async throws {
-        let body = listing([release(tag: "v0.1.0-beta.1", hashInBody: hashA)])
+        let body = listing([fakeRelease(tag: "v0.1.0-beta.1", hashInBody: hashA)])
         let result = try await client(StubTransport(steps: [.ok(body)])).check(current: current)
         XCTAssertEqual(result, .upToDate(latest: SemanticVersion("0.1.0-beta.1")))
     }
 
     func testNeverOffersDowngrade() async throws {
-        let body = listing([release(tag: "v0.0.9", hashInBody: hashA), release(tag: "v0.1.0-alpha.1", hashInBody: hashA)])
+        let body = listing([fakeRelease(tag: "v0.0.9", hashInBody: hashA), fakeRelease(tag: "v0.1.0-alpha.1", hashInBody: hashA)])
         let result = try await client(StubTransport(steps: [.ok(body)])).check(current: current)
         XCTAssertEqual(result, .upToDate(latest: SemanticVersion("0.1.0-alpha.1")))
     }
@@ -106,9 +106,9 @@ final class GitHubReleaseClientTests: XCTestCase {
 
     func testDraftsAndUnparseableTagsAreIgnored() async throws {
         let body = listing([
-            release(tag: "v9.9.9", draft: true, hashInBody: hashA),
-            release(tag: "nightly", hashInBody: hashA),
-            release(tag: "v0.1.0-beta.2", hashInBody: hashB),
+            fakeRelease(tag: "v9.9.9", draft: true, hashInBody: hashA),
+            fakeRelease(tag: "nightly", hashInBody: hashA),
+            fakeRelease(tag: "v0.1.0-beta.2", hashInBody: hashB),
         ])
         let result = try await client(StubTransport(steps: [.ok(body)])).check(current: current)
         guard case .available(let c) = result else { return XCTFail("\(result)") }
@@ -116,7 +116,7 @@ final class GitHubReleaseClientTests: XCTestCase {
     }
 
     func testExcludingPrereleasesSkipsThem() async throws {
-        let body = listing([release(tag: "v0.2.0-beta.1", hashInBody: hashA)])
+        let body = listing([fakeRelease(tag: "v0.2.0-beta.1", hashInBody: hashA)])
         let result = try await client(StubTransport(steps: [.ok(body)]), version: "0.1.0", prereleases: false)
             .check(current: SemanticVersion("0.1.0")!)
         XCTAssertEqual(result, .upToDate(latest: nil))
@@ -131,7 +131,7 @@ final class GitHubReleaseClientTests: XCTestCase {
             asset("Source.zip", tag: "v0.1.0-beta.2"),
             asset("DavidNook-0.1.0-beta.2-arm64.zip", tag: "v0.1.0-beta.2"),
         ]
-        let body = listing([release(tag: "v0.1.0-beta.2", assets: assets, hashInBody: hashA)])
+        let body = listing([fakeRelease(tag: "v0.1.0-beta.2", assets: assets, hashInBody: hashA)])
         let result = try await client(StubTransport(steps: [.ok(body)])).check(current: current)
         guard case .available(let c) = result else { return XCTFail("\(result)") }
         XCTAssertEqual(c.archiveName, "DavidNook-0.1.0-beta.2-arm64.zip")
@@ -142,24 +142,24 @@ final class GitHubReleaseClientTests: XCTestCase {
 
     func testZipForOtherVersionIsNotAccepted() async throws {
         let assets = [asset("DavidNook-0.1.0-beta.1-arm64.zip", tag: "v0.1.0-beta.2")]
-        let body = listing([release(tag: "v0.1.0-beta.2", assets: assets, hashInBody: hashA)])
+        let body = listing([fakeRelease(tag: "v0.1.0-beta.2", assets: assets, hashInBody: hashA)])
         await assertThrows(UpdateCheckError.missingArchive(tag: "v0.1.0-beta.2"), StubTransport(steps: [.ok(body)]))
     }
 
     func testMissingArm64ZipIsRejected() async throws {
-        let body = listing([release(tag: "v0.1.0-beta.2", assets: [], hashInBody: hashA)])
+        let body = listing([fakeRelease(tag: "v0.1.0-beta.2", assets: [], hashInBody: hashA)])
         await assertThrows(UpdateCheckError.missingArchive(tag: "v0.1.0-beta.2"), StubTransport(steps: [.ok(body)]))
     }
 
     func testAssetNotFullyUploadedIsRejected() async throws {
         let assets = [asset("DavidNook-0.1.0-beta.2-arm64.zip", tag: "v0.1.0-beta.2", state: "starter")]
-        let body = listing([release(tag: "v0.1.0-beta.2", assets: assets, hashInBody: hashA)])
+        let body = listing([fakeRelease(tag: "v0.1.0-beta.2", assets: assets, hashInBody: hashA)])
         await assertThrows(UpdateCheckError.missingArchive(tag: "v0.1.0-beta.2"), StubTransport(steps: [.ok(body)]))
     }
 
     func testAssetWithDisallowedHostIsRejected() async throws {
         let assets = [asset("DavidNook-0.1.0-beta.2-arm64.zip", tag: "v0.1.0-beta.2", url: "https://evil.example/DavidNook-0.1.0-beta.2-arm64.zip")]
-        let body = listing([release(tag: "v0.1.0-beta.2", assets: assets, hashInBody: hashA)])
+        let body = listing([fakeRelease(tag: "v0.1.0-beta.2", assets: assets, hashInBody: hashA)])
         await assertThrows(UpdateCheckError.disallowedURL("https://evil.example/DavidNook-0.1.0-beta.2-arm64.zip"),
                            StubTransport(steps: [.ok(body)]))
     }
@@ -168,7 +168,7 @@ final class GitHubReleaseClientTests: XCTestCase {
         let tag = "v0.1.0-beta.2"
         let name = "DavidNook-0.1.0-beta.2-arm64.zip"
         let assets = [asset(name, tag: tag), asset(name + ".sha256", tag: tag, size: 100)]
-        let body = listing([release(tag: tag, assets: assets, hashInBody: hashA)])
+        let body = listing([fakeRelease(tag: tag, assets: assets, hashInBody: hashA)])
         let transport = StubTransport(steps: [.ok(body), shaFileStep("\(hashA.uppercased())  \(name)\n")])
         let result = try await client(transport).check(current: current)
         guard case .available(let c) = result else { return XCTFail("\(result)") }
@@ -183,7 +183,7 @@ final class GitHubReleaseClientTests: XCTestCase {
         let tag = "v0.1.0-beta.2"
         let name = "DavidNook-0.1.0-beta.2-arm64.zip"
         let assets = [asset(name, tag: tag), asset(name + ".sha256", tag: tag)]
-        let body = listing([release(tag: tag, assets: assets)])
+        let body = listing([fakeRelease(tag: tag, assets: assets)])
         let transport = StubTransport(steps: [.ok(body), shaFileStep("\(hashB)  \(name)")])
         let result = try await client(transport).check(current: current)
         guard case .available(let c) = result else { return XCTFail("\(result)") }
@@ -194,7 +194,7 @@ final class GitHubReleaseClientTests: XCTestCase {
         let tag = "v0.1.0-beta.2"
         let name = "DavidNook-0.1.0-beta.2-arm64.zip"
         let assets = [asset(name, tag: tag), asset(name + ".sha256", tag: tag)]
-        let transport = StubTransport(steps: [.ok(listing([release(tag: tag, assets: assets)])), shaFileStep("\(hashB) *\(name)")])
+        let transport = StubTransport(steps: [.ok(listing([fakeRelease(tag: tag, assets: assets)])), shaFileStep("\(hashB) *\(name)")])
         let result = try await client(transport).check(current: current)
         guard case .available(let c) = result else { return XCTFail("\(result)") }
         XCTAssertEqual(c.sha256, hashB)
@@ -204,7 +204,7 @@ final class GitHubReleaseClientTests: XCTestCase {
         let tag = "v0.1.0-beta.2"
         let name = "DavidNook-0.1.0-beta.2-arm64.zip"
         let assets = [asset(name, tag: tag), asset(name + ".sha256", tag: tag)]
-        let transport = StubTransport(steps: [.ok(listing([release(tag: tag, assets: assets, hashInBody: hashB)])),
+        let transport = StubTransport(steps: [.ok(listing([fakeRelease(tag: tag, assets: assets, hashInBody: hashB)])),
                                               shaFileStep("\(hashB)  other.zip")])
         await assertThrows(UpdateCheckError.invalidChecksumFile(tag: tag), transport)
     }
@@ -213,13 +213,13 @@ final class GitHubReleaseClientTests: XCTestCase {
         let tag = "v0.1.0-beta.2"
         let name = "DavidNook-0.1.0-beta.2-arm64.zip"
         let assets = [asset(name, tag: tag), asset(name + ".sha256", tag: tag)]
-        let transport = StubTransport(steps: [.ok(listing([release(tag: tag, assets: assets, hashInBody: hashB)])),
+        let transport = StubTransport(steps: [.ok(listing([fakeRelease(tag: tag, assets: assets, hashInBody: hashB)])),
                                               shaFileStep("not a hash")])
         await assertThrows(UpdateCheckError.invalidChecksumFile(tag: tag), transport)
     }
 
     func testFallsBackToBodyWhenNoSha256Asset() async throws {
-        let body = listing([release(tag: "v0.1.0-beta.2", hashInBody: hashA.uppercased())])
+        let body = listing([fakeRelease(tag: "v0.1.0-beta.2", hashInBody: hashA.uppercased())])
         let transport = StubTransport(steps: [.ok(body)])
         let result = try await client(transport).check(current: current)
         guard case .available(let c) = result else { return XCTFail("\(result)") }
@@ -228,24 +228,24 @@ final class GitHubReleaseClientTests: XCTestCase {
     }
 
     func testBodyHashAcceptsAsciiColonToo() async throws {
-        let body = listing([release(tag: "v0.1.0-beta.2", body: "SHA-256: `\(hashA)`")])
+        let body = listing([fakeRelease(tag: "v0.1.0-beta.2", body: "SHA-256: `\(hashA)`")])
         let result = try await client(StubTransport(steps: [.ok(body)])).check(current: current)
         guard case .available(let c) = result else { return XCTFail("\(result)") }
         XCTAssertEqual(c.sha256, hashA)
     }
 
     func testNoChecksumAnywhereRefusesUpdate() async throws {
-        let body = listing([release(tag: "v0.1.0-beta.2")])
+        let body = listing([fakeRelease(tag: "v0.1.0-beta.2")])
         await assertThrows(UpdateCheckError.missingChecksum(tag: "v0.1.0-beta.2"), StubTransport(steps: [.ok(body)]))
     }
 
     func testBodyWithWrongLengthHashRefusesUpdate() async throws {
-        let body = listing([release(tag: "v0.1.0-beta.2", body: "SHA-256：`abc123`")])
+        let body = listing([fakeRelease(tag: "v0.1.0-beta.2", body: "SHA-256：`abc123`")])
         await assertThrows(UpdateCheckError.missingChecksum(tag: "v0.1.0-beta.2"), StubTransport(steps: [.ok(body)]))
     }
 
     func testConflictingHashesInBodyAreRejected() async throws {
-        let body = listing([release(tag: "v0.1.0-beta.2", body: "SHA-256：`\(hashA)`\nSHA-256：`\(hashB)`")])
+        let body = listing([fakeRelease(tag: "v0.1.0-beta.2", body: "SHA-256：`\(hashA)`\nSHA-256：`\(hashB)`")])
         await assertThrows(UpdateCheckError.checksumConflict(tag: "v0.1.0-beta.2"), StubTransport(steps: [.ok(body)]))
     }
 
@@ -253,7 +253,7 @@ final class GitHubReleaseClientTests: XCTestCase {
         let tag = "v0.1.0-beta.2"
         let name = "DavidNook-0.1.0-beta.2-arm64.zip"
         let assets = [asset(name, tag: tag), asset(name + ".sha256", tag: tag)]
-        let transport = StubTransport(steps: [.ok(listing([release(tag: tag, assets: assets, hashInBody: hashA)])),
+        let transport = StubTransport(steps: [.ok(listing([fakeRelease(tag: tag, assets: assets, hashInBody: hashA)])),
                                               shaFileStep("\(hashB)  \(name)")])
         await assertThrows(UpdateCheckError.checksumConflict(tag: tag), transport)
     }
@@ -262,7 +262,7 @@ final class GitHubReleaseClientTests: XCTestCase {
         let tag = "v0.1.0-beta.2"
         let name = "DavidNook-0.1.0-beta.2-arm64.zip"
         let assets = [asset(name, tag: tag, digest: "sha256:\(hashB)")]
-        let body = listing([release(tag: tag, assets: assets, hashInBody: hashA)])
+        let body = listing([fakeRelease(tag: tag, assets: assets, hashInBody: hashA)])
         await assertThrows(UpdateCheckError.checksumConflict(tag: tag), StubTransport(steps: [.ok(body)]))
     }
 
@@ -270,7 +270,7 @@ final class GitHubReleaseClientTests: XCTestCase {
         let tag = "v0.1.0-beta.2"
         let name = "DavidNook-0.1.0-beta.2-arm64.zip"
         let assets = [asset(name, tag: tag, digest: "sha256:\(hashA)")]
-        let result = try await client(StubTransport(steps: [.ok(listing([release(tag: tag, assets: assets, hashInBody: hashA)]))])).check(current: current)
+        let result = try await client(StubTransport(steps: [.ok(listing([fakeRelease(tag: tag, assets: assets, hashInBody: hashA)]))])).check(current: current)
         guard case .available = result else { return XCTFail("\(result)") }
     }
 
@@ -278,7 +278,7 @@ final class GitHubReleaseClientTests: XCTestCase {
 
     func testNotesAreSanitizedAndTruncated() async throws {
         let long = "<script>x</script>[連結](https://evil.example) " + String(repeating: "很長", count: 2000)
-        let body = listing([release(tag: "v0.1.0-beta.2", body: long, hashInBody: hashA)])
+        let body = listing([fakeRelease(tag: "v0.1.0-beta.2", body: long, hashInBody: hashA)])
         let result = try await client(StubTransport(steps: [.ok(body)])).check(current: current)
         guard case .available(let c) = result else { return XCTFail("\(result)") }
         XCTAssertFalse(c.notes.contains("<script"))
@@ -288,7 +288,7 @@ final class GitHubReleaseClientTests: XCTestCase {
     }
 
     func testReleasePageURLOutsideAllowlistFallsBackToCanonicalTagPage() async throws {
-        var r = release(tag: "v0.1.0-beta.2", hashInBody: hashA)
+        var r = fakeRelease(tag: "v0.1.0-beta.2", hashInBody: hashA)
         r["html_url"] = "https://evil.example/phish"
         let result = try await client(StubTransport(steps: [.ok(listing([r]))])).check(current: current)
         guard case .available(let c) = result else { return XCTFail("\(result)") }

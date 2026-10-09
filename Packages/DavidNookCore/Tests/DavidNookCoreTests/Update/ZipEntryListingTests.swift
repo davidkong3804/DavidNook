@@ -66,4 +66,28 @@ final class ZipEntryListingTests: XCTestCase {
         try data.prefix(data.count / 2).write(to: cut)
         XCTAssertThrowsError(try ZipEntryListing.entryNames(of: cut))
     }
+
+    func testDittoExtractorRoundTripsRealZip() throws {
+        let zip = try makeZip(files: ["DavidNook.app/Contents/Info.plist": "plist", "DavidNook.app/Contents/MacOS/DavidNook": "bin"])
+        let out = tmp.appendingPathComponent("out")
+        try DittoArchiveExtractor().extract(archive: zip, to: out)
+        XCTAssertEqual(try String(contentsOf: out.appendingPathComponent("DavidNook.app/Contents/Info.plist")), "plist")
+    }
+
+    func testDittoExtractorRefusesZipWithForeignTopLevelItem() throws {
+        let zip = try makeZip(files: ["DavidNook.app/Contents/Info.plist": "x"])
+        // 另做一個頂層不是 DavidNook.app 的 zip。
+        let other = tmp.appendingPathComponent("Other")
+        try FileManager.default.createDirectory(at: other, withIntermediateDirectories: true)
+        try Data("x".utf8).write(to: other.appendingPathComponent("f"))
+        let bad = tmp.appendingPathComponent("bad.zip")
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+        p.arguments = ["-c", "-k", "--keepParent", other.path, bad.path]
+        try p.run(); p.waitUntilExit()
+        XCTAssertNoThrow(try DittoArchiveExtractor().extract(archive: zip, to: tmp.appendingPathComponent("ok")))
+        let out = tmp.appendingPathComponent("never")
+        XCTAssertThrowsError(try DittoArchiveExtractor().extract(archive: bad, to: out))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: out.path), "不合格的 zip 不得開始解壓")
+    }
 }
