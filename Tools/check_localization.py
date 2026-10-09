@@ -50,6 +50,7 @@ KEY_CALL_PREFIXES = [
     r"\bPicker\(\s*",
     r"\bSection\(\s*",
     r"\bStepper\(\s*",
+    r"\bLabeledContent\(\s*",
     r"\bTextField\(\s*",
     r"\bColorPicker\(\s*",
     r"\bMenuBarExtra\(\s*",
