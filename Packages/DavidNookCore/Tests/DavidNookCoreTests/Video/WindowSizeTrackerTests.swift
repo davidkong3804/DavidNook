@@ -54,9 +54,17 @@ final class WindowSizeTrackerTests: XCTestCase {
 
     func testInvalidSamplesAreIgnored() {
         var t = WindowSizeTracker(initial: CGSize(width: 800, height: 450))
-        for bad in [CGSize.zero, CGSize(width: -1, height: 5), CGSize(width: CGFloat.nan, height: 5), CGSize(width: 5, height: .infinity)] {
+        for bad in [CGSize.zero, CGSize(width: -1, height: 5), CGSize(width: CGFloat.nan, height: 5), CGSize(width: 5, height: CGFloat.infinity)] {
             XCTAssertFalse(t.ingest(rawSize: bad))
         }
         XCTAssertEqual(t.size, CGSize(width: 800, height: 450))
+    }
+}
+
+extension WindowSizeTrackerTests {
+    func testFirstSampleWithDifferentShapeIsARealResize() {
+        var t = WindowSizeTracker(initial: CGSize(width: 800, height: 450))
+        XCTAssertTrue(t.ingest(rawSize: CGSize(width: 600, height: 450)), "長寬比不同＝視窗被縮放，不是單位差異")
+        XCTAssertEqual(t.size, CGSize(width: 600, height: 450))
     }
 }
