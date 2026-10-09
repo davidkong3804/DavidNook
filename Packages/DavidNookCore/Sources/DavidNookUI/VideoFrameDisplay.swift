@@ -15,7 +15,15 @@ public final class VideoFrameDisplay: @unchecked Sendable {
 
     public init() {}
 
+    /// 畫質設定：等比顯示；縮小、放大都用線性。不用 trilinear：它會替 IOSurface 產生並快取 mipmap，SCStream 重用同一張 surface 覆寫內容時會顯示舊畫面（實測 FloatingVideoLiveUpdateTests 單張重用 surface 只剩 1 種畫面）。擷取尺寸已跟著顯示大小走，縮小幅度本來就小。
+    static func applyQuality(to layer: CALayer) {
+        layer.contentsGravity = .resizeAspect
+        layer.minificationFilter = .linear
+        layer.magnificationFilter = .linear
+    }
+
     func attach(_ layer: CALayer) {
+        Self.applyQuality(to: layer)
         lock.lock(); layers.add(layer); let current = latest; lock.unlock()
         if let current { layer.contents = current }
     }
@@ -37,20 +45,30 @@ public final class VideoFrameDisplay: @unchecked Sendable {
     }
 }
 
+/// 掛著影片圖層的 AppKit 視圖：contentsScale 跟著所在視窗的 backingScaleFactor（換螢幕時也更新）。
+final class VideoFrameLayerHostView: NSView {
+    init(display: VideoFrameDisplay) {
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.black.cgColor
+        if let layer { display.attach(layer) }
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
+
+    override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        if let scale = window?.backingScaleFactor { layer?.contentsScale = scale }
+    }
+}
+
 /// 顯示 `VideoFrameDisplay` 的 SwiftUI 視圖（AppKit layer 為底）。
 public struct VideoFrameLayerView: NSViewRepresentable {
     public let display: VideoFrameDisplay
 
     public init(display: VideoFrameDisplay) { self.display = display }
 
-    public func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        view.wantsLayer = true
-        view.layer?.contentsGravity = .resizeAspect
-        view.layer?.backgroundColor = NSColor.black.cgColor
-        if let layer = view.layer { display.attach(layer) }
-        return view
-    }
+    public func makeNSView(context: Context) -> NSView { VideoFrameLayerHostView(display: display) }
 
     public func updateNSView(_ nsView: NSView, context: Context) {}
 }

@@ -57,7 +57,7 @@ final class VideoFrameDisplayTests: XCTestCase {
     }
 }
 
-/// 畫質：縮小用三線性、放大用線性、等比顯示；contentsScale 跟著視窗的 backingScaleFactor。
+/// 畫質：縮放都用線性（trilinear 的 mipmap 快取會讓重用的 IOSurface 顯示舊畫面）、等比顯示；contentsScale 跟著視窗的 backingScaleFactor。
 @MainActor
 final class VideoLayerQualityTests: XCTestCase {
     func testAttachedLayerGetsQualityFilters() {
@@ -65,7 +65,7 @@ final class VideoLayerQualityTests: XCTestCase {
         let layer = CALayer()
         display.attach(layer)
         XCTAssertEqual(layer.contentsGravity, .resizeAspect)
-        XCTAssertEqual(layer.minificationFilter, .trilinear)
+        XCTAssertEqual(layer.minificationFilter, .linear)
         XCTAssertEqual(layer.magnificationFilter, .linear)
     }
 
@@ -73,7 +73,7 @@ final class VideoLayerQualityTests: XCTestCase {
         let display = VideoFrameDisplay()
         let view = FloatingVideoView(display: display)
         XCTAssertEqual(view.videoLayer.contentsGravity, .resizeAspect)
-        XCTAssertEqual(view.videoLayer.minificationFilter, .trilinear)
+        XCTAssertEqual(view.videoLayer.minificationFilter, .linear)
         XCTAssertEqual(view.videoLayer.magnificationFilter, .linear)
         let panel = FloatingVideoPanel(contentRect: CGRect(x: 0, y: 0, width: 320, height: 180))
         panel.contentView = view
@@ -84,7 +84,7 @@ final class VideoLayerQualityTests: XCTestCase {
     func testLayerHostViewAppliesWindowScaleToItsLayer() {
         let display = VideoFrameDisplay()
         let host = VideoFrameLayerHostView(display: display)
-        XCTAssertEqual(host.layer?.minificationFilter, .trilinear)
+        XCTAssertEqual(host.layer?.minificationFilter, .linear)
         XCTAssertEqual(host.layer?.magnificationFilter, .linear)
         XCTAssertEqual(host.layer?.contentsGravity, .resizeAspect)
         let panel = FloatingVideoPanel(contentRect: CGRect(x: 0, y: 0, width: 320, height: 180))

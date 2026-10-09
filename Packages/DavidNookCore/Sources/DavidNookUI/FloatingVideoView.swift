@@ -96,7 +96,7 @@ public final class FloatingVideoView: NSView {
     public static let cornerRadius: CGFloat = 10
     static let cornerZone: CGFloat = 18
 
-    private let videoLayer = CALayer()
+    let videoLayer = CALayer()
     private let gripLayer = CAShapeLayer()
     private let noticeView = NSView()
     private let noticeTitle = NSTextField(wrappingLabelWithString: "")
@@ -205,6 +205,11 @@ public final class FloatingVideoView: NSView {
     }
 
     // MARK: 版面（手動；視窗大小由外部決定，這裡只排內容）
+
+    public override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        if let scale = window?.backingScaleFactor { videoLayer.contentsScale = scale }
+    }
 
     public override func layout() {
         super.layout()
