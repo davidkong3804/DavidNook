@@ -23,6 +23,13 @@ struct DynamicNotchApp: App {
                 }
             }
             .keyboardShortcut(KeyEquivalent(","), modifiers: .command)
+            Button("Check for Updates…") {
+                DispatchQueue.main.async {
+                    SettingsWindowController.shared.showWindow()
+                    NotificationCenter.default.post(name: .showAboutSettings, object: nil)
+                    Task { @MainActor in UpdateController.shared.check() }
+                }
+            }
             Button("Restart DavidNook") {
                 ApplicationRelauncher.restart()
             }
