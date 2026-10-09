@@ -15,7 +15,7 @@ struct OnboardingOverviewPage: View {
         VStack(alignment: .leading, spacing: 18) {
             OnboardingHeader(
                 title: "How DavidNook works",
-                subtitle: "DavidNook turns the notch into a small control center. Everything stays on this Mac; the only network connection is lrclib.net, for lyrics."
+                subtitle: "DavidNook turns the notch into a small control center. Everything stays on this Mac; it goes online only for lyrics (lrclib.net) and when you press Check for Updates (GitHub)."
             )
             HStack(alignment: .top, spacing: 14) {
                 card(
@@ -30,8 +30,8 @@ struct OnboardingOverviewPage: View {
                 )
                 card(
                     icon: "network",
-                    title: "lrclib.net only",
-                    detail: "The only connection: the title, artist and duration of the current track go to lrclib.net to look up lyrics (can be turned off in Settings → Media). No telemetry, no update server."
+                    title: "Online only when needed",
+                    detail: "Lyrics: the title, artist and duration of the current track go to lrclib.net (can be turned off in Settings → Media). Updates: only when you press Check for Updates, a plain request goes to GitHub. No telemetry, no background checks."
                 )
             }
             .fixedSize(horizontal: false, vertical: true) // 三張卡片等高，高度取最高那張，不撐滿視窗

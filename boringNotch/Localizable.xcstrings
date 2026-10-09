@@ -864,16 +864,6 @@
         }
       }
     },
-    "DavidNook turns the notch into a small control center. Everything stays on this Mac; the only network connection is lrclib.net, for lyrics." : {
-      "localizations" : {
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "DavidNook 讓瀏海變成小型控制中心。資料都只留在這台 Mac，唯一的對外連線是查詢歌詞用的 lrclib.net。"
-          }
-        }
-      }
-    },
     "DavidNook's Now Playing components are unavailable. Reopen or reinstall the app." : {
       "localizations" : {
         "zh-Hant" : {
@@ -3239,16 +3229,6 @@
         }
       }
     },
-    "The only connection: the title, artist and duration of the current track go to lrclib.net to look up lyrics (can be turned off in Settings → Media). No telemetry, no update server." : {
-      "localizations" : {
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "唯一的對外連線：把目前曲目的曲名、歌手與長度送到 lrclib.net 查詢歌詞（可在「設定 → 媒體」關閉）。沒有遙測，也沒有更新伺服器。"
-          }
-        }
-      }
-    },
     "Third-party licenses" : {
       "localizations" : {
         "zh-Hant" : {
@@ -3631,16 +3611,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "目前 macOS 系統的強調色彩"
-          }
-        }
-      }
-    },
-    "lrclib.net only" : {
-      "localizations" : {
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "只連線 lrclib.net"
           }
         }
       }
@@ -5760,6 +5730,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "再試一次"
+          }
+        }
+      }
+    },
+    "DavidNook turns the notch into a small control center. Everything stays on this Mac; it goes online only for lyrics (lrclib.net) and when you press Check for Updates (GitHub)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook turns the notch into a small control center. Everything stays on this Mac; it goes online only for lyrics (lrclib.net) and when you press Check for Updates (GitHub)."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DavidNook 讓瀏海變成小型控制中心。資料都只留在這台 Mac；只有查歌詞（lrclib.net）與你按下「檢查更新」時（GitHub）才會連網。"
+          }
+        }
+      }
+    },
+    "Online only when needed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Online only when needed"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只在需要時連網"
+          }
+        }
+      }
+    },
+    "Lyrics: the title, artist and duration of the current track go to lrclib.net (can be turned off in Settings → Media). Updates: only when you press Check for Updates, a plain request goes to GitHub. No telemetry, no background checks." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyrics: the title, artist and duration of the current track go to lrclib.net (can be turned off in Settings → Media). Updates: only when you press Check for Updates, a plain request goes to GitHub. No telemetry, no background checks."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歌詞：把目前曲目的曲名、歌手與長度送到 lrclib.net（可在「設定 → 媒體」關閉）。更新：只有你按下「檢查更新」時，才會對 GitHub 送出單純的請求。沒有遙測，也不會在背景自動檢查。"
           }
         }
       }
