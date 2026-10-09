@@ -16,10 +16,12 @@ DavidNook is an independent implementation and is **not affiliated with NotchNoo
 - Now Playing with line-by-line synced lyrics from [LRCLIB](https://lrclib.net). Simplified Chinese lyrics are converted to
   Traditional Chinese (OpenCC `s2tw` plus an override table; native Traditional lyrics are left alone; Taiwan idiom
   conversion is off by default).
+  When a track ends, the last track stays (title, cover, lyrics; memory only) just like pause: still visible when the notch is opened, no live activity when closed; a new track replaces it.
 - A slim lyrics capsule under the closed notch: while music plays, the current line scrolls in it one line at a time (static and centered if it fits;
   otherwise it scrolls and finishes before the next line). On by default; Settings → Media turns it off and adjusts distance, maximum width, font size and speed.
   It shares the lyrics, offset and Simplified→Traditional result with the expanded panel; with Reduce Motion it does not scroll and fades out at the end instead.
 - Clipboard history (text, images, file paths): search, filter, pin, click to paste back, item limit and retention, pause.
+  Scrolling while the pointer is over the list only scrolls the list; it no longer triggers swipe-up-to-close.
 - **Video (new, not verified on real hardware)**: in the expanded notch's Now Playing panel, the album cover has a small, low-key button at its top right.
   It opens the macOS system picker so you can pick **one window**; that window's live, scaled-down picture then **replaces the album cover** (for landscape
   video the cover slot widens without squeezing the title, controls or lyrics; Stop brings the cover back). **Click the video to pin it**: it becomes a
