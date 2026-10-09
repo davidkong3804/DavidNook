@@ -62,6 +62,10 @@ final class FloatingVideoLiveUpdateTests: XCTestCase {
     }
 
     func testFloatingWindowUpdatesLiveWithRotatingSurfaces() throws {
+        // 這個測試會在螢幕上真的顯示一個視窗（約 3 秒），會打擾正在使用電腦的人；預設略過，
+        // 需要時以 DAVIDNOOK_LIVE_WINDOW_TESTS=1 swift test --filter FloatingVideoLiveUpdateTests 開啟。
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["DAVIDNOOK_LIVE_WINDOW_TESTS"] == "1",
+                          "預設不在螢幕上顯示測試視窗；設 DAVIDNOOK_LIVE_WINDOW_TESTS=1 才執行")
         let r = try distinctFrames(rotating: 3)
         if r.captures == 0 { throw XCTSkip("此環境無法擷取視窗") }
         print("LIVE rotating3 captures=\(r.captures) distinct=\(r.distinct)")
@@ -69,6 +73,10 @@ final class FloatingVideoLiveUpdateTests: XCTestCase {
     }
 
     func testFloatingWindowUpdatesLiveWithSingleReusedSurface() throws {
+        // 這個測試會在螢幕上真的顯示一個視窗（約 3 秒），會打擾正在使用電腦的人；預設略過，
+        // 需要時以 DAVIDNOOK_LIVE_WINDOW_TESTS=1 swift test --filter FloatingVideoLiveUpdateTests 開啟。
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["DAVIDNOOK_LIVE_WINDOW_TESTS"] == "1",
+                          "預設不在螢幕上顯示測試視窗；設 DAVIDNOOK_LIVE_WINDOW_TESTS=1 才執行")
         let r = try distinctFrames(rotating: 1)
         if r.captures == 0 { throw XCTSkip("此環境無法擷取視窗") }
         print("LIVE single captures=\(r.captures) distinct=\(r.distinct)")
