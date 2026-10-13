@@ -13,6 +13,13 @@ final class NotchCloseWatchdogTests: XCTestCase {
         w.evaluate(now: t, isOpen: open, pointer: pointer, notchRect: rect, holdOpen: hold, mouseButtonDown: down)
     }
 
+    /// 游標至少進過瀏海一次（看門狗才「上膛」）。
+    private func armed() -> NotchCloseWatchdog {
+        var w = NotchCloseWatchdog()
+        _ = decide(&w, at: -1, pointer: inside)
+        return w
+    }
+
     func testOpenRectIsTopCentered() {
         XCTAssertEqual(rect, CGRect(x: 396, y: 982 - 176, width: 720, height: 176))
     }
@@ -23,14 +30,14 @@ final class NotchCloseWatchdogTests: XCTestCase {
     }
 
     func testPointerOutsideClosesOnlyAfterGrace() {
-        var w = NotchCloseWatchdog()
+        var w = armed()
         XCTAssertEqual(decide(&w, at: 0, pointer: outside), .keepOpen)
         XCTAssertEqual(decide(&w, at: NotchCloseWatchdog.graceInterval - 0.05, pointer: outside), .keepOpen)
         XCTAssertEqual(decide(&w, at: NotchCloseWatchdog.graceInterval, pointer: outside), .close)
     }
 
     func testReenteringResetsTheTimer() {
-        var w = NotchCloseWatchdog()
+        var w = armed()
         _ = decide(&w, at: 0, pointer: outside)
         _ = decide(&w, at: 0.3, pointer: inside)
         XCTAssertEqual(decide(&w, at: 0.6, pointer: outside), .keepOpen)
@@ -39,7 +46,7 @@ final class NotchCloseWatchdogTests: XCTestCase {
     }
 
     func testHoldOpenAndMouseButtonResetTheTimer() {
-        var w = NotchCloseWatchdog()
+        var w = armed()
         _ = decide(&w, at: 0, pointer: outside)
         XCTAssertEqual(decide(&w, at: 10, pointer: outside, hold: true), .keepOpen)
         // hold 解除後重新計時，不會立刻關。
@@ -58,7 +65,7 @@ final class NotchCloseWatchdogTests: XCTestCase {
     }
 
     func testMarginAroundTheNotchCountsAsInside() {
-        var w = NotchCloseWatchdog()
+        var w = armed()
         let nearBottom = CGPoint(x: 756, y: rect.minY - NotchCloseWatchdog.margin + 1)
         let nearSide = CGPoint(x: rect.maxX + NotchCloseWatchdog.margin - 1, y: 900)
         let farBottom = CGPoint(x: 756, y: rect.minY - NotchCloseWatchdog.margin - 20)
@@ -78,11 +85,21 @@ final class NotchCloseWatchdogTests: XCTestCase {
     }
 
     func testAfterCloseTheWatchdogStartsFresh() {
-        var w = NotchCloseWatchdog()
+        var w = armed()
         _ = decide(&w, at: 0, pointer: outside)
         XCTAssertEqual(decide(&w, at: 1, pointer: outside), .close)
-        // 再次展開後又移出：要重新等寬限時間。
+        // 再次展開後，游標沒進過瀏海之前不會自己收（與舊行為一致：只有 hover 過才會 hover 離開）。
         XCTAssertEqual(decide(&w, at: 2, pointer: outside), .keepOpen)
-        XCTAssertEqual(decide(&w, at: 2 + NotchCloseWatchdog.graceInterval, pointer: outside), .close)
+        XCTAssertEqual(decide(&w, at: 10, pointer: outside), .keepOpen)
+        // 進過一次之後才重新上膛。
+        _ = decide(&w, at: 11, pointer: inside)
+        _ = decide(&w, at: 12, pointer: outside)
+        XCTAssertEqual(decide(&w, at: 12 + NotchCloseWatchdog.graceInterval, pointer: outside), .close)
+    }
+
+    /// 用快捷鍵展開、游標一直在別處：不能 0.5 秒後就被收掉（舊行為：沒 hover 過就不會 hover 離開）。
+    func testNeverEnteredNeverCloses() {
+        var w = NotchCloseWatchdog()
+        for t in stride(from: 0.0, through: 30.0, by: 0.5) { XCTAssertEqual(decide(&w, at: t, pointer: outside), .keepOpen) }
     }
 }

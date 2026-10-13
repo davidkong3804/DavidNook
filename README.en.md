@@ -40,7 +40,7 @@ DavidNook is an independent implementation and is **not affiliated with NotchNoo
   A small control bar shows only on hover: x (unpin) and opacity (click to cycle 100/80/60/40%); the right-click menu has Unpin and opacity; a double-click unpins, and clicking the video in the cover slot again also unpins.
   With several displays the window follows the screen you drag it to; it is never duplicated. If no picture arrives for a while the window restarts the stream once and shows "Reconnecting…", then a closable notice if it still fails (a still source is not a stall).
   Protected (DRM) sources still go black: the window does **not** close itself but shows a short notice with a close button (the app does not try to bypass protection). The floating window is your own window on your desktop, so screenshots and screen sharing may show it.
-- Playback controls (previous / play-pause / next, shuffle, repeat, seek, volume; favorites for the Music app).
+- Playback controls (previous / play-pause / next by default; shuffle, repeat, volume, favorites and ±15 s can be added in Settings).
 - UI languages: Traditional Chinese when the system language is Traditional Chinese, English otherwise.
 
 ## Privacy

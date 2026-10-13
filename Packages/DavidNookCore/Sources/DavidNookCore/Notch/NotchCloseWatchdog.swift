@@ -18,6 +18,8 @@ public struct NotchCloseWatchdog: Equatable, Sendable {
     public static let margin: CGFloat = 8
 
     private var outsideSince: TimeInterval?
+    /// 游標進過瀏海才「上膛」：用快捷鍵展開、游標一直在別處時不能被自動收掉（與舊行為一致）。
+    private var hasBeenInside = false
 
     public init() {}
 
@@ -32,7 +34,14 @@ public struct NotchCloseWatchdog: Equatable, Sendable {
     public mutating func evaluate(
         now: TimeInterval, isOpen: Bool, pointer: CGPoint, notchRect: CGRect, holdOpen: Bool, mouseButtonDown: Bool
     ) -> Decision {
-        guard isOpen, !holdOpen, !mouseButtonDown, !Self.isInside(pointer, notchRect: notchRect) else {
+        guard isOpen else {
+            outsideSince = nil
+            hasBeenInside = false
+            return .keepOpen
+        }
+        let isInside = Self.isInside(pointer, notchRect: notchRect)
+        if isInside { hasBeenInside = true }
+        guard hasBeenInside, !isInside, !holdOpen, !mouseButtonDown else {
             outsideSince = nil
             return .keepOpen
         }
@@ -40,6 +49,7 @@ public struct NotchCloseWatchdog: Equatable, Sendable {
         outsideSince = since
         if now - since >= Self.graceInterval {
             outsideSince = nil
+            hasBeenInside = false
             return .close
         }
         return .keepOpen

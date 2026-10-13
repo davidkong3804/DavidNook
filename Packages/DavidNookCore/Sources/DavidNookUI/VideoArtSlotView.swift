@@ -178,32 +178,30 @@ public struct VideoArtSlotView<Cover: View>: View {
         }
     }
 
-    /// hover 才出現的「換視窗」「停止」：獨立 Button，疊在釘選手勢層上方。
-    @ViewBuilder
+    /// 「換視窗」「裁切」「停止」：串流中一律顯示（沒 hover 時半透明，hover 時變清楚），不用再先把游標停在影片上才找得到；
+    /// 獨立 Button，疊在釘選手勢層上方。
     private var controlsOverlay: some View {
-        if hovering {
-            VStack {
-                Spacer()
-                HStack(spacing: 4) {
-                    iconButton("rectangle.on.rectangle", help: strings.changeWindow, action: callbacks.onChoose)
-                    iconButton("crop", help: strings.crop, action: callbacks.onCrop)
-                    if hasCrop {
-                        iconButton("arrow.counterclockwise", help: strings.resetCrop, action: callbacks.onResetCrop)
-                    }
-                    iconButton("stop.fill", help: strings.stop, action: callbacks.onStop)
+        VStack {
+            Spacer()
+            HStack(spacing: 5) {
+                iconButton("rectangle.on.rectangle", help: strings.changeWindow, action: callbacks.onChoose)
+                iconButton("crop", help: strings.crop, action: callbacks.onCrop)
+                if hasCrop {
+                    iconButton("arrow.counterclockwise", help: strings.resetCrop, action: callbacks.onResetCrop)
                 }
-                .padding(.bottom, 5)
+                iconButton("stop.fill", help: strings.stop, action: callbacks.onStop)
             }
-            .transition(.opacity)
+            .padding(.bottom, 6)
+            .opacity(hovering ? 1 : 0.5)
         }
     }
 
     private func iconButton(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 10.5, weight: .semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Color.white)
-                .frame(width: 24, height: 22)
+                .frame(width: 30, height: 26)
                 .background(Capsule().fill(Color.black.opacity(0.6)))
                 .contentShape(Capsule())
         }
@@ -217,9 +215,9 @@ public struct VideoArtSlotView<Cover: View>: View {
     private var captureEntryButton: some View {
         Button(action: callbacks.onChoose) {
             Image(systemName: "macwindow.badge.plus")
-                .font(.system(size: 10.5, weight: .semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Color.white)
-                .frame(width: 22, height: 22)
+                .frame(width: 28, height: 28)
                 .background(Circle().fill(Color.black.opacity(0.55)))
                 .contentShape(Circle())
         }

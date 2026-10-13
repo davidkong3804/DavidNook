@@ -258,10 +258,13 @@ extension Defaults.Keys {
         "musicControlSlots",
         default: MusicControlButton.defaultLayout
     )
+    /// 最多顯示幾顆（尾端的空格不佔位）；固定 5，使用者在設定頁加按鈕才不會被預設的 3 顆截掉。
     static let musicControlSlotLimit = Key<Int>(
         "musicControlSlotLimit",
-        default: MusicControlButton.defaultLayout.count
+        default: MusicControlButton.maxSlotCount
     )
+    /// 按鈕版面的遷移版本（見 Core 的 MusicControlLayoutMigration）。
+    static let musicControlLayoutVersion = Key<Int>(MusicControlLayoutMigration.versionKey, default: 0)
 
     // MARK: Clipboard
     /// 記錄剪貼簿歷史（預設開）。關閉時完全不讀剪貼簿內容，也不輪詢 changeCount。

@@ -171,6 +171,7 @@ struct VideoArtSlotHost<Cover: View>: View {
     @ObservedObject private var controller = VideoCapsuleController.shared
     @Default(.videoCapsuleEnabled) private var enabled
     @Default(.videoCapsulePinned) private var pinned
+    @State private var pickerHoldTask: Task<Void, Never>?
     @ViewBuilder let cover: () -> Cover
 
     var body: some View {
@@ -197,9 +198,20 @@ struct VideoArtSlotHost<Cover: View>: View {
                 vm.isPopoverActive = false
                 controller.slotDidDisappear()
             }
-            // 系統挑選器開著時，滑鼠移到挑選器上不要讓瀏海自動收合。
-            .onChange(of: controller.state) { _, newState in
-                vm.isPopoverActive = (newState == .choosing)
+            // 系統挑選器開著時，滑鼠移到挑選器上不要讓瀏海自動收合；但最多撐 25 秒：
+            // 挑選器若被關掉卻沒有回呼（狀態卡在「挑選中」），瀏海不能因此永遠收不起來。
+            .onChange(of: controller.state) { oldState, newState in
+                pickerHoldTask?.cancel()
+                if newState == .choosing {
+                    vm.isPopoverActive = true
+                    pickerHoldTask = Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(25))
+                        guard !Task.isCancelled else { return }
+                        vm.isPopoverActive = false
+                    }
+                } else if oldState == .choosing {
+                    vm.isPopoverActive = false
+                }
             }
         } else {
             cover()
@@ -293,7 +305,7 @@ struct MusicControlsView: View {
         )
         let padded = slotConfig.padded(to: sanitizedLimit, filler: .none)
         let result = Array(padded.prefix(sanitizedLimit))
-        return result
+        return result.droppingTrailingEmptySlots()
     }
 
     private func slotView(for slot: MusicControlButton) -> some View {
@@ -422,6 +434,13 @@ extension Array where Element == MusicControlButton {
     func padded(to length: Int, filler: MusicControlButton) -> [MusicControlButton] {
         if count >= length { return self }
         return self + Array(repeating: filler, count: length - count)
+    }
+
+    /// 尾端的空格不佔位（否則預設只有三顆時，兩個空格會把按鈕擠偏）；中間的空格是使用者刻意留的間隔。
+    func droppingTrailingEmptySlots() -> [MusicControlButton] {
+        var result = self
+        while result.last == MusicControlButton.none { result.removeLast() }
+        return result
     }
 }
 

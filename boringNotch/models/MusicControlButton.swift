@@ -22,14 +22,12 @@ enum MusicControlButton: String, CaseIterable, Identifiable, Codable, Defaults.S
 
     var id: String { rawValue }
 
-    /// Shuffle and repeat round out the default row, so a fresh install
-    /// shows five buttons rather than dead space either side.
+    /// 預設只有上一首／播放／下一首：五顆小按鈕擠在一起容易誤點「重複播放」，
+    /// 播放器就會單曲循環（見 Core 的 MusicControlLayoutMigration）。隨機與重複仍可在設定頁加回去。
     static let defaultLayout: [MusicControlButton] = [
-        .shuffle,
         .previous,
         .playPause,
-        .next,
-        .repeatMode
+        .next
     ]
 
     static let minSlotCount: Int = 3

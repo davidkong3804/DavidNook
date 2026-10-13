@@ -8,6 +8,7 @@
 
 import AVFoundation
 import Combine
+import DavidNookCore
 import DavidNookUI
 import Defaults
 import KeyboardShortcuts
@@ -23,6 +24,9 @@ struct ContentView: View {
     /// 歌詞膠囊目前是否可見（影片膠囊據此決定堆疊位置）。
     @State private var hoverTask: Task<Void, Never>?
     @State private var isHovering: Bool = false
+    /// 展開時定時比對游標與瀏海矩形的看門狗：SwiftUI 的 hover 離開事件漏掉時，瀏海仍然會收。
+    @State private var closeWatchdog = NotchCloseWatchdog()
+    @State private var closeWatchdogTask: Task<Void, Never>?
 
     @State private var gestureProgress: CGFloat = .zero
     @State private var horizontalMediaGestureTriggered = false
@@ -341,6 +345,7 @@ struct ContentView: View {
                     .onChange(of: vm.notchState) { _, state in
                         // 真正展開／收合後預期動作就結束了（鼓起的比例隨展開彈簧回到 1）。
                         isAnticipating = false
+                        if state == .open { startCloseWatchdog() } else { stopCloseWatchdog() }
                         beginMorph(for: state == .open ? motion.openSettleTime : motion.closeSettleTime)
                     }
                     .onChange(of: coordinator.currentView) { _, _ in
@@ -735,6 +740,43 @@ extension ContentView {
             transaction.disablesAnimations = true
             withTransaction(transaction) { isMorphing = false }
         }
+    }
+
+    // MARK: - Close watchdog
+
+    /// 展開期間每 0.15 秒比對一次游標與瀏海矩形（不靠任何事件）：游標離開超過寬限時間就收合。
+    /// 挑選器／剪貼簿輸入（`isPopoverActive`）與滑鼠鍵按著（拖曳進度條）時不收。
+    private func startCloseWatchdog() {
+        closeWatchdogTask?.cancel()
+        closeWatchdog = NotchCloseWatchdog()
+        closeWatchdogTask = Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(150))
+                guard !Task.isCancelled, vm.notchState == .open else { return }
+                guard let screenFrame = getScreenFrame(vm.screenUUID) else { continue }
+                let size = sizing.openSize(for: coordinator.currentView.sizingPanel, headerHeight: openHeaderHeight)
+                let rect = NotchCloseWatchdog.openRect(screenFrame: screenFrame, size: size)
+                let decision = closeWatchdog.evaluate(
+                    now: ProcessInfo.processInfo.systemUptime,
+                    isOpen: true,
+                    pointer: NSEvent.mouseLocation,
+                    notchRect: rect,
+                    holdOpen: vm.isPopoverActive,
+                    mouseButtonDown: NSEvent.pressedMouseButtons != 0
+                )
+                if decision == .close {
+                    hoverTask?.cancel()
+                    withAnimation(animationSpring) { isHovering = false }
+                    vm.close()
+                    return
+                }
+            }
+        }
+    }
+
+    private func stopCloseWatchdog() {
+        closeWatchdogTask?.cancel()
+        closeWatchdogTask = nil
     }
 
     // MARK: - Hover Management

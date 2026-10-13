@@ -155,6 +155,7 @@ struct CompactHomeView: View {
             .padded(to: sanitizedLimit, filler: .none)
             .prefix(sanitizedLimit)
             .map { $0 }
+            .droppingTrailingEmptySlots()
     }
 
     private var transport: some View {
