@@ -4986,19 +4986,19 @@
         }
       }
     },
-    "DavidNook connects to GitHub only when you press “Check for Updates”: a plain GET request to api.github.com (and, if you update, to GitHub's download servers) that carries only a User-Agent with the app version, for example DavidNook/0.1.0. No account, token, identifier or usage data is sent, and nothing is checked in the background or at launch. To replace itself, DavidNook asks you to choose the folder it is in, only while updating (the sandbox “user-selected files” permission)." : {
+    "DavidNook connects to GitHub only when you press “Check for Updates” and, if “Check for updates automatically” is on, about 30 seconds after launch and then at most once a day: a plain GET request to api.github.com that carries only a User-Agent with the app version, for example DavidNook/0.1.0. Automatic checks only look for a new version; they never download or install anything. No account, token, identifier or usage data is sent. If you update, DavidNook downloads the new version from GitHub's download servers, and asks you to choose the folder it is in, only while updating (the sandbox “user-selected files” permission)." : {
       "comment" : "Settings: About tab, privacy disclosure under the update section.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "DavidNook connects to GitHub only when you press “Check for Updates”: a plain GET request to api.github.com (and, if you update, to GitHub's download servers) that carries only a User-Agent with the app version, for example DavidNook/0.1.0. No account, token, identifier or usage data is sent, and nothing is checked in the background or at launch. To replace itself, DavidNook asks you to choose the folder it is in, only while updating (the sandbox “user-selected files” permission)."
+            "value" : "DavidNook connects to GitHub only when you press “Check for Updates” and, if “Check for updates automatically” is on, about 30 seconds after launch and then at most once a day: a plain GET request to api.github.com that carries only a User-Agent with the app version, for example DavidNook/0.1.0. Automatic checks only look for a new version; they never download or install anything. No account, token, identifier or usage data is sent. If you update, DavidNook downloads the new version from GitHub's download servers, and asks you to choose the folder it is in, only while updating (the sandbox “user-selected files” permission)."
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "只有在你按下「檢查更新」時，DavidNook 才會連線到 GitHub：對 api.github.com（若你選擇更新，還有 GitHub 的下載伺服器）送出一個單純的 GET 請求，內容只有帶著 App 版本號的 User-Agent，例如 DavidNook/0.1.0。不會送出帳號、token、識別碼或任何使用資料，也不會在背景或啟動時自動檢查。為了取代自己，DavidNook 會在更新時請你選擇它所在的資料夾（沙盒的「使用者選取的檔案」權限）。"
+            "value" : "只有在你按下「檢查更新」，以及（若開啟「自動檢查更新」）啟動後約 30 秒、之後每天最多一次，DavidNook 才會連線到 GitHub：對 api.github.com 送出一個單純的 GET 請求，內容只有帶著 App 版本號的 User-Agent，例如 DavidNook/0.1.0。自動檢查只會查看有沒有新版，絕不會自動下載或安裝任何東西。不會送出帳號、token、識別碼或任何使用資料。若你選擇更新，DavidNook 才會從 GitHub 的下載伺服器下載新版，並且只在更新時請你選擇它所在的資料夾（沙盒的「使用者選取的檔案」權限）。"
           }
         }
       }
@@ -5972,18 +5972,18 @@
         }
       }
     },
-    "DavidNook turns the notch into a small control center. Everything stays on this Mac; it goes online only for lyrics (lrclib.net) and when you press Check for Updates (GitHub)." : {
+    "DavidNook turns the notch into a small control center. Everything stays on this Mac; it goes online only for lyrics (lrclib.net) and to check GitHub for a new version (once a day at most; you can turn this off in Settings → About)." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "DavidNook turns the notch into a small control center. Everything stays on this Mac; it goes online only for lyrics (lrclib.net) and when you press Check for Updates (GitHub)."
+            "value" : "DavidNook turns the notch into a small control center. Everything stays on this Mac; it goes online only for lyrics (lrclib.net) and to check GitHub for a new version (once a day at most; you can turn this off in Settings → About)."
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "DavidNook 讓瀏海變成小型控制中心。資料都只留在這台 Mac；只有查歌詞（lrclib.net）與你按下「檢查更新」時（GitHub）才會連網。"
+            "value" : "DavidNook 讓瀏海變成小型控制中心。資料都只留在這台 Mac；只有查歌詞（lrclib.net）與向 GitHub 查看有沒有新版（每天最多一次，可在「設定 → 關於」關閉）時才會連網。"
           }
         }
       }
@@ -6004,18 +6004,69 @@
         }
       }
     },
-    "Lyrics: the title, artist and duration of the current track go to lrclib.net (can be turned off in Settings → Media). Updates: only when you press Check for Updates, a plain request goes to GitHub. No telemetry, no background checks." : {
+    "Lyrics: the title, artist and duration of the current track go to lrclib.net (can be turned off in Settings → Media). Updates: at most once a day, a plain request goes to GitHub to see whether a new version exists (can be turned off in Settings → About). Nothing is installed without you. No telemetry." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lyrics: the title, artist and duration of the current track go to lrclib.net (can be turned off in Settings → Media). Updates: only when you press Check for Updates, a plain request goes to GitHub. No telemetry, no background checks."
+            "value" : "Lyrics: the title, artist and duration of the current track go to lrclib.net (can be turned off in Settings → Media). Updates: at most once a day, a plain request goes to GitHub to see whether a new version exists (can be turned off in Settings → About). Nothing is installed without you. No telemetry."
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "歌詞：把目前曲目的曲名、歌手與長度送到 lrclib.net（可在「設定 → 媒體」關閉）。更新：只有你按下「檢查更新」時，才會對 GitHub 送出單純的請求。沒有遙測，也不會在背景自動檢查。"
+            "value" : "歌詞：把目前曲目的曲名、歌手與長度送到 lrclib.net（可在「設定 → 媒體」關閉）。更新：每天最多一次，對 GitHub 送出單純的請求來查看有沒有新版（可在「設定 → 關於」關閉）。沒有你的同意不會安裝任何東西。沒有遙測。"
+          }
+        }
+      }
+    },
+    "Update Available: %@…" : {
+      "comment" : "Menu bar item shown when a new version was found; the argument is a version such as 0.2.0.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update Available: %@…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有新版 %@…"
+          }
+        }
+      }
+    },
+    "Check for updates automatically" : {
+      "comment" : "Settings: About tab, toggle for background update checks.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check for updates automatically"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動檢查更新"
+          }
+        }
+      }
+    },
+    "Connects to GitHub at most once a day, only to see whether a new version exists. It never installs anything by itself." : {
+      "comment" : "Settings: About tab, explanation under the automatic update check toggle.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connects to GitHub at most once a day, only to see whether a new version exists. It never installs anything by itself."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每天最多連線 GitHub 一次，只查看有沒有新版，不會自動安裝。"
           }
         }
       }

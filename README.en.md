@@ -1,6 +1,6 @@
 # DavidNook
 
-A macOS notch utility: **fully local — no server, no telemetry, no background updates, no AI, no account.** (It contacts GitHub only when you press "Check for Updates"; see Updating.)
+A macOS notch utility: **fully local — no server, no telemetry, no auto-install, no AI, no account.** (It contacts GitHub only to check for a new version: when you press "Check for Updates", or through the automatic check, on by default, switchable in Settings, at most once a day; see Updating.)
 
 [繁體中文說明](README.md) (the primary README)
 
@@ -48,8 +48,8 @@ DavidNook is an independent implementation and is **not affiliated with NotchNoo
 - Everything stays on this Mac. The app is sandboxed; lyrics cache and clipboard history live in the container's
   Application Support (`~/Library/Containers/io.github.davidkong3804.DavidNook/Data/Library/Application Support/DavidNook/`),
   files `0600`, directories `0700`. Settings let you clear them.
-- **There are only two kinds of network connection**: (1) `lrclib.net` for lyrics (automatic), and (2) **only when you press "Check for Updates"**, `api.github.com` and GitHub's download hosts
-  (see Updating; just a GET and a User-Agent with the app version; nothing in the background or at launch). The lyrics lookup receives the **track title, artist and duration** and a
+- **There are only two kinds of network connection**: (1) `lrclib.net` for lyrics (automatic), and (2) `api.github.com` when checking for updates, and GitHub's download hosts only when you press "Update and Restart"
+  (see Updating; just a GET and a User-Agent with the app version; the automatic check is on by default, can be turned off in Settings → About, and runs at most once a day). The lyrics lookup receives the **track title, artist and duration** and a
   `User-Agent: DavidNook/<version> (project URL)`. It does **not** receive the album, clipboard content, file paths or any
   identifier. (The server sees your IP address, as with any request.) Turn lyrics off in Settings → Media to disable it.
 - No telemetry, no update server of ours (updates are manual and come straight from GitHub Releases), no content in logs.
@@ -96,11 +96,11 @@ cd Packages/DavidNookCore && swift test      # pure-logic package tests
 
 ## Updating (manual, one click)
 
-Settings → About → "Updates": press **Check for Updates** and only then does the app contact GitHub. If there is a newer version it shows the version and a plain-text summary
-of the release notes; **Update and Restart** downloads, verifies, replaces and reopens the app. **There is no background polling and no check at login or launch.**
+Settings → About → "Updates": press **Check for Updates** to contact GitHub. "Check for updates automatically" is on by default: first check about 30 seconds after launch, then at most once a day (one retry per launch if it fails); turn it off and the app never connects on its own. If there is a newer version it shows the version and a plain-text summary
+of the release notes; **Update and Restart** downloads, verifies, replaces and reopens the app. **The automatic check only looks for a new version; it never downloads or installs anything** and merely shows a hint in Settings and the menu bar.
 The menu bar item "Check for Updates…" opens the same flow.
 
-- **What goes where**: only when you press "Check for Updates" the app sends one plain GET to `api.github.com`
+- **What goes where**: only when you press "Check for Updates" (or the automatic check is on) the app sends one plain GET to `api.github.com`
   (`/repos/davidkong3804/DavidNook/releases?per_page=10`) with just `User-Agent: DavidNook/<app version>` and `Accept`; pressing "Update and Restart" additionally contacts
   GitHub's download hosts. **No token, cookie, account or identifier is sent.** Only https to `api.github.com`, `github.com`, `objects.githubusercontent.com`,
   `release-assets.githubusercontent.com` and `*.githubusercontent.com` is allowed, including every redirect; anything else is refused. (GitHub sees your IP address, as with any

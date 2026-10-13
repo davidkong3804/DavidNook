@@ -15,6 +15,7 @@ struct DynamicNotchApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Default(.menubarIcon) var showMenuBarIcon
     @Environment(\.openWindow) var openWindow
+    @ObservedObject private var updates = UpdateController.shared
 
     var body: some Scene {
         MenuBarExtra("DavidNook", systemImage: "rectangle.topthird.inset.filled", isInserted: $showMenuBarIcon) {
@@ -24,11 +25,9 @@ struct DynamicNotchApp: App {
                 }
             }
             .keyboardShortcut(KeyEquivalent(","), modifiers: .command)
-            Button("Check for Updates…") {
+            Button(updates.menuBarTitle) {
                 DispatchQueue.main.async {
-                    SettingsWindowController.shared.showWindow()
-                    NotificationCenter.default.post(name: .showAboutSettings, object: nil)
-                    Task { @MainActor in UpdateController.shared.check() }
+                    Task { @MainActor in UpdateController.shared.openFromMenuBar() }
                 }
             }
             Button("Restart DavidNook") {
@@ -118,6 +117,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // SIGTERM（例如 pkill、關機）預設不會走 applicationWillTerminate，adapter 的 perl 子行程會變成孤兒
         // 一直活著；改成走正常的終止流程（MusicManager.destroy 會關掉子行程）。
         migrateMusicControlLayout()
+        // 自動檢查更新：約 30 秒後第一次，之後每天最多一次，只檢查不安裝；設定頁可關閉（見 UpdateController）。
+        Task { @MainActor in UpdateController.shared.startAutoChecking() }
         signal(SIGTERM, SIG_IGN)
         let termination = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
         termination.setEventHandler { NSApplication.shared.terminate(nil) }

@@ -60,11 +60,17 @@ struct AboutView: View {
             }
 
             Section {
+                Defaults.Toggle(key: .autoCheckUpdates) {
+                    Text("Check for updates automatically")
+                }
+                Text("Connects to GitHub at most once a day, only to see whether a new version exists. It never installs anything by itself.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 UpdatePanelView(state: updates.state, strings: updates.strings, callbacks: updates.callbacks)
             } header: {
                 Text("Updates")
             } footer: {
-                Text("DavidNook connects to GitHub only when you press “Check for Updates”: a plain GET request to api.github.com (and, if you update, to GitHub's download servers) that carries only a User-Agent with the app version, for example DavidNook/0.1.0. No account, token, identifier or usage data is sent, and nothing is checked in the background or at launch. To replace itself, DavidNook asks you to choose the folder it is in, only while updating (the sandbox “user-selected files” permission).")
+                Text("DavidNook connects to GitHub only when you press “Check for Updates” and, if “Check for updates automatically” is on, about 30 seconds after launch and then at most once a day: a plain GET request to api.github.com that carries only a User-Agent with the app version, for example DavidNook/0.1.0. Automatic checks only look for a new version; they never download or install anything. No account, token, identifier or usage data is sent. If you update, DavidNook downloads the new version from GitHub's download servers, and asks you to choose the folder it is in, only while updating (the sandbox “user-selected files” permission).")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

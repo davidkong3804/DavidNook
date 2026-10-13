@@ -282,6 +282,12 @@ extension Defaults.Keys {
     /// 剪貼簿分頁底部「操作提示」：使用者是否按了關閉。
     static let clipboardHintDismissed = Key<Bool>("clipboardHintDismissed", default: false)
 
+    // MARK: Updates
+    /// 自動檢查更新（預設開）。只做「檢查有沒有新版」：每天最多連線 GitHub 一次，不自動下載、不自動安裝；關閉後絕不連線。
+    static let autoCheckUpdates = Key<Bool>("autoCheckUpdates", default: true)
+    /// 上次「成功」檢查更新的時間（手動或自動）。自動檢查據此決定今天要不要再查（見 Core 的 AutoUpdateSchedule）。
+    static let lastSuccessfulUpdateCheck = Key<Date?>("lastSuccessfulUpdateCheck", default: nil)
+
     // MARK: Downloads
     static let enableDownloadListener = Key<Bool>("enableDownloadListener", default: true)
     static let enableSafariDownloads = Key<Bool>("enableSafariDownloads", default: true)

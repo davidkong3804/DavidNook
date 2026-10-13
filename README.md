@@ -1,6 +1,6 @@
 # DavidNook
 
-macOS 瀏海工具：**完全本機、無伺服器、無遙測、無背景更新、無 AI、無帳號。**（只有你手動按「檢查更新」才會連 GitHub，見〈更新〉。）
+macOS 瀏海工具：**完全本機、無伺服器、無遙測、無自動安裝、無 AI、無帳號。**（只有「檢查更新」會連 GitHub：你按下去時，或預設開啟、可在設定關閉的自動檢查，每天最多一次；見〈更新〉。）
 
 [English README](README.en.md)
 
@@ -47,7 +47,7 @@ DavidNook 把螢幕頂端的瀏海（沒有瀏海的螢幕則是一條浮動的�
   - 歌詞快取：`DavidNook/Lyrics`（檔案權限 0600，可在 設定 → 媒體 清除）。
   - 剪貼簿歷史：`DavidNook/Clipboard`（目錄 0700、檔案 0600；設定 → 剪貼簿 可「清除未釘選」，或二次確認後「清除全部」，連同暫存圖片）。
   - 實際位置：`~/Library/Containers/io.github.davidkong3804.DavidNook/Data/Library/Application Support/DavidNook/`。
-- **對外連線只有兩種**：① `lrclib.net`（歌詞查詢，自動）；② **僅在你按下「檢查更新」時**連 `api.github.com` 與 GitHub 的下載主機（見〈更新〉；只送 GET 與帶版本號的 User-Agent，沒有背景或啟動時的檢查）。
+- **對外連線只有兩種**：① `lrclib.net`（歌詞查詢，自動）；② 檢查更新時連 `api.github.com`，你按「更新並重新啟動」才連 GitHub 的下載主機（見〈更新〉；只送 GET 與帶版本號的 User-Agent；自動檢查預設開啟、可在「設定 → 關於」關閉，每天最多一次）。
   App 沒有其他網路用途。歌詞查詢送出的內容只有：**曲名、歌手、長度（秒）**，
   以及一個自報身分的 `User-Agent: DavidNook/<版本> (專案網址)`（當然，伺服器會看到你的 IP 位址，這是任何網路請求都無法避免的）。
   影片來源（瀏覽器）送出的是**萃取後**的歌名與歌手，不送原始影片標題與頻道名，也不帶長度。
@@ -126,10 +126,10 @@ open "$HOME/Applications/DavidNook.app"
 
 ## 更新（手動、按一下）
 
-設定 → 關於 →「更新」：按「檢查更新」才會連到 GitHub 看有沒有新版；有的話顯示版本與發行說明摘要，按「更新並重新啟動」就會自己下載、驗證、替換並重新開啟。
-**沒有背景輪詢，也不會在開機或啟動時自動檢查**；選單列的「檢查更新…」進入同一個流程。
+設定 → 關於 →「更新」：按「檢查更新」會連到 GitHub 看有沒有新版（「自動檢查更新」預設開啟：啟動後約 30 秒第一次，之後每天最多一次，失敗時同一次啟動最多重試一次；可關閉，關閉後絕不連線）；有的話顯示版本與發行說明摘要，按「更新並重新啟動」就會自己下載、驗證、替換並重新開啟。
+**自動檢查只查看有沒有新版，絕不自動下載或安裝**，有新版時只會在設定頁與選單列提示；選單列的「檢查更新…」進入同一個流程。
 
-- **會連到哪裡、送什麼**：只有你按下「檢查更新」時，才對 `api.github.com` 送一個單純的 GET 請求（`/repos/davidkong3804/DavidNook/releases?per_page=10`），
+- **會連到哪裡、送什麼**：只有你按下「檢查更新」、或開啟了自動檢查時，才對 `api.github.com` 送一個單純的 GET 請求（`/repos/davidkong3804/DavidNook/releases?per_page=10`），
   內容只有 `User-Agent: DavidNook/<App 版本>` 與 `Accept`；你按「更新並重新啟動」才會再連到 GitHub 的下載主機。
   **不帶 token、cookie、帳號或任何識別資料。** 只允許 `api.github.com`、`github.com`、`objects.githubusercontent.com`、
   `release-assets.githubusercontent.com` 與 `*.githubusercontent.com` 的 https（包含每一次重新導向），其他主機一律拒絕。

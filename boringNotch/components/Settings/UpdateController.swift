@@ -5,11 +5,13 @@
 //  「檢查更新」與「更新並重新啟動」的流程控制。純邏輯（版本比較、GitHub 解析、驗證、安裝）都在
 //  DavidNookCore 的 Update/；這裡只負責：目前版本、狀態、NSOpenPanel 授權資料夾、重新啟動、在地化文字。
 //
-//  隱私：只有使用者按下按鈕才連線（沒有背景輪詢、沒有啟動時檢查）；只送 GET 與 `User-Agent: DavidNook/<版本>`，
+//  隱私：連線只有兩種——使用者按下按鈕，或（預設開、可在設定關閉的）自動檢查：啟動後約 30 秒第一次，之後每天最多一次，
+//  只「檢查有沒有新版」，絕不自動下載或安裝（規則在 Core 的 AutoUpdateSchedule）。只送 GET 與 `User-Agent: DavidNook/<版本>`，
 //  不帶 token、cookie、識別資料。只連 UpdateHostPolicy 白名單內的 https 主機（含每一次重新導向）。
 //
 
 import AppKit
+import Defaults
 import DavidNookCore
 import DavidNookUI
 import SwiftUI
@@ -26,6 +28,12 @@ final class UpdateController: ObservableObject {
     /// 使用者用 NSOpenPanel 授權的資料夾（沙盒 powerbox 授權，只在更新期間持有）。
     private var scopedFolder: URL?
     private let session = AllowlistedSession()
+
+    // 自動檢查（見 startAutoChecking）。只存在記憶體；跨啟動保存的只有「上次成功檢查時間」。
+    private var autoTask: Task<Void, Never>?
+    private let schedule = AutoUpdateSchedule()
+    private var lastAutoAttempt: Date?
+    private var retriedThisLaunch = false
 
     private init() {}
 
@@ -48,10 +56,10 @@ final class UpdateController: ObservableObject {
         task?.cancel()
         task = Task { [weak self] in
             guard let self else { return }
-            let client = GitHubReleaseClient(transport: AllowlistedTransport(session: self.session), appVersion: self.currentVersionText)
             do {
-                let result = try await client.check(current: current)
+                let result = try await self.fetchLatest(current: current)
                 guard !Task.isCancelled else { return }
+                Defaults[.lastSuccessfulUpdateCheck] = Date()
                 switch result {
                 case .upToDate:
                     self.state = .upToDate
@@ -63,6 +71,68 @@ final class UpdateController: ObservableObject {
                 guard !Task.isCancelled else { return }
                 self.state = Self.failureState(for: error, canOpenReleasePage: false)
             }
+        }
+    }
+
+    private func fetchLatest(current: SemanticVersion) async throws -> UpdateCheckResult {
+        let client = GitHubReleaseClient(transport: AllowlistedTransport(session: session), appVersion: currentVersionText)
+        return try await client.check(current: current)
+    }
+
+    // MARK: - 自動檢查
+
+    /// 在背景定期「檢查」有沒有新版（由 App 啟動時呼叫一次）。只檢查，絕不下載或安裝；有新版時只是把狀態變成 `.available`，
+    /// 設定頁「關於」與選單列就會顯示提示。沒有開啟、更新進行中、已有新版時都不連線。失敗（斷網、限流）靜默處理，不顯示紅字。
+    func startAutoChecking() {
+        guard autoTask == nil else { return }
+        autoTask = Task { [weak self] in
+            // 啟動後先等一下，不拖慢開機。
+            try? await Task.sleep(for: .seconds(AutoUpdateSchedule.initialDelay))
+            while !Task.isCancelled {
+                guard let self else { return }
+                let pause = await self.autoCheckStep()
+                try? await Task.sleep(for: .seconds(pause))
+            }
+        }
+    }
+
+    /// 問排程「現在該不該查」，該查就查一次；回傳下一次再問之前要睡多久（秒）。睡眠最長 1 小時，系統時鐘被改動時也能很快重新判斷。
+    private func autoCheckStep() async -> TimeInterval {
+        let now = Date()
+        let lastSuccess = Defaults[.lastSuccessfulUpdateCheck]
+        let alreadyAvailable: Bool = { if case .available = state { true } else { false } }()
+        switch schedule.decision(
+            now: now, lastSuccessfulCheck: lastSuccess, lastAttempt: lastAutoAttempt, retriedThisLaunch: retriedThisLaunch,
+            enabled: Defaults[.autoCheckUpdates], isBusy: state.isBusy, alreadyAvailable: alreadyAvailable
+        ) {
+        case .skip:
+            return 10 * 60 // 只是重新問本機規則（例如使用者剛打開開關），不連線
+        case .wait(let until):
+            return min(3_600, max(60, until.timeIntervalSince(now)))
+        case .checkNow:
+            // 上一次自動嘗試失敗、尚未被成功取代：這次是重試，本次啟動只允許一次。
+            if let previous = lastAutoAttempt, lastSuccess.map({ $0 < previous }) ?? true { retriedThisLaunch = true }
+            lastAutoAttempt = now
+            await runAutomaticCheck()
+            return 60
+        }
+    }
+
+    private func runAutomaticCheck() async {
+        guard let current = SemanticVersion(currentVersionText) else { return }
+        do {
+            let result = try await fetchLatest(current: current)
+            guard !Task.isCancelled else { return }
+            Defaults[.lastSuccessfulUpdateCheck] = Date()
+            // 使用者這時已經手動檢查或開始更新：不去動畫面，讓那個流程自己收尾。
+            guard !state.isBusy else { return }
+            if case .available(let found) = result {
+                candidate = found
+                state = .available(version: found.version.description, notes: found.notes, isPrerelease: found.isPrerelease)
+            }
+            // 已是最新版：不改畫面（不跳「已是最新版本」）。
+        } catch {
+            // 自動檢查失敗一律靜默：不改狀態、不顯示紅字；不更新「上次成功時間」，由排程決定要不要重試。
         }
     }
 
@@ -307,6 +377,22 @@ final class UpdateController: ObservableObject {
     }
 
     // MARK: - 給畫面用的文字與動作
+
+    /// 選單列的更新項目：有新版時直接寫出版本號，否則是一般的「檢查更新…」。
+    var menuBarTitle: String {
+        if case .available(let version, _, _) = state {
+            return String(localized: "Update Available: \(version)…", comment: "Menu bar item shown when a new version was found; the argument is a version such as 0.2.0.")
+        }
+        return String(localized: "Check for Updates…", comment: "Menu bar item.")
+    }
+
+    /// 選單列項目的動作：開啟設定的「關於」；已經有新版就直接讓使用者看到更新面板，不重查。
+    func openFromMenuBar() {
+        SettingsWindowController.shared.showWindow()
+        NotificationCenter.default.post(name: .showAboutSettings, object: nil)
+        if case .available = state { return }
+        check()
+    }
 
     var strings: UpdatePanelStrings {
         var s = UpdatePanelStrings()
