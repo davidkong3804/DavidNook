@@ -231,6 +231,9 @@ extension Defaults.Keys {
     static let lyricsTaiwanIdioms = Key<Bool>("lyricsTaiwanIdioms", default: false)
     /// 日文／韓文歌只顯示原文。預設關：這兩種語言的歌詞預設在原文下方附中文翻譯（系統離線翻譯，歌詞不離開這台 Mac）。
     static let lyricsOriginalOnly = Key<Bool>("lyricsOriginalOnly", default: false)
+    /// 羅馬拼音歌名（Apple Music 繁中地區常把日韓歌顯示成這樣）時，向 Apple 的 iTunes Search 查回原文歌名再找歌詞。
+    /// 預設開；只送出歌手名，關閉後完全不連 itunes.apple.com。
+    static let lyricsNativeTitleLookup = Key<Bool>("lyricsNativeTitleLookup", default: true)
     /// 收合瀏海下方的歌詞膠囊（一句一句跑馬燈）。預設開；沒有歌詞或沒在播放時不顯示。
     static let lyricsPillEnabled = Key<Bool>("lyricsPillEnabled", default: true)
     /// 膠囊離瀏海底緣的距離（pt；−8…40，預設 6）。有實體瀏海的螢幕上膠囊會佔用一點顯示空間。

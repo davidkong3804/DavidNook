@@ -64,7 +64,6 @@ struct LyricsSidePanel: View {
 
     var body: some View {
         content
-            .lyricsTranslationHost(service: service)
             .contentShape(Rectangle())
             .onHover { hovering in
                 // 對時控制展開後，滑鼠離開面板 2 秒才自動收合（中途回來就取消）。
@@ -150,8 +149,9 @@ struct LyricsSidePanel: View {
 }
 
 /// 日文／韓文歌的現場翻譯：用系統的離線翻譯（Translation 框架，macOS 15 以上），歌詞不離開這台 Mac。
-/// 系統只讓視圖取得翻譯工作階段，所以由歌詞面板接手 `LyricsService.translationJob`；面板不在畫面上時工作會等著，
-/// 下次面板出現再翻。第一次翻某個語言時，系統可能會跳出下載語言包的提示。失敗就只顯示原文。
+/// 系統只讓視圖取得翻譯工作階段，所以由「一直在畫面上」的 `LyricsPillHost` 接手 `LyricsService.translationJob`：
+/// 歌詞一載入就開始翻，不必等你展開面板（膠囊也要用翻譯）。多個螢幕各有一份視圖時，由 `claimTranslation` 保證只翻一次。
+/// 第一次翻某個語言時，系統可能會跳出下載語言包的提示。失敗就只顯示原文。
 extension View {
     @ViewBuilder
     func lyricsTranslationHost(service: LyricsService) -> some View {
@@ -190,7 +190,7 @@ private struct LyricsTranslationHost: ViewModifier {
     }
 
     nonisolated private static func translate(with session: TranslationSession, service: LyricsService) async {
-        guard let job = await service.translationJob else { return }
+        guard let job = await service.translationJob, await service.claimTranslation(job) else { return }
         do {
             let requests = job.requests.enumerated().map {
                 TranslationSession.Request(sourceText: $0.element.text, clientIdentifier: String($0.offset))
@@ -202,7 +202,8 @@ private struct LyricsTranslationHost: ViewModifier {
             }
             await service.completeTranslation(job, translated: job.requests.indices.map { byID[$0] ?? "" })
         } catch is CancellationError {
-            return          // 面板收起來了：工作留著，下次出現再翻
+            await service.releaseTranslationClaim(job)      // 被取消：工作留著，下次再翻
+            return
         } catch {
             await service.failTranslation(job)
         }
@@ -372,9 +373,13 @@ struct LyricsPillHost: View {
         .frame(width: CGFloat(maxWidth), height: LyricsPillMetrics.twoLineHeight, alignment: .top)
         .offset(y: LyricsPillMetrics.topOffset(notchBottom: notchBottom, dropDistance: CGFloat(dropDistance)))
         .background(PillWindowReader(box: windowBox))
+        .lyricsTranslationHost(service: service)
         .onChange(of: visibility.isVisible) { _, visible in onVisibleChange(visible) }
         .task(id: passThroughActive) { await runPassThroughPolling() }
-        .onDisappear { setPassingThrough(false) }
+        .onDisappear {
+            passThrough.reset()
+            setPassingThrough(false)
+        }
     }
 
     /// 透過去時膠囊的不透明度：淡到幾乎看不見，底下的分頁才看得到。
@@ -394,6 +399,7 @@ struct LyricsPillHost: View {
 
     /// 約 20 Hz 取樣游標；不需要時（任務被取消或條件不成立）立刻恢復接收滑鼠事件。
     private func runPassThroughPolling() async {
+        passThrough.reset()
         guard passThroughActive else {
             setPassingThrough(false)
             return
@@ -402,11 +408,13 @@ struct LyricsPillHost: View {
             samplePointer()
             try? await Task.sleep(for: .milliseconds(50))
         }
+        passThrough.reset()
         setPassingThrough(false)
     }
 
     private func samplePointer() {
         guard let window = windowBox.window, heldLine != nil else {
+            passThrough.reset()
             setPassingThrough(false)
             return
         }
@@ -422,8 +430,8 @@ struct LyricsPillHost: View {
         setPassingThrough(engaged)
     }
 
+    /// 只切換「視窗是否接收滑鼠事件」與膠囊淡化；**不能**在這裡重設 `passThrough`，否則每次取樣都會把停留計時歸零。
     private func setPassingThrough(_ engaged: Bool) {
-        if !engaged { passThrough.reset() }
         guard engaged != isPassingThrough else { return }
         isPassingThrough = engaged
         windowBox.window?.ignoresMouseEvents = engaged
@@ -481,6 +489,8 @@ private struct PillWindowReader: NSViewRepresentable {
 
     private final class Reader: NSView {
         var box: PillWindowBox?
+        /// 只是用來取得視窗的隱形視圖：不攔截任何滑鼠事件，hover／點擊照常落到它下面的畫面。
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
             box?.window = window

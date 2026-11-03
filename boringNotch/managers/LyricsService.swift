@@ -62,7 +62,11 @@ final class LyricsService: ObservableObject {
     @Published private(set) var sourceLanguage: LyricsSourceLanguage?
     /// 等著現場翻譯的工作（nil＝沒有）。翻譯要由 SwiftUI 的 `translationTask` 執行（系統翻譯只能從視圖取得工作階段），
     /// 所以由歌詞面板接手，完成後呼叫 `completeTranslation` 或 `failTranslation`。
-    @Published private(set) var translationJob: TranslationJob?
+    @Published private(set) var translationJob: TranslationJob? {
+        didSet { if translationJob == nil { claimedTranslation = nil } }
+    }
+    /// 已有某個視圖接手的翻譯工作（每個螢幕各有一份歌詞膠囊視圖，只能有一份真的去翻）。
+    private var claimedTranslation: TranslationJob?
 
     /// 一次現場翻譯：哪首歌、什麼語言、哪些行。
     struct TranslationJob: Equatable, Sendable {
@@ -312,6 +316,17 @@ final class LyricsService: ObservableObject {
 
     // MARK: - 中文對照（日文／韓文）
 
+    /// 視圖接手翻譯工作：第一個來的拿到 true，其餘（另一個螢幕的視圖）拿到 false。
+    func claimTranslation(_ job: TranslationJob) -> Bool {
+        guard job == translationJob, claimedTranslation != job else { return false }
+        claimedTranslation = job
+        return true
+    }
+
+    func releaseTranslationClaim(_ job: TranslationJob) {
+        if claimedTranslation == job { claimedTranslation = nil }
+    }
+
     /// 完成現場翻譯：`translated` 與 `job.requests` 一一對應（已是繁體中文）。結果會依曲目快取。
     func completeTranslation(_ job: TranslationJob, translated: [String]) {
         guard job == translationJob, loadedKey == job.key, let picked else { return }
@@ -411,6 +426,11 @@ final class LyricsService: ObservableObject {
             ?? DavidNookCore.version
         let cache: any LyricsCacheStore = store ?? MemoryLyricsCacheStore()
         // 組裝（簡繁感知的挑選／剝檔頭／查詢變體）在 Core 的 LyricsPipeline，有離線測試；HTTP 走 URLSessionTransport。
-        return LyricsPipeline.makeRepository(transport: URLSessionTransport(), store: cache, appVersion: version)
+        // 日韓歌在繁中地區常顯示成羅馬拼音歌名：先向 Apple 查回原文歌名（只送歌手名；設定可關）。
+        let transport = URLSessionTransport()
+        let resolver = ITunesNativeTitleResolver(transport: transport, isEnabled: { Defaults[.lyricsNativeTitleLookup] })
+        return LyricsPipeline.makeRepository(
+            transport: transport, store: cache, appVersion: version, nativeTitleResolver: resolver
+        )
     }
 }

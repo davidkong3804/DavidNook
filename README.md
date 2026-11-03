@@ -48,7 +48,7 @@ DavidNook 把螢幕頂端的瀏海（沒有瀏海的螢幕則是一條浮動的�
   - 歌詞快取：`DavidNook/Lyrics`（檔案權限 0600，可在 設定 → 媒體 清除）。
   - 剪貼簿歷史：`DavidNook/Clipboard`（目錄 0700、檔案 0600；設定 → 剪貼簿 可「清除未釘選」，或二次確認後「清除全部」，連同暫存圖片）。
   - 實際位置：`~/Library/Containers/io.github.davidkong3804.DavidNook/Data/Library/Application Support/DavidNook/`。
-- **對外連線只有兩種**：① `lrclib.net`（歌詞查詢，自動）；② 檢查更新時連 `api.github.com`，你按「更新並重新啟動」才連 GitHub 的下載主機（見〈更新〉；只送 GET 與帶版本號的 User-Agent；自動檢查預設開啟、可在「設定 → 關於」關閉，每天最多一次）。
+- **對外連線只有三種**：① `lrclib.net`（歌詞查詢，自動）；①-b `itunes.apple.com`（只在 Apple Music 把日韓歌顯示成羅馬拼音歌名時，用「歌手名」查回原文歌名，只送歌手名；預設開，可在「設定 → 媒體 → 查詢歌曲的原文歌名」關閉）；② 檢查更新時連 `api.github.com`，你按「更新並重新啟動」才連 GitHub 的下載主機（見〈更新〉；只送 GET 與帶版本號的 User-Agent；自動檢查預設開啟、可在「設定 → 關於」關閉，每天最多一次）。
   App 沒有其他網路用途。歌詞查詢送出的內容只有：**曲名、歌手、長度（秒）**，
   以及一個自報身分的 `User-Agent: DavidNook/<版本> (專案網址)`（當然，伺服器會看到你的 IP 位址，這是任何網路請求都無法避免的）。
   影片來源（瀏覽器）送出的是**萃取後**的歌名與歌手，不送原始影片標題與頻道名，也不帶長度。

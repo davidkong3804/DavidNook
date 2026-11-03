@@ -6172,6 +6172,40 @@
           }
         }
       }
+    },
+    "Look up original song titles" : {
+      "comment" : "Settings toggle: resolve romanized Japanese/Korean titles to the original title via Apple.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Look up original song titles"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查詢歌曲的原文歌名"
+          }
+        }
+      }
+    },
+    "When Apple Music shows a Japanese or Korean song with a romanized title, ask Apple (itunes.apple.com) for the original title so the right lyrics are found. Only the artist name is sent." : {
+      "comment" : "Caption under the original-title lookup toggle.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When Apple Music shows a Japanese or Korean song with a romanized title, ask Apple (itunes.apple.com) for the original title so the right lyrics are found. Only the artist name is sent."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Music 把日文或韓文歌顯示成羅馬拼音歌名時，向 Apple（itunes.apple.com）查回原文歌名，才找得到正確的歌詞。只會送出歌手名。"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

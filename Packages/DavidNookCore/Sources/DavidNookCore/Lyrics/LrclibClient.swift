@@ -210,8 +210,34 @@ public final class LrclibClient: LyricsFetching, @unchecked Sendable {
         }
 
         if let getPick { return LyricsFetchOutcome(lyrics: getPick) }     // search 成功但沒有結果：get 是唯一版本
+        if getFailure == nil, let fallback = try await titleOnlyFallback(original, sentSoFar: &sent) {
+            return LyricsFetchOutcome(lyrics: fallback)
+        }
         if let getFailure { throw getFailure }                             // get 失敗、search 又沒結果：不能宣稱「找不到」
         return LyricsFetchOutcome(lyrics: nil)
+    }
+
+    /// 羅馬拼音歌名＋原文歌手（Apple Music 在繁中地區常把日韓歌顯示成「Shinunoga E-Wa／藤井風」）：
+    /// LRCLIB 登記的歌手多半是 "Fujii Kaze"，帶歌手的 get／search 都找不到。所有一般查詢都落空後，
+    /// 再做一次只帶歌名的 search；為了不放錯歌，只接受**歌名（忽略大小寫與標點）完全相同**的候選，
+    /// 長度仍由挑選器的 ±2 秒規則把關（所以要求查詢的長度已知）。
+    private func titleOnlyFallback(_ q: LyricsQuery, sentSoFar sent: inout Int) async throws -> PickedLyrics? {
+        guard q.looksRomanizedAgainstNativeArtist, q.duration.isFinite, q.duration > 0 else { return nil }
+        let response = try await send(
+            makeRequest(path: "/api/search", items: [("track_name", q.title)]), sentSoFar: &sent
+        )
+        guard response.statusCode == 200 else {
+            if response.statusCode == 404 { return nil }
+            throw LrclibError.unexpectedStatus(response.statusCode)
+        }
+        let wanted = Self.foldedTitle(q.title)
+        let list = try decode([LossyCandidate].self, from: response.body).compactMap(\.value)
+            .filter { Self.foldedTitle($0.trackName) == wanted }
+        return picker.pick(from: list, for: q)
+    }
+
+    private static func foldedTitle(_ s: String) -> String {
+        String(s.lowercased().filter { $0.isLetter || $0.isNumber })
     }
 
     /// 把 get 的單筆放在最前面併入搜尋結果，以 id 去重（同一筆紀錄不算兩票）。

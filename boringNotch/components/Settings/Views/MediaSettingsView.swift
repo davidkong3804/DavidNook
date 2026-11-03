@@ -131,6 +131,15 @@ struct MediaSettingsView: View {
                 }
                 .disabled(!enableLyrics)
                 VStack(alignment: .leading, spacing: 4) {
+                    Defaults.Toggle(key: .lyricsNativeTitleLookup) {
+                        Text("Look up original song titles")
+                    }
+                    Text("When Apple Music shows a Japanese or Korean song with a romanized title, ask Apple (itunes.apple.com) for the original title so the right lyrics are found. Only the artist name is sent.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .disabled(!enableLyrics)
+                VStack(alignment: .leading, spacing: 4) {
                     Defaults.Toggle(key: .lyricsPillEnabled) {
                         Text("Show lyrics under the closed notch")
                     }

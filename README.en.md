@@ -49,7 +49,7 @@ DavidNook is an independent implementation and is **not affiliated with NotchNoo
 - Everything stays on this Mac. The app is sandboxed; lyrics cache and clipboard history live in the container's
   Application Support (`~/Library/Containers/io.github.davidkong3804.DavidNook/Data/Library/Application Support/DavidNook/`),
   files `0600`, directories `0700`. Settings let you clear them.
-- **There are only two kinds of network connection**: (1) `lrclib.net` for lyrics (automatic), and (2) `api.github.com` when checking for updates, and GitHub's download hosts only when you press "Update and Restart"
+- **There are only three kinds of network connection**: (1) `lrclib.net` for lyrics (automatic), (1b) `itunes.apple.com`, only when Apple Music shows a Japanese/Korean song with a romanized title: the artist name is sent to find the original title (on by default; turn off in Settings → Media → "Look up original song titles"), and (2) `api.github.com` when checking for updates, and GitHub's download hosts only when you press "Update and Restart"
   (see Updating; just a GET and a User-Agent with the app version; the automatic check is on by default, can be turned off in Settings → About, and runs at most once a day). The lyrics lookup receives the **track title, artist and duration** and a
   `User-Agent: DavidNook/<version> (project URL)`. It does **not** receive the album, clipboard content, file paths or any
   identifier. (The server sees your IP address, as with any request.) Turn lyrics off in Settings → Media to disable it.

@@ -245,6 +245,45 @@ final class LrclibClientTests: XCTestCase {
         XCTAssertEqual(queryDict(t.requests[0]), ["track_name": "x"])
     }
 
+    // MARK: - 羅馬拼音歌名＋原文歌手（Apple Music 的「Shinunoga E-Wa／藤井風」）：LRCLIB 登記的歌手是 Fujii Kaze
+
+    private let romanized = LyricsQuery(title: "Shinunoga E-Wa", artist: "藤井風", album: nil, duration: 185.6)
+
+    func testRomanizedTitleWithNativeArtistFallsBackToATitleOnlySearch() async throws {
+        let match = recordObject(id: 7, track: "Shinunoga E-wa", artist: "Fujii Kaze", duration: 186, synced: goodSynced)
+        let otherSong = recordObject(id: 8, track: "Another Song", artist: "Someone", duration: 186, synced: goodSynced)
+        let t = StubTransport(steps: [.notFound, .ok("[]"), .ok(jsonString([otherSong, match]))])
+        let picked = try await makeClient(t).lyrics(for: romanized)
+        XCTAssertEqual(picked?.candidateID, 7, "只採歌名（忽略大小寫與標點）完全相同、長度吻合的版本")
+        XCTAssertEqual(t.requests.count, 3)
+        XCTAssertEqual(queryDict(t.requests[2]), ["track_name": "Shinunoga E-Wa"], "後備查詢不帶歌手")
+    }
+
+    func testTitleOnlyFallbackNeverAcceptsADifferentTitleOrLength() async throws {
+        let wrongTitle = recordObject(id: 8, track: "Another Song", artist: "Someone", duration: 186, synced: goodSynced)
+        let wrongLength = recordObject(id: 9, track: "Shinunoga E-Wa", artist: "Fujii Kaze", duration: 219, synced: goodSynced)
+        let t = StubTransport(steps: [.notFound, .ok("[]"), .ok(jsonString([wrongTitle, wrongLength]))])
+        let result = try await makeClient(t).lyrics(for: romanized)
+        XCTAssertNil(result)
+    }
+
+    func testNoTitleOnlyFallbackWhenArtistIsLatinOrTitleIsNative() async throws {
+        let latin = LyricsQuery(title: "Shinunoga E-Wa", artist: "Fujii Kaze", album: nil, duration: 185.6)
+        let t1 = StubTransport(steps: [.notFound, .ok("[]")])
+        _ = try await makeClient(t1).lyrics(for: latin)
+        XCTAssertEqual(t1.requests.count, 2)
+        let native = LyricsQuery(title: "死ぬのがいいわ", artist: "藤井風", album: nil, duration: 185.6)
+        let t2 = StubTransport(steps: [.notFound, .ok("[]")])
+        _ = try await makeClient(t2).lyrics(for: native)
+        XCTAssertEqual(t2.requests.count, 2)
+    }
+
+    func testTitleOnlyFallbackNeedsAKnownLength() async throws {
+        let t = StubTransport(steps: [.notFound, .ok("[]")])
+        _ = try await makeClient(t).lyrics(for: LyricsQuery(title: "Shinunoga E-Wa", artist: "藤井風", duration: 0))
+        XCTAssertEqual(t.requests.count, 2)
+    }
+
     // MARK: - 共識挑選：get 的單筆併入 search 候選池，統一交給 Picker 排序
 
     /// 首句在 `seconds` 秒的兩行同步歌詞（用來製造「時間軸不同的版本」）。

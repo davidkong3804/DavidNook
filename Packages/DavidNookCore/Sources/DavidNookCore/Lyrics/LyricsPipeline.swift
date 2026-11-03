@@ -74,13 +74,16 @@ public enum LyricsPipeline {
         negativeTTL: TimeInterval = 1_800,
         sleeper: @escaping Sleeper = LrclibClient.defaultSleeper,
         requestSpacing: TimeInterval = 0.25,
-        baseURL: URL = URL(string: "https://lrclib.net")!
+        baseURL: URL = URL(string: "https://lrclib.net")!,
+        nativeTitleResolver: (any NativeTitleResolving)? = nil
     ) -> LyricsRepository {
         let client = makeClient(
             transport: transport, appVersion: appVersion, sleeper: sleeper,
             requestSpacing: requestSpacing, baseURL: baseURL
         )
         // 影片來源（瀏覽器播 YouTube 等）先從影片標題萃取歌名／歌手；乾淨來源原樣直通。
-        return LyricsRepository(fetcher: VideoAwareLyricsFetcher(base: client), store: store, negativeTTL: negativeTTL)
+        // 羅馬拼音歌名＋原文歌手（Apple Music 的「Shinunoga E-Wa／藤井風」）：先換回原文歌名再查。
+        let base: any LyricsFetching = nativeTitleResolver.map { NativeTitleLyricsFetcher(base: client, resolver: $0) } ?? client
+        return LyricsRepository(fetcher: VideoAwareLyricsFetcher(base: base), store: store, negativeTTL: negativeTTL)
     }
 }
