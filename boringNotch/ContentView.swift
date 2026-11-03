@@ -801,6 +801,19 @@ extension ContentView {
         }
     }
 
+    /// 游標在選單列高度、卻不在實體瀏海正上方（閉合瀏海兩側延伸出去、蓋住旁邊選單列圖示的部分）時，
+    /// hover 不展開：否則 720 pt 的展開面板會把游標正要去點的圖示整排蓋住。點擊仍會展開。
+    private func hoverMayOpenNotch() -> Bool {
+        guard let screenFrame = getScreenFrame(vm.screenUUID) else { return true }
+        let screen = vm.screenUUID.flatMap { NSScreen.screen(withUUID: $0) }
+        return NotchHoverOpenGuard.allowsHoverOpen(
+            pointer: NSEvent.mouseLocation,
+            screenFrame: screenFrame,
+            menuBarHeight: getMenuBarHeight(for: screen),
+            notchWidth: vm.closedNotchSize.width
+        )
+    }
+
     private func handleHover(_ hovering: Bool) {
         if coordinator.firstLaunch { return }
         hoverTask?.cancel()
@@ -817,7 +830,8 @@ extension ContentView {
             guard vm.notchState == .closed,
                   !shouldDisplayNowPlayingFallbackNotice,
                   !coordinator.shouldShowSneakPeek(on: vm.screenUUID),
-                  Defaults[.openNotchOnHover] else { return }
+                  Defaults[.openNotchOnHover],
+                  hoverMayOpenNotch() else { return }
 
             // 預期動作：停留時間幾乎為 0 時直接展開，不先鼓一下。
             if Defaults[.minimumHoverDuration] > 0.05 {
@@ -832,7 +846,11 @@ extension ContentView {
                     guard self.vm.notchState == .closed,
                           self.isHovering,
                           !self.shouldDisplayNowPlayingFallbackNotice,
-                          !self.coordinator.shouldShowSneakPeek(on: self.vm.screenUUID) else { return }
+                          !self.coordinator.shouldShowSneakPeek(on: self.vm.screenUUID),
+                          self.hoverMayOpenNotch() else {
+                        self.isAnticipating = false
+                        return
+                    }
 
                     self.doOpen()
                 }
