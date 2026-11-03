@@ -22,6 +22,14 @@ public enum LyricsPillMetrics {
     // MARK: 版面
 
     public static let height: CGFloat = 22
+    /// 雙語（原文＋較小的中文翻譯）時的膠囊高度。
+    public static let twoLineHeight: CGFloat = 38
+    /// 雙語時原文那一行／翻譯那一行的高度（加上下內縮 = `twoLineHeight`）。
+    public static let primaryLineHeight: CGFloat = 19
+    public static let translationLineHeight: CGFloat = 15
+    /// 翻譯字級比原文小多少、以及最小字級。
+    public static let translationFontDelta: CGFloat = 2
+    public static let minimumTranslationFontSize: CGFloat = 9
     public static let horizontalPadding: CGFloat = 12
     public static let minimumWidth: CGFloat = 96
     /// 文字兩側的漸層邊緣寬度（捲動時文字滑入／滑出邊緣的柔化）。
@@ -30,6 +38,16 @@ public enum LyricsPillMetrics {
     public static let windowBottomPadding: CGFloat = 8
     /// 夾限用的最大瀏海底緣假設（真實瀏海高約 32–38，自訂高度滑桿上限更低；留餘裕）。
     public static let maximumAssumedNotchBottom: CGFloat = 60
+
+    /// 有翻譯＝兩行高，否則單行高。
+    public static func height(hasTranslation: Bool) -> CGFloat {
+        hasTranslation ? twoLineHeight : height
+    }
+
+    /// 翻譯行的字級：原文字級小 2 pt，不低於 9 pt。
+    public static func translationFontSize(for fontSize: CGFloat) -> CGFloat {
+        max(clampedFontSize(fontSize) - translationFontDelta, minimumTranslationFontSize)
+    }
 
     // MARK: 夾限
 
@@ -72,9 +90,9 @@ public enum LyricsPillMetrics {
         max(notchBottom + clampedDropDistance(dropDistance), 0)
     }
 
-    /// 最壞情況（瀏海底緣 60、下拉 40）膠囊底緣離視窗上緣的距離。
+    /// 最壞情況（瀏海底緣 60、下拉 40、雙語兩行）膠囊底緣離視窗上緣的距離。
     public static var maximumBottomExtent: CGFloat {
-        topOffset(notchBottom: maximumAssumedNotchBottom, dropDistance: dropDistanceRange.upperBound) + height
+        topOffset(notchBottom: maximumAssumedNotchBottom, dropDistance: dropDistanceRange.upperBound) + twoLineHeight
     }
 
     // MARK: 動畫

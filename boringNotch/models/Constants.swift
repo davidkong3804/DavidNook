@@ -229,6 +229,8 @@ extension Defaults.Keys {
     static let enableLyrics = Key<Bool>("enableLyrics", default: true)
     /// 簡體歌詞轉繁體時是否套用台灣慣用詞（軟件→軟體…）。預設關：慣用詞層對歌詞有風險（支持→支援、打开→開啟）。
     static let lyricsTaiwanIdioms = Key<Bool>("lyricsTaiwanIdioms", default: false)
+    /// 日文／韓文歌只顯示原文。預設關：這兩種語言的歌詞預設在原文下方附中文翻譯（系統離線翻譯，歌詞不離開這台 Mac）。
+    static let lyricsOriginalOnly = Key<Bool>("lyricsOriginalOnly", default: false)
     /// 收合瀏海下方的歌詞膠囊（一句一句跑馬燈）。預設開；沒有歌詞或沒在播放時不顯示。
     static let lyricsPillEnabled = Key<Bool>("lyricsPillEnabled", default: true)
     /// 膠囊離瀏海底緣的距離（pt；−8…40，預設 6）。有實體瀏海的螢幕上膠囊會佔用一點顯示空間。
@@ -239,6 +241,10 @@ extension Defaults.Keys {
     static let lyricsPillFontSize = Key<Double>("lyricsPillFontSize", default: 12)
     /// 跑馬燈速度倍率（0.5…2，預設 1）。
     static let lyricsPillSpeed = Key<Double>("lyricsPillSpeed", default: 1)
+    /// 膠囊歌詞的文字顏色跟著專輯封面（淡彩色，黑底上保證讀得清楚）。預設開；封面幾乎沒有顏色（灰、黑、白）時維持白字。
+    static let lyricsPillTintFromCover = Key<Bool>("lyricsPillTintFromCover", default: true)
+    /// 滑鼠停在歌詞膠囊上時，膠囊暫時變淡、點擊穿透到底下的視窗（例如瀏覽器分頁）。
+    static let lyricsPillPassThrough = Key<Bool>("lyricsPillPassThrough", default: true)
     /// 展開的播放器是否顯示右側歌詞面板（歌名旁的按鈕切換）。
     /// 影片功能（在展開瀏海顯示你挑選的單一視窗的即時畫面）。預設開；沒挑視窗時完全不擷取。
     static let videoCapsuleEnabled = Key<Bool>(VideoCapsuleSettings.enabledKey, default: VideoCapsuleSettings.defaultEnabled)

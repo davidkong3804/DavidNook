@@ -131,29 +131,43 @@ public struct LyricsPanelView: View {
             let isCurrent = highlightedIndex == line.id
             // 離「目前位置」幾行（尚未開始視為在第 −1 行；目前行是空白行時以該空白行為準）。
             let distance = abs(line.id - (currentIndex ?? -1))
-            // 用粗體量測所有行，目前行切成粗體時折行與高度不會跳動。
-            Text(verbatim: line.text)
-                .font(LyricsFont.font(size: fontSize, weight: .bold))
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .hidden()
-                .overlay(alignment: .topLeading) {
-                    Text(verbatim: line.text)
-                        .font(isCurrent
-                              ? LyricsFont.font(size: fontSize, weight: .bold)
-                              : LyricsFont.font(size: fontSize - 1, weight: .regular))
+            VStack(alignment: .leading, spacing: Self.translationSpacing) {
+                // 用粗體量測所有行，目前行切成粗體時折行與高度不會跳動。
+                Text(verbatim: line.text)
+                    .font(LyricsFont.font(size: fontSize, weight: .bold))
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .hidden()
+                    .overlay(alignment: .topLeading) {
+                        Text(verbatim: line.text)
+                            .font(isCurrent
+                                  ? LyricsFont.font(size: fontSize, weight: .bold)
+                                  : LyricsFont.font(size: fontSize - 1, weight: .regular))
+                            .multilineTextAlignment(.leading)
+                            .foregroundStyle(isCurrent ? Color.white : Color.white.opacity(Self.dimOpacity(distance: distance)))
+                    }
+                // 日文／韓文歌的中文對照：原文下方，字小一級、比原文淡一點。
+                if let translation = line.translation {
+                    Text(verbatim: translation)
+                        .font(LyricsFont.font(size: fontSize - 2, weight: isCurrent ? .medium : .regular))
                         .multilineTextAlignment(.leading)
-                        .foregroundStyle(isCurrent ? Color.white : Color.white.opacity(Self.dimOpacity(distance: distance)))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .foregroundStyle(Color.white.opacity(isCurrent ? 0.72 : Self.dimOpacity(distance: distance) * 0.85))
                 }
-                .animation(.smooth(duration: 0.35), value: isCurrent)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(line.text)
-                .modifier(AlignTapModifier(
-                    sync: sync, lineID: line.id, hoveredLineID: $hoveredLineID, hoverID: hoveredLineID
-                ))
+            }
+            .animation(.smooth(duration: 0.35), value: isCurrent)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(line.translation.map { "\(line.text)，\($0)" } ?? line.text)
+            .modifier(AlignTapModifier(
+                sync: sync, lineID: line.id, hoveredLineID: $hoveredLineID, hoverID: hoveredLineID
+            ))
         }
     }
+
+    /// 原文與中文對照之間的間距。
+    private static let translationSpacing: CGFloat = 1
 
     /// 離目前行越遠越暗（0.5 → 0.18）。
     static func dimOpacity(distance: Int) -> Double {

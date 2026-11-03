@@ -253,6 +253,9 @@ struct MusicControlsView: View {
                 MarqueeText(musicManager.songTitle, font: .headline, color: .white, frameWidth: enableLyrics ? max(width - 24, 0) : width)
                 if enableLyrics {
                     LyricsToggleButton(isShowing: $showLyricsPanel)
+                    if showLyricsPanel {
+                        LyricsTranslationToggleSlot()
+                    }
                 }
             }
             MarqueeText(

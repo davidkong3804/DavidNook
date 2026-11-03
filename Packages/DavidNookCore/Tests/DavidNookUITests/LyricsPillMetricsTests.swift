@@ -50,7 +50,7 @@ final class LyricsPillMetricsTests: XCTestCase {
     }
 
     func testWorstCaseStaysInsideTheClosedAndCoveringWindows() {
-        let bottom = M.topOffset(notchBottom: M.maximumAssumedNotchBottom, dropDistance: 999) + M.height
+        let bottom = M.topOffset(notchBottom: M.maximumAssumedNotchBottom, dropDistance: 999) + M.twoLineHeight
         XCTAssertEqual(bottom, M.maximumBottomExtent)
         let closed = NotchSizing.legacyClosedWindowSize
         let covering = NotchSizing.coveringWindowSize

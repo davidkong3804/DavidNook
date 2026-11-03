@@ -117,8 +117,8 @@ public struct LyricsCandidatePicker: Sendable {
 
             let document = LRCParser.parse(synced)
             // 雙語檔（原文＋翻譯共用時間戳）先收合成只剩原文，再剝檔頭、再做簡繁分類。
-            let collapsed = LyricsTranslationCollapser.collapse(document.lines).lines
-            let lines = stripper.strip(collapsed, title: query.title, artist: query.artist).lines
+            let collapse = LyricsTranslationCollapser.collapse(document.lines)
+            let lines = stripper.strip(collapse.lines, title: query.title, artist: query.artist).lines
             let spoken = lines.filter { !$0.isBlank }
             guard let first = spoken.first else { continue }
 
@@ -130,7 +130,8 @@ public struct LyricsCandidatePicker: Sendable {
                 script: script,
                 lines: lines,
                 offsetMs: document.offsetMs,
-                metadata: document.metadata
+                metadata: document.metadata,
+                embeddedTranslations: Self.embeddedTranslations(lines: lines, dropped: collapse.dropped)
             )
             let residue = (script == .traditional || script == .mixed)
                 ? residualSimplifiedCounter(spoken.map(\.text)) : 0
@@ -154,6 +155,25 @@ public struct LyricsCandidatePicker: Sendable {
         }
 
         return pool.min { rankKey($0).lexicographicallyPrecedes(rankKey($1)) }?.picked
+    }
+
+    // MARK: - 雙語檔附的中文翻譯
+
+    /// 雙語檔被收合時丟掉的翻譯行，若是日文／韓文歌的中文翻譯，就依時間戳配回保留下來的原文行。
+    /// 條件：整份是日文或韓文；至少一半的原文行配得到中文翻譯（否則視為不是中文對照檔）。
+    /// 結果與 `lines` 等長，配不到的行（含空白標記）是空字串。
+    static func embeddedTranslations(lines: [LRCLine], dropped: [LRCLine]) -> [String]? {
+        guard !dropped.isEmpty else { return nil }
+        let spoken = lines.filter { !$0.isBlank }
+        guard LyricsTranslation.sourceLanguage(of: spoken.map(\.text)) != nil else { return nil }
+
+        var byTime: [Int: String] = [:]
+        for line in dropped where byTime[line.timeMs] == nil && LyricsTranslation.isChineseTranslation(line.text) {
+            byTime[line.timeMs] = line.text
+        }
+        let aligned = lines.map { $0.isBlank ? "" : (byTime[$0.timeMs] ?? "") }
+        let covered = aligned.filter { !$0.isEmpty }.count
+        return covered * 2 >= spoken.count ? aligned : nil
     }
 
     // MARK: - 影片來源：歌名／歌手比對

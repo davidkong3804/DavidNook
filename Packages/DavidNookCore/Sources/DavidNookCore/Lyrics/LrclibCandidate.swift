@@ -106,6 +106,9 @@ public struct PickedLyrics: Equatable, Sendable, Codable {
     public var offsetMs: Int
     /// 檔內 ID tag。
     public var metadata: [String: String]
+    /// 日文／韓文歌的 LRCLIB 版本若本身是雙語檔，這裡放它附的中文翻譯（與 `lines` 一一對應，沒有翻譯的行是空字串）。
+    /// 其餘情況為 nil。**尚未做簡繁轉換**。舊版寫入磁碟的快取沒有這個欄位，解碼為 nil。
+    public var embeddedTranslations: [String]?
 
     public init(
         candidateID: Int,
@@ -114,7 +117,8 @@ public struct PickedLyrics: Equatable, Sendable, Codable {
         script: LyricsScript,
         lines: [LRCLine],
         offsetMs: Int = 0,
-        metadata: [String: String] = [:]
+        metadata: [String: String] = [:],
+        embeddedTranslations: [String]? = nil
     ) {
         self.candidateID = candidateID
         self.trackName = trackName
@@ -123,6 +127,7 @@ public struct PickedLyrics: Equatable, Sendable, Codable {
         self.lines = lines
         self.offsetMs = offsetMs
         self.metadata = metadata
+        self.embeddedTranslations = embeddedTranslations
     }
 
     /// 方便建立時間軸（已帶入檔內 offset；使用者偏移在查詢時另外傳入）。

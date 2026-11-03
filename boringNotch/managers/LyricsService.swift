@@ -56,6 +56,21 @@ final class LyricsService: ObservableObject {
     /// 目前曲目的使用者偏移（毫秒；正值＝歌詞提早）。
     @Published private(set) var offsetMs: Int = 0
 
+    /// 日文／韓文歌的中文對照，與 `lines` 一一對應（空字串＝該行沒有翻譯）；沒有翻譯時是空陣列。已是繁體。
+    @Published private(set) var translations: [String] = []
+    /// 目前歌詞的原文語言（只有日文、韓文會有值）。設定頁與歌詞面板的「只顯示原文」按鈕只在有值時出現。
+    @Published private(set) var sourceLanguage: LyricsSourceLanguage?
+    /// 等著現場翻譯的工作（nil＝沒有）。翻譯要由 SwiftUI 的 `translationTask` 執行（系統翻譯只能從視圖取得工作階段），
+    /// 所以由歌詞面板接手，完成後呼叫 `completeTranslation` 或 `failTranslation`。
+    @Published private(set) var translationJob: TranslationJob?
+
+    /// 一次現場翻譯：哪首歌、什麼語言、哪些行。
+    struct TranslationJob: Equatable, Sendable {
+        let key: TrackKey
+        let source: LyricsSourceLanguage
+        let requests: [LyricsTranslation.Request]
+    }
+
     private(set) var timeline = LyricsTimeline(lines: [])
 
     var isFetchingLyrics: Bool { status == .loading }
@@ -64,6 +79,7 @@ final class LyricsService: ObservableObject {
 
     private let repository: LyricsRepository
     private let cacheStore: FileLyricsCacheStore?
+    private let translationStore: any TranslationCacheStore
     private let offsetStore: any TrackOffsetStore
     private let localizer = LyricsLocalizer.shared
     private var track: LyricsTrack?
@@ -74,6 +90,8 @@ final class LyricsService: ObservableObject {
     private var retryTask: Task<Void, Never>?
     private var enableObservation: Task<Void, Never>?
     private var idiomObservation: Task<Void, Never>?
+    private var originalOnlyObservation: Task<Void, Never>?
+    private var translationLocalizeTask: Task<Void, Never>?
 
     /// 換歌後等多久才真的查詢：duration、artist 常常比 title 晚幾十毫秒到，等它們穩定可避免白打一次請求。
     private static let debounce: Duration = .milliseconds(450)
@@ -84,6 +102,7 @@ final class LyricsService: ObservableObject {
     private init() {
         let store = Self.makeCacheStore()
         cacheStore = store
+        translationStore = store ?? MemoryTranslationCacheStore()
         repository = Self.makeRepository(store: store)
         offsetStore = UserDefaultsTrackOffsetStore(suiteName: nil) ?? MemoryTrackOffsetStore()
 
@@ -95,6 +114,11 @@ final class LyricsService: ObservableObject {
         idiomObservation = Task { @MainActor [weak self] in
             for await _ in Defaults.updates(.lyricsTaiwanIdioms, initial: false) {
                 self?.relocalize()
+            }
+        }
+        originalOnlyObservation = Task { @MainActor [weak self] in
+            for await _ in Defaults.updates(.lyricsOriginalOnly, initial: false) {
+                self?.refreshTranslation()
             }
         }
     }
@@ -122,15 +146,18 @@ final class LyricsService: ObservableObject {
 
     /// 收合瀏海歌詞膠囊用的取樣：目前行（已簡轉繁、已含偏移）＋它的起訖時間。
     /// 沒載入、尚未開始、或目前是間奏（空白行）回傳 nil。時間軸與偏移與展開面板同一份資料，所以調整偏移會一起生效。
-    func pillSample(at position: TimeInterval) -> LyricsPillSample? {
+    func pillSample(at position: TimeInterval, includeTranslation: Bool = true) -> LyricsPillSample? {
         guard let index = currentIndex(at: position),
               lines.indices.contains(index), timeline.lines.indices.contains(index) else { return nil }
         let text = lines[index].trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return nil }
         let start = Double(timeline.lines[index].timeMs - timeline.lrcOffsetMs - offsetMs) / 1000
         let end = timeline.nextLineTime(at: position, userOffsetMs: offsetMs)
+        // 日文／韓文歌的中文翻譯：與 `lines` 同索引；「只顯示原文」開著、或這行沒有翻譯就是 nil（膠囊維持單行）。
+        let translation = includeTranslation && translations.count == lines.count ? translations[index] : nil
         return LyricsPillSample(
-            line: LyricsPillLine(index: index, text: text, start: start, end: end), position: position
+            line: LyricsPillLine(index: index, text: text, start: start, end: end, translation: translation),
+            position: position
         )
     }
 
@@ -182,6 +209,7 @@ final class LyricsService: ObservableObject {
         picked = nil
         timeline = LyricsTimeline(lines: [])
         lines = []
+        resetTranslation()
         offsetMs = offsetStore.offsetMs(for: key)
         load(track, key: key, attempt: 0, delay: Self.debounce)
     }
@@ -224,9 +252,11 @@ final class LyricsService: ObservableObject {
     private func cancelWork() {
         fetchTask?.cancel()
         localizeTask?.cancel()
+        translationLocalizeTask?.cancel()
         retryTask?.cancel()
         fetchTask = nil
         localizeTask = nil
+        translationLocalizeTask = nil
         retryTask = nil
     }
 
@@ -238,6 +268,7 @@ final class LyricsService: ObservableObject {
         picked = nil
         timeline = LyricsTimeline(lines: [])
         lines = []
+        resetTranslation()
         offsetMs = 0
         status = newStatus
     }
@@ -245,18 +276,21 @@ final class LyricsService: ObservableObject {
     private func apply(_ result: PickedLyrics?) {
         guard let result else {
             picked = nil
+            resetTranslation()
             status = .notFound
             return
         }
         picked = result
         timeline = result.timeline
         localize(result, publishAs: .loaded)
+        refreshTranslation()
     }
 
     /// 簡繁設定（台灣慣用詞）變更時，用已載入的歌詞重新轉換，不必重查。
     private func relocalize() {
         guard let picked, status == .loaded else { return }
         localize(picked, publishAs: .loaded)
+        refreshTranslation()
     }
 
     private func localize(_ lyrics: PickedLyrics, publishAs newStatus: Status) {
@@ -273,6 +307,85 @@ final class LyricsService: ObservableObject {
             guard let self, !Task.isCancelled, self.loadedKey == key else { return }
             self.lines = converted
             self.status = newStatus
+        }
+    }
+
+    // MARK: - 中文對照（日文／韓文）
+
+    /// 完成現場翻譯：`translated` 與 `job.requests` 一一對應（已是繁體中文）。結果會依曲目快取。
+    func completeTranslation(_ job: TranslationJob, translated: [String]) {
+        guard job == translationJob, loadedKey == job.key, let picked else { return }
+        guard let aligned = LyricsTranslation.align(
+            count: picked.timeline.lines.count, requests: job.requests, translated: translated
+        ) else {
+            translationJob = nil
+            return
+        }
+        translationStore.storeTranslation(TranslationCacheEntry(source: job.source, lines: aligned), for: job.key)
+        translations = aligned
+        translationJob = nil
+    }
+
+    /// 現場翻譯失敗（例如沒下載語言包、使用者取消）：這首歌就只顯示原文，下次換歌再試。
+    func failTranslation(_ job: TranslationJob) {
+        guard job == translationJob else { return }
+        translationJob = nil
+    }
+
+    private func resetTranslation() {
+        translationLocalizeTask?.cancel()
+        translationLocalizeTask = nil
+        if !translations.isEmpty { translations = [] }
+        if translationJob != nil { translationJob = nil }
+        if sourceLanguage != nil { sourceLanguage = nil }
+    }
+
+    /// 依目前歌詞決定中文對照從哪裡來（LRCLIB 雙語檔、快取、現場翻譯），並更新對應狀態。
+    /// 「只顯示原文」開著時不會要求現場翻譯；關掉後（`Defaults` 變更）會重新評估。
+    private func refreshTranslation() {
+        translationLocalizeTask?.cancel()
+        translationLocalizeTask = nil
+        guard let picked, let key = loadedKey else {
+            resetTranslation()
+            return
+        }
+        let texts = picked.timeline.lines.map(\.text)
+        let language = LyricsTranslation.sourceLanguage(of: texts)
+        if sourceLanguage != language { sourceLanguage = language }
+
+        let plan = LyricsTranslation.plan(
+            lines: texts,
+            embedded: picked.embeddedTranslations,
+            cached: translationStore.translation(for: key),
+            allowTranslating: !Defaults[.lyricsOriginalOnly]
+        )
+        switch plan {
+        case .none:
+            if !translations.isEmpty { translations = [] }
+            if translationJob != nil { translationJob = nil }
+        case .useCached(let cached):
+            translations = cached
+            if translationJob != nil { translationJob = nil }
+        case .useEmbedded(let embedded):
+            if translationJob != nil { translationJob = nil }
+            localizeEmbeddedTranslations(embedded, key: key)
+        case .translate(let source, let requests):
+            if !translations.isEmpty { translations = [] }
+            let job = TranslationJob(key: key, source: source, requests: requests)
+            if translationJob != job { translationJob = job }
+        }
+    }
+
+    /// LRCLIB 雙語檔附的中文翻譯可能是簡體：與歌詞內文走同一套簡轉繁（含台灣慣用詞設定）。
+    private func localizeEmbeddedTranslations(_ embedded: [String], key: TrackKey) {
+        let options = LyricsLocalizationOptions(useTaiwanIdioms: Defaults[.lyricsTaiwanIdioms])
+        let localizer = localizer
+        translationLocalizeTask = Task { @MainActor [weak self] in
+            let converted = await Task.detached(priority: .userInitiated) {
+                (try? localizer.localize(lines: embedded, options: options).lines) ?? embedded
+            }.value
+            guard let self, !Task.isCancelled, self.loadedKey == key else { return }
+            self.translations = converted
         }
     }
 

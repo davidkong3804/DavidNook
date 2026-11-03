@@ -167,3 +167,58 @@ public final class FileLyricsCacheStore: LyricsCacheStore, @unchecked Sendable {
         }
     }
 }
+
+// MARK: - 翻譯快取（日文／韓文歌詞的中文對照）
+
+/// 翻譯與歌詞放在同一個資料夾、同樣的檔名規則（`<64 位 hex>.json`），所以權限、原子寫入、損毀容忍、
+/// 「排除備份」與 `removeAll`（設定頁的「清除快取」）全部共用。檔名雜湊多了前綴，不會與同一首歌的歌詞快取衝突。
+extension FileLyricsCacheStore: TranslationCacheStore {
+
+    private struct TranslationFile: Codable {
+        let version: Int
+        let key: TrackKey
+        let entry: TranslationCacheEntry
+    }
+
+    private func translationFileURL(for key: TrackKey) -> URL {
+        let digest = SHA256.hash(data: Data(("translation\u{1F}" + key.storageString).utf8))
+        let name = digest.map { String(format: "%02x", $0) }.joined() + "." + Self.fileExtension
+        return directory.appendingPathComponent(name)
+    }
+
+    public func translation(for key: TrackKey) -> TranslationCacheEntry? {
+        lock.withLock {
+            let url = translationFileURL(for: key)
+            let fm = FileManager.default
+            guard fm.fileExists(atPath: url.path) else { return nil }
+
+            guard let attributes = try? fm.attributesOfItem(atPath: url.path),
+                  let size = (attributes[.size] as? NSNumber)?.intValue,
+                  size <= Self.maxFileBytes,
+                  let data = try? Data(contentsOf: url)
+            else {
+                try? fm.removeItem(at: url)
+                return nil
+            }
+            guard let header = try? JSONDecoder().decode(Header.self, from: data) else {
+                try? fm.removeItem(at: url)
+                return nil
+            }
+            guard header.version == Self.formatVersion else { return nil }
+            guard let file = try? JSONDecoder().decode(TranslationFile.self, from: data), file.key == key else {
+                try? fm.removeItem(at: url)
+                return nil
+            }
+            return file.entry
+        }
+    }
+
+    public func storeTranslation(_ entry: TranslationCacheEntry, for key: TrackKey) {
+        lock.withLock {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.sortedKeys]
+            guard let data = try? encoder.encode(TranslationFile(version: Self.formatVersion, key: key, entry: entry)) else { return }
+            try? atomicWrite(data, to: translationFileURL(for: key))
+        }
+    }
+}

@@ -1737,6 +1737,57 @@
         }
       }
     },
+    "Match lyrics color to the album cover" : {
+      "comment" : "Settings toggle: the lyrics capsule text takes a soft tint of the album cover's color.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match lyrics color to the album cover"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歌詞顏色貼合專輯封面"
+          }
+        }
+      }
+    },
+    "Let the mouse pass through the capsule" : {
+      "comment" : "Settings toggle: pointer resting on the lyrics capsule makes it fade and lets clicks through.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Let the mouse pass through the capsule"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑鼠移到膠囊上時透過去"
+          }
+        }
+      }
+    },
+    "When the pointer rests on the capsule, it fades and clicks go to whatever is underneath (for example a browser tab). Hover the notch itself to open it." : {
+      "comment" : "Caption under the capsule pass-through toggle.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When the pointer rests on the capsule, it fades and clicks go to whatever is underneath (for example a browser tab). Hover the notch itself to open it."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑鼠停在膠囊上時，膠囊會變淡，點擊會直接落到底下的視窗（例如瀏覽器分頁）。要展開請把滑鼠移到瀏海本身。"
+          }
+        }
+      }
+    },
     "Match menu bar height" : {
       "localizations" : {
         "en" : {
@@ -2875,6 +2926,23 @@
         }
       }
     },
+    "Show Chinese translation" : {
+      "comment" : "Tooltip of the small button next to the song title while only the original lyrics are shown.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Chinese translation"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示中文翻譯"
+          }
+        }
+      }
+    },
     "Show cool face animation while inactive" : {
       "localizations" : {
         "en" : {
@@ -2967,6 +3035,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在所有顯示器上顯示"
+          }
+        }
+      }
+    },
+    "Show original lyrics only" : {
+      "comment" : "Settings toggle and tooltip of the small button next to the song title: hide the Chinese translation of Japanese and Korean lyrics.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show original lyrics only"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只顯示原文歌詞"
           }
         }
       }
@@ -6067,6 +6152,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "每天最多連線 GitHub 一次，只查看有沒有新版，不會自動安裝。"
+          }
+        }
+      }
+    },
+    "Japanese and Korean songs show a Chinese translation under each line, translated on this Mac by the system's translation (macOS may ask you to download the language the first time). Turn this on to hide it." : {
+      "comment" : "Caption under the 'Show original lyrics only' setting.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Japanese and Korean songs show a Chinese translation under each line, translated on this Mac by the system's translation (macOS may ask you to download the language the first time). Turn this on to hide it."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日文與韓文歌會在每一行下方附上中文翻譯，由系統內建的翻譯在這台 Mac 上完成（第一次使用時 macOS 可能會請你下載語言）。開啟後就只顯示原文。"
           }
         }
       }

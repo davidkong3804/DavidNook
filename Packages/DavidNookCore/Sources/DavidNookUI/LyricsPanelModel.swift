@@ -19,17 +19,33 @@ public struct LyricsPanelLine: Identifiable, Equatable, Sendable {
     public let id: Int
     /// 空字串代表間奏／空白行（以留白呈現）。
     public let text: String
+    /// 中文對照（日文／韓文歌）；nil＝這行沒有翻譯。顯示在原文下方。
+    public let translation: String?
 
-    public init(id: Int, text: String) {
+    public init(id: Int, text: String, translation: String? = nil) {
         self.id = id
         self.text = text
+        self.translation = translation
     }
 
     public var isBlank: Bool { text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
     /// 由一組文字建立（id 為索引）。
     public static func make(from texts: [String]) -> [LyricsPanelLine] {
-        texts.enumerated().map { LyricsPanelLine(id: $0.offset, text: $0.element) }
+        make(from: texts, translations: nil)
+    }
+
+    /// 由原文與中文對照建立。`translations` 要與 `texts` 等長才採用（筆數不符就整份忽略）；
+    /// 空白翻譯、以及空白原文行（間奏）上的翻譯都視為沒有。
+    public static func make(from texts: [String], translations: [String]?) -> [LyricsPanelLine] {
+        let usable = translations?.count == texts.count ? translations : nil
+        return texts.enumerated().map { index, text in
+            var translation = usable?[index].trimmingCharacters(in: .whitespacesAndNewlines)
+            if translation?.isEmpty == true || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                translation = nil
+            }
+            return LyricsPanelLine(id: index, text: text, translation: translation)
+        }
     }
 }
 

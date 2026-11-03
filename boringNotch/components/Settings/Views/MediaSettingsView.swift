@@ -122,6 +122,15 @@ struct MediaSettingsView: View {
                 }
                 .disabled(!enableLyrics)
                 VStack(alignment: .leading, spacing: 4) {
+                    Defaults.Toggle(key: .lyricsOriginalOnly) {
+                        Text("Show original lyrics only")
+                    }
+                    Text("Japanese and Korean songs show a Chinese translation under each line, translated on this Mac by the system's translation (macOS may ask you to download the language the first time). Turn this on to hide it.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .disabled(!enableLyrics)
+                VStack(alignment: .leading, spacing: 4) {
                     Defaults.Toggle(key: .lyricsPillEnabled) {
                         Text("Show lyrics under the closed notch")
                     }
@@ -131,6 +140,17 @@ struct MediaSettingsView: View {
                 }
                 .disabled(!enableLyrics)
                 if enableLyrics && lyricsPillEnabled {
+                    Defaults.Toggle(key: .lyricsPillTintFromCover) {
+                        Text("Match lyrics color to the album cover")
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Defaults.Toggle(key: .lyricsPillPassThrough) {
+                            Text("Let the mouse pass through the capsule")
+                        }
+                        Text("When the pointer rests on the capsule, it fades and clicks go to whatever is underneath (for example a browser tab). Hover the notch itself to open it.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                     Slider(value: $lyricsPillDropDistance, in: Double(LyricsPillMetrics.dropDistanceRange.lowerBound)...Double(LyricsPillMetrics.dropDistanceRange.upperBound), step: 1) {
                         HStack {
                             Text("Distance below the notch")

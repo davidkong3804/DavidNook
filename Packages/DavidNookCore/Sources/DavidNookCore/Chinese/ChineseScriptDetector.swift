@@ -51,10 +51,45 @@ public struct ChineseScriptDetector: Sendable {
         return Self.isJapaneseOrKorean(counts)
     }
 
+    /// 這段文字是不是「純中文」：至少有一個漢字，而且完全沒有假名或諺文（中文翻譯行的判斷用）。
+    public func isChineseText(_ text: String) -> Bool {
+        let counts = Self.cjkCounts(text)
+        return counts.ideographs > 0 && counts.kanaHangul == 0
+    }
+
+    /// 整份歌詞是日文還是韓文；不是（中文、英文、只夾一兩句日文的華語歌）回傳 nil。
+    ///
+    /// 沿用 `detect` 的門檻：日韓行（見 `isJapaneseOrKorean`）占「含 CJK 字元的行」≥ 30% 才算。
+    /// 日韓都有時，假名與諺文字數多的那一邊勝出。
+    public func japaneseOrKoreanLanguage(of lines: [String]) -> LyricsSourceLanguage? {
+        var cjkLines = 0
+        var foreignLines = 0
+        var kana = 0
+        var hangul = 0
+        for line in lines where !line.isEmpty {
+            let counts = Self.cjkCounts(line)
+            if counts.hasCJK { cjkLines += 1 }
+            guard Self.isJapaneseOrKorean(counts) else { continue }
+            foreignLines += 1
+            for scalar in line.unicodeScalars {
+                if Self.isHangul(scalar) { hangul += 1 } else if Self.isKanaOrHangul(scalar) { kana += 1 }
+            }
+        }
+        guard cjkLines > 0, foreignLines * 100 >= Self.japaneseKoreanDocumentPercentLimit * cjkLines else { return nil }
+        return hangul > kana ? .korean : .japanese
+    }
+
     private struct CJKCounts {
         var ideographs = 0
         var kanaHangul = 0
         var hasCJK: Bool { ideographs + kanaHangul > 0 }
+    }
+
+    private static func isHangul(_ s: Unicode.Scalar) -> Bool {
+        switch s.value {
+        case 0xAC00...0xD7AF, 0x1100...0x11FF, 0x3130...0x318F, 0xA960...0xA97F, 0xD7B0...0xD7FF: return true
+        default: return false
+        }
     }
 
     private static func cjkCounts(_ line: String) -> CJKCounts {
