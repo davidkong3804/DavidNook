@@ -125,7 +125,7 @@ struct MediaSettingsView: View {
                     Defaults.Toggle(key: .lyricsOriginalOnly) {
                         Text("Show original lyrics only")
                     }
-                    Text("Japanese and Korean songs show a Chinese translation under each line, translated on this Mac by the system's translation (macOS may ask you to download the language the first time). Turn this on to hide it.")
+                    Text("Japanese and Korean songs show a Chinese translation under each line, translated on this Mac by the system's translation. It only works once the languages are downloaded (System Settings → General → Language & Region → Translation Languages: Japanese/Korean and Traditional Chinese). Turn this on to hide it.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

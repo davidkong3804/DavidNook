@@ -177,16 +177,25 @@ private struct LyricsTranslationHost: ViewModifier {
             .onChange(of: service.translationJob) { _, job in start(job) }
     }
 
+    /// 只在語言包**已經裝好**時才翻：沒裝的話，系統會跳出下載對話框，在這種無邊框浮動視窗上可能卡住整個螢幕的操作。
+    /// 沒裝就只顯示原文（到「系統設定 → 一般 → 語言與地區 → 翻譯語言」下載日文／韓文與繁體中文後，下次播放就會翻）。
     private func start(_ job: LyricsService.TranslationJob?) {
         guard let job else {
             configuration = nil
             return
         }
-        let next = TranslationSession.Configuration(
-            source: Locale.Language(identifier: job.source == .japanese ? "ja" : "ko"),
-            target: Locale.Language(identifier: "zh-Hant")
-        )
-        if configuration == next { configuration?.invalidate() } else { configuration = next }
+        let source = Locale.Language(identifier: job.source == .japanese ? "ja" : "ko")
+        let target = Locale.Language(identifier: "zh-Hant")
+        Task { @MainActor in
+            let status = await LanguageAvailability().status(from: source, to: target)
+            guard service.translationJob == job else { return }
+            guard status == .installed else {
+                service.failTranslation(job)
+                return
+            }
+            let next = TranslationSession.Configuration(source: source, target: target)
+            if configuration == next { configuration?.invalidate() } else { configuration = next }
+        }
     }
 
     nonisolated private static func translate(with session: TranslationSession, service: LyricsService) async {
@@ -432,9 +441,9 @@ struct LyricsPillHost: View {
 
     /// 只切換「視窗是否接收滑鼠事件」與膠囊淡化；**不能**在這裡重設 `passThrough`，否則每次取樣都會把停留計時歸零。
     private func setPassingThrough(_ engaged: Bool) {
-        guard engaged != isPassingThrough else { return }
-        isPassingThrough = engaged
-        windowBox.window?.ignoresMouseEvents = engaged
+        if isPassingThrough != engaged { isPassingThrough = engaged }
+        // 每次都對齊視窗的實際狀態（不只在狀態改變時）：視圖被重建、狀態歸零時，視窗也不會卡在「不接收滑鼠」。
+        if let window = windowBox.window, window.ignoresMouseEvents != engaged { window.ignoresMouseEvents = engaged }
     }
 
     private func apply(_ input: LyricsPillVisibility.Input, line: LyricsPillLine?) {

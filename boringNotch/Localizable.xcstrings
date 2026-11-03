@@ -6156,19 +6156,19 @@
         }
       }
     },
-    "Japanese and Korean songs show a Chinese translation under each line, translated on this Mac by the system's translation (macOS may ask you to download the language the first time). Turn this on to hide it." : {
+    "Japanese and Korean songs show a Chinese translation under each line, translated on this Mac by the system's translation. It only works once the languages are downloaded (System Settings → General → Language & Region → Translation Languages: Japanese/Korean and Traditional Chinese). Turn this on to hide it." : {
       "comment" : "Caption under the 'Show original lyrics only' setting.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Japanese and Korean songs show a Chinese translation under each line, translated on this Mac by the system's translation (macOS may ask you to download the language the first time). Turn this on to hide it."
+            "value" : "Japanese and Korean songs show a Chinese translation under each line, translated on this Mac by the system's translation. It only works once the languages are downloaded (System Settings → General → Language & Region → Translation Languages: Japanese/Korean and Traditional Chinese). Turn this on to hide it."
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "日文與韓文歌會在每一行下方附上中文翻譯，由系統內建的翻譯在這台 Mac 上完成（第一次使用時 macOS 可能會請你下載語言）。開啟後就只顯示原文。"
+            "value" : "日文與韓文歌會在每行下方顯示中文翻譯，由這台 Mac 的系統翻譯完成。需要先下載語言（系統設定 → 一般 → 語言與地區 → 翻譯語言：日文／韓文與繁體中文）才會翻。開啟此項即隱藏翻譯。"
           }
         }
       }

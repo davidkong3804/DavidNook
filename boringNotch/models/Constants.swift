@@ -247,7 +247,9 @@ extension Defaults.Keys {
     /// 膠囊歌詞的文字顏色跟著專輯封面（淡彩色，黑底上保證讀得清楚）。預設開；封面幾乎沒有顏色（灰、黑、白）時維持白字。
     static let lyricsPillTintFromCover = Key<Bool>("lyricsPillTintFromCover", default: true)
     /// 滑鼠停在歌詞膠囊上時，膠囊暫時變淡、點擊穿透到底下的視窗（例如瀏覽器分頁）。
-    static let lyricsPillPassThrough = Key<Bool>("lyricsPillPassThrough", default: true)
+    /// 預設關：0.2.0-beta.4 預設開，回報有人整個螢幕點不到（要結束 App 才恢復），原因未查明前改為手動開啟。
+    /// 用新的鍵名，讓 beta.4 已存的值不會沿用。
+    static let lyricsPillPassThrough = Key<Bool>("lyricsPillPassThroughOptIn", default: false)
     /// 展開的播放器是否顯示右側歌詞面板（歌名旁的按鈕切換）。
     /// 影片功能（在展開瀏海顯示你挑選的單一視窗的即時畫面）。預設開；沒挑視窗時完全不擷取。
     static let videoCapsuleEnabled = Key<Bool>(VideoCapsuleSettings.enabledKey, default: VideoCapsuleSettings.defaultEnabled)
